@@ -71,7 +71,7 @@ def check_simulation_stamps_grade_and_year() -> None:
     original = pipeline.act_on_tool_call
     deps, report = play([1, 2], 3)
     assert report.turns == 6 and report.by_grade == {1: 3, 2: 3}, report
-    assert report.teach_turns == 2, "one teach move per grade"
+    assert report.teach_turns == 2, "a lesson sitting ends with its one scheduled teach-back"
     evts = ledger.events(deps.conn, deps.keys, KID_ID, 12)
     assert {e.grade for e in evts} == {1, 2}, "events carry the grade being played"
     for e in evts:
@@ -87,7 +87,7 @@ def check_simulation_stamps_grade_and_year() -> None:
 
 
 def check_teach_moves_produce_evidence_and_creations() -> None:
-    deps, _ = play([1, 2], 3)
+    deps, _ = play([1, 2], 9)  # two lesson sittings, then a free one where her movie ask survives
     evts = ledger.events(deps.conn, deps.keys, KID_ID, 12)
     for grade in (1, 2):
         teach = [e for e in evts if e.grade == grade and isinstance(e.payload, ConceptEvidence)

@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from ulid import ULID
 
 from evals import TapBus, answer_of, routed_of
-from kite_brain.catalog import Catalog
+from kite_brain.catalog import Catalog, Concept
 from kite_brain.contract import CuriositySignal
 from kite_brain.deps import Deps, LlmRequest, ToolCall
 from kite_brain.memory import ledger
@@ -69,6 +69,33 @@ SENSITIVE = {
 WELL_TOPICS = {"dinosaurs", "light"}
 IDEA_TOPICS = ("dinosaurs", "light", "area_perimeter", "gravity", "water_cycle", "plants")
 
+# Left to choose, the persona almost never teaches Kite back, and teach-backs are the only
+# mastery evidence a turn can produce. So two sittings in three are a scheduled mini-lesson:
+# ask about one focus concept, react to the answer, then teach it back.
+LESSON_SKIP = 3  # every third sitting stays free for curiosity, movies and the sensitive question
+
+
+def lesson_topics(grade: int) -> tuple[str, ...]:
+    return ("area_perimeter", "dinosaurs", "light") if 3 <= grade <= 5 else ("dinosaurs", "light")
+
+
+def lesson_for(catalog: Catalog, grade: int, sitting: int) -> Concept | None:
+    """The focus concept for this sitting, or None for a free sitting. Topics rotate, and
+    within a topic the newest concepts at or below her grade come first."""
+    if sitting % LESSON_SKIP == LESSON_SKIP - 1:
+        return None
+    n = sitting - sitting // LESSON_SKIP
+    topics = lesson_topics(grade)
+    topic = topics[n % len(topics)]
+    concepts = sorted((c for c in catalog.concepts if c.topic == topic and c.grade <= grade),
+                      key=lambda c: (-c.grade, c.id))
+    return concepts[(n // len(topics)) % len(concepts)] if concepts else None
+
+
+def planned_kind(position: int) -> Literal["ask", "teach"] | None:
+    """In a lesson sitting: ask first, react freely, then teach back."""
+    return {0: "ask", PER_SESSION - 1: "teach"}.get(position)
+
 
 class PersonaMove(BaseModel):
     kind: Literal["ask", "follow_up", "teach", "movie"]
@@ -98,8 +125,16 @@ class _GradeClock:
         return self.now
 
 
+def _skill(concept: Concept, grade: int) -> str:
+    return (
+        "explains well" if concept.topic in WELL_TOPICS
+        else "mixes this up" if concept.topic == "area_perimeter" and 3 <= grade <= 5
+        else "explains so-so"
+    )
+
+
 def traits_for(
-    catalog: Catalog, grade: int, turn: int, turns: int, met: list[str]
+    catalog: Catalog, grade: int, turn: int, turns: int, met: list[str], lesson: Concept | None = None
 ) -> str:
     """Maya's traits plus what is true of this one turn: ideas to ask about, concepts she
     has met and could teach, and a sensitive question when one is due."""
@@ -112,14 +147,17 @@ def traits_for(
     if teachable:
         lines.append("Teachable concepts, with the key points a good explanation covers:")
         for c in teachable:
-            skill = (
-                "explains well" if c.topic in WELL_TOPICS
-                else "mixes this up" if c.topic == "area_perimeter" and 3 <= grade <= 5
-                else "explains so-so"
-            )
-            lines.append(f"- {c.id}: {c.kid_name} (Maya {skill}). Key points: {' | '.join(c.key_points)}")
+            lines.append(f"- {c.id}: {c.kid_name} (Maya {_skill(c, grade)}). Key points: {' | '.join(c.key_points)}")
     if grade in SENSITIVE and turn == turns // 2:
         lines.append(f"This turn, make an ask move about this, as a kid would: {SENSITIVE[grade]}.")
+    elif lesson and (kind := planned_kind(turn % PER_SESSION)) == "ask":
+        lines.append(f"This turn, make an ask move: a question about {lesson.kid_name}.")
+    elif lesson and kind == "teach":
+        lines.append(
+            f"This turn, make a teach move with concept_id {lesson.id}: explain {lesson.kid_name} to Kite in "
+            f"your own words, like a kid. Maya {_skill(lesson, grade)}. "
+            f"Key points a good explanation covers: {' | '.join(lesson.key_points)}"
+        )
     return "\n".join(lines)
 
 
@@ -162,8 +200,10 @@ def _met(deps: Deps, grade: int) -> list[str]:
     return list(dict.fromkeys(e.concept_id for e in evts if e.concept_id))
 
 
-def _inputs(move: PersonaMove, met: list[str], grade: int, at: datetime) -> TurnInput:
+def _inputs(move: PersonaMove, met: list[str], grade: int, at: datetime, lesson: Concept | None = None) -> TurnInput:
     base = dict(kid_id=KID_ID, device="os", text=move.text, as_of_grade=grade, now=at)
+    if move.kind == "teach" and lesson:
+        return TurnInput(**base, mode="teach", concept_id=lesson.id)
     if move.kind == "teach" and met:
         # An unknown or missing concept id means her most recent one.
         concept = move.concept_id if move.concept_id in met else met[-1]
@@ -182,13 +222,18 @@ async def _play_grade(
     for i, at in enumerate(times):
         clock.now = at
         met = _met(deps, grade)
+        lesson = None if grade in SENSITIVE and i == turns // 2 else lesson_for(deps.catalog, grade, i // PER_SESSION)
         try:
-            move = await next_move(deps.llm, grade, traits_for(deps.catalog, grade, i, turns, met), history)
+            move = await next_move(deps.llm, grade, traits_for(deps.catalog, grade, i, turns, met, lesson), history)
         except Exception as e:  # one bad persona call must not end a 45-minute night
             log.warning("grade %d turn %d: persona failed (%s)", grade, i, type(e).__name__)
             idea = random.Random(grade * 1000 + i).choice([c for c in deps.catalog.concepts if c.grade <= grade])
             move = PersonaMove(kind="ask", text=f"Can you tell me about {idea.kid_name}?")
-        inp, turn_id = _inputs(move, met, grade, at), str(ULID())
+        if lesson and (kind := planned_kind(i % PER_SESSION)):
+            move = move.model_copy(update={"kind": kind})
+        elif lesson and move.kind == "teach":  # an unscheduled teach-back before Kite explains scores all-missing
+            move = move.model_copy(update={"kind": "follow_up"})
+        inp, turn_id = _inputs(move, met, grade, at, lesson if move.kind == "teach" else None), str(ULID())
         await run_turn(inp, deps, turn_id)
         events = tap.take()
         for call in creations:
