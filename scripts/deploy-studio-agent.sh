@@ -6,7 +6,8 @@
 #            FOUNDRY_PROJECT_ENDPOINT    https://<account>.services.ai.azure.com/api/projects/<project>
 #            ANTHROPIC_FOUNDRY_RESOURCE  the Foundry resource name that holds the Claude deployments
 #            SONNET_DEPLOYMENT           the Claude Sonnet deployment name
-# Optional:  HAIKU_DEPLOYMENT (defaults to SONNET_DEPLOYMENT), AGENT_NAME (kite-studio), IMAGE_TAG (git sha)
+# Optional:  HAIKU_DEPLOYMENT (defaults to SONNET_DEPLOYMENT), AGENT_NAME (kite-studio), IMAGE_TAG (git sha),
+#            SKIP_BUILD=1 to reuse an image already in the registry under IMAGE_TAG
 #
 # The project must be in a hosted-agent region, and the caller needs Foundry Project Manager on it.
 set -euo pipefail
@@ -24,8 +25,12 @@ LOGIN_SERVER=$(az acr show --name "$ACR_NAME" --query loginServer -o tsv 2>/dev/
   || { echo "cannot see registry '$ACR_NAME': run 'az account set --subscription <id>' or fix ACR_NAME" >&2; exit 2; }
 IMAGE="$LOGIN_SERVER/$AGENT_NAME:$IMAGE_TAG"
 
-echo "== building $IMAGE in ACR"
-az acr build --registry "$ACR_NAME" --image "$AGENT_NAME:$IMAGE_TAG" --platform linux/amd64 studio-agent
+if [ "${SKIP_BUILD:-}" = 1 ]; then
+  echo "== reusing $IMAGE"
+else
+  echo "== building $IMAGE in ACR"
+  az acr build --registry "$ACR_NAME" --image "$AGENT_NAME:$IMAGE_TAG" --platform linux/amd64 studio-agent
+fi
 
 TOKEN=$(az account get-access-token --resource https://ai.azure.com --query accessToken -o tsv)
 API="api-version=v1"
@@ -56,7 +61,12 @@ else
   CREATED=$(curl -sSf "${auth[@]}" -X POST "$AGENTS?$API" -d "{\"name\": \"$AGENT_NAME\", \"definition\": $DEFINITION}")
 fi
 echo "$CREATED"
-VERSION=$(echo "$CREATED" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("version") or d.get("versions", [{}])[-1].get("version") or 1)')
+# The create-agent response nests the new version under versions.latest; the create-version response is flat.
+read -r VERSION PRINCIPAL < <(echo "$CREATED" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+v = (d.get("versions") or {}).get("latest") or d
+print(v.get("version") or 1, (v.get("instance_identity") or d.get("instance_identity") or {}).get("principal_id", "-"))')
 
 echo "== waiting for version $VERSION to be active"
 STATUS=creating
@@ -69,13 +79,33 @@ for _ in $(seq 1 60); do
 done
 [ "$STATUS" = active ] || { echo "gave up waiting for the version" >&2; exit 1; }
 
+# A new agent's endpoint starts out serving the Responses protocol only; route it to invocations on this version.
+echo "== routing the endpoint to invocations on version $VERSION"
+ROUTE='{"agent_endpoint": {"protocols": ["invocations"], "protocol_configuration": {"invocations": {}},
+  "version_selector": {"version_selection_rules": [{"type": "FixedRatio", "agent_version": "'"$VERSION"'", "traffic_percentage": 100}]}}}'
+curl -sSf -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/merge-patch+json" -X PATCH "$AGENTS/$AGENT_NAME?$API" -d "$ROUTE" >/dev/null \
+  || curl -sSf "${auth[@]}" -X PATCH "$AGENTS/$AGENT_NAME?$API" -d "$ROUTE" >/dev/null \
+  || echo "  could not patch the endpoint; set protocols to invocations in the Foundry portal" >&2
+curl -sSf "${auth[@]}" "$AGENTS/$AGENT_NAME?$API" | python3 -c '
+import json, sys
+e = json.load(sys.stdin).get("agent_endpoint", {})
+rules = e.get("version_selector", {}).get("version_selection_rules", [])
+print("  endpoint protocols:", e.get("protocols"), "versions:", [r.get("agent_version") for r in rules])'
+
+if [ "$PRINCIPAL" != - ]; then
+  echo "== granting the agent identity $PRINCIPAL Azure AI User on $ANTHROPIC_FOUNDRY_RESOURCE"
+  ACCOUNT_ID=$(az cognitiveservices account list --query "[?name=='$ANTHROPIC_FOUNDRY_RESOURCE'].id | [0]" -o tsv)
+  az role assignment create --assignee-object-id "$PRINCIPAL" --assignee-principal-type ServicePrincipal \
+    --role 53ca6127-db72-4b80-b1b0-d745d6d5456d --scope "$ACCOUNT_ID" -o none \
+    || echo "  role assignment failed; grant Azure AI User to $PRINCIPAL on $ANTHROPIC_FOUNDRY_RESOURCE by hand" >&2
+fi
+
 cat <<EOF
 == deployed version $VERSION
 STUDIO_AGENT_ENDPOINT=$AGENTS/$AGENT_NAME/endpoint/protocols/invocations
 
 Before the first game works:
   1. The project's managed identity needs 'Container Registry Repository Reader' on $ACR_NAME (else image_pull_failed).
-  2. The agent's own Entra identity needs 'Azure AI User' on the Foundry resource '$ANTHROPIC_FOUNDRY_RESOURCE'.
-  3. Check the endpoint routes to version $VERSION:  curl -H "Authorization: Bearer \$TOKEN" "$AGENTS/$AGENT_NAME?$API"
-  4. Put STUDIO_AGENT_ENDPOINT in brain/.env and restart the brain.
+  2. The endpoint protocols line above must include invocations.
+  3. Put STUDIO_AGENT_ENDPOINT in brain/.env and restart the brain.
 EOF
