@@ -237,3 +237,21 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   3. wrote the game
   4. ran the play-test until it passed
 - **Claude checked the result independently.** It re-ran the play-test on the returned file and took screenshots in headless Chromium. Rexy moves, blue and red stars fall, and catching a blue one shows "Yes! Blue light scatters a lot!"
+
+## 2026-10-24 ~18:20 EDT: Session 1, a dress rehearsal changes the definition of "strength"
+
+- **Claude rehearsed the demo's data check on a small real run before the full night shift.** It failed: dinosaurs didn't show as a strength topic.
+- **The cause was the rule, not the run.** One dinosaur concept sat at "learning" because Maya's teach-back covered 3 of its 4 points. The spec required every evidenced concept to be mastered, so one near-miss sank the whole topic.
+- **Claude proposed a rule closer to how a parent would read "strength", and the spec now says it:** at least 2 concepts mastered, making up at least 75% of the topic's evidenced concepts. The rehearsal database then passed.
+- Two smaller bugs surfaced on the way and were fixed before the rerun. The simulator was changing shared persona moves in place. The retry for teach turns also consumed the scripted moves the checks relied on.
+
+## 2026-10-24 ~18:50 EDT: Session 1, three helpers' work lands without touching the running night shift
+
+- **Three Claude helpers built the parent dashboard, the movie and game packages, and the studio backend in parallel**, each in its own git worktree.
+- **The lead integrated them on a separate branch in a separate folder.** The night shift imports brain files, so the human's checkout stays untouched until it exits. Then `brain` only has to fast-forward.
+- **Running the real routes exposed what each helper's own checks couldn't:**
+  - The auth check had been written against a placeholder dashboard. The real route needs the app's dependencies, so the check moved next to the dashboard's own.
+  - The fallback movie had no art map, so its characters would have rendered as plain badges.
+  - The brain sends art as raw SVG, but both players expected data URLs. The players now convert it themselves, so the web app can pass the brain's map straight through.
+- **Claude looked at the rendered frames instead of trusting the exit code.** The highlighted caption word ran into its neighbors ("on asunnyday"). After a spacing fix, the fallback movie was re-rendered: 32 s, 1280×720, with real Fluent Emoji art.
+- **Claude wrote a wiring note for the human teammate** (`docs/web-wiring.md`) and pushed the branch, so the web app can use the real routes while the night shift is still running.
