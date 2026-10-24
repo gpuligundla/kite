@@ -143,8 +143,11 @@ def expect_fallback(folder, cid, seen, why):
     assert creation.status == "fallback" and creation.storyboard.title == STORYBOARD.title, why
     assert creation.storyboard.check.concept_id == SKY_CONCEPT, why
     assert all((folder / cid / name).exists() for name in creation.audio.values()), f"{why}: the fallback audio is copied"
-    assert seen["os"][-1].type == "creation.ready" and seen["os"][-1].status == "fallback", why
-    assert seen["parent"][-1].status == "fallback" and not seen["counselor"], why
+    for audience in ("os", "parent"):
+        ready = [e for e in seen[audience] if e.type == "creation.ready"]
+        assert ready[-1].status == "fallback", why
+        assert seen[audience][-1].type == "creation.video", f"{why}: the rendered fallback plays at once"
+    assert creation.video_url == f"/creations/{cid}/files/movie.mp4" and not seen["counselor"], why
 
 
 def check_deadline_falls_back() -> None:

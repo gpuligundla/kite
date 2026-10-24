@@ -3,14 +3,8 @@
 import asyncio
 from datetime import datetime, timezone
 
-from fastapi.testclient import TestClient
-
-from kite_brain.api import create_app
 from kite_brain.bus import EventBus, visible_to
 from kite_brain.contract import AnswerSentenceEvent, RoutedEvent
-from kite_brain.crypto import FamilyKeys, new_key
-from kite_brain.db import connect, init_db
-from kite_brain.seed import seed
 
 # kind -> audiences it may receive. The whole safety claim in one table.
 TABLE = {
@@ -82,37 +76,10 @@ def check_live_delivery() -> None:
     assert asyncio.run(run()) == [2], "a live kid subscriber skips the parent event"
 
 
-def check_auth() -> None:
-    conn = connect(":memory:")
-    init_db(conn)
-    keys = FamilyKeys(conn, new_key())
-    tokens = seed(conn, keys, datetime.now(timezone.utc)).tokens
-    client = TestClient(create_app(conn))
-    bearer = lambda kind: {"Authorization": f"Bearer {tokens[kind]}"}  # noqa: E731
-
-    assert client.get("/kids/maya/dashboard").status_code == 401, "no token is 401"
-    assert client.get("/kids/maya/dashboard", headers={"Authorization": "Bearer nope"}).status_code == 401
-    for kind in ("os", "handheld", "counselor"):
-        assert client.get("/kids/maya/dashboard", headers=bearer(kind)).status_code == 403, (
-            f"a {kind} token must not read the dashboard"
-        )
-    assert client.get("/kids/maya/dashboard", headers=bearer("parent")).status_code == 200
-    assert client.get("/kids/sam/dashboard", headers=bearer("parent")).status_code == 403, "another kid is 403"
-    assert client.get("/kids/maya/dashboard", cookies={"kite_token": tokens["parent"]}).status_code == 200, (
-        "the cookie works"
-    )
-
-    fresh = TestClient(create_app(conn))
-    statuses = [fresh.get("/kids/maya/dashboard", headers=bearer("parent")).status_code for _ in range(301)]
-    assert set(statuses[:300]) == {200}, "the first 300 requests pass"
-    assert statuses[300] == 429, "the 301st request in a minute is 429"
-
-
 def run() -> None:
     check_visible_to_table()
     check_bus()
     check_live_delivery()
-    check_auth()
 
 
 if __name__ == "__main__":

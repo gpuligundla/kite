@@ -1,8 +1,6 @@
 """Task 21: the parent dashboard routes, as plain asserts, with a temp DB and stand-in Deps.
 Run from brain/: uv run python -m scripts.checks.dashboard"""
 
-import asyncio
-import json
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,12 +13,11 @@ from kite_brain.api import create_app
 from kite_brain.contract import ConceptEvidence, Creation, InterestFact, Moment
 from kite_brain.deps import Deps
 from kite_brain.memory import ledger
-from kite_brain.routers import dashboard as dashboard_router
 from kite_brain.seed import FAMILY_ID, KID_ID, seed
 from kite_brain.turn.pipeline import TurnInput, _Turn
 from scripts.checks.ledger import CATALOG, NOW, T0, add, fresh
 from scripts.checks.memory import async_embed
-from scripts.checks.pipeline import StandIns, turn
+from scripts.checks.pipeline import StandIns
 
 BAD_ROUTES = (
     ("get", f"/kids/{KID_ID}/dashboard", None), ("get", f"/kids/{KID_ID}/contacts", None),
@@ -33,9 +30,6 @@ def client_with_data():
     conn, keys = fresh()
     tokens = seed(conn, keys, NOW).tokens
     app = create_app(conn)
-    # Until the lead drops the stub from api.py, take it out so the real router answers.
-    app.router.routes = [r for r in app.router.routes if getattr(r, "name", "") != "dashboard"]
-    app.include_router(dashboard_router.router)
     stand = StandIns()
     app.state.deps = Deps(
         conn=conn, keys=keys, bus=app.state.bus, catalog=CATALOG, decide=stand.decide, llm=stand,
@@ -160,8 +154,24 @@ def check_contacts_and_movies(client, bearer) -> None:
     print("ok contacts decrypt; movies list rendered ones newest first")
 
 
+def check_auth() -> None:
+    """The parts of require() the route sweep in check_all leaves out: bad tokens, other kids, the cookie, the rate limit."""
+    client, _, bearer = client_with_data()
+    assert client.get(f"/kids/{KID_ID}/dashboard", headers={"Authorization": "Bearer nope"}).status_code == 401
+    assert client.get("/kids/sam/dashboard", headers=bearer["parent"]).status_code == 403, "another kid is 403"
+    token = bearer["parent"]["Authorization"].removeprefix("Bearer ")
+    assert client.get(f"/kids/{KID_ID}/dashboard", cookies={"kite_token": token}).status_code == 200, "the cookie works"
+
+    fresh_client, _, bearer = client_with_data()
+    statuses = [fresh_client.get(f"/kids/{KID_ID}/dashboard", headers=bearer["parent"]).status_code for _ in range(301)]
+    assert set(statuses[:300]) == {200}, "the first 300 requests pass"
+    assert statuses[300] == 429, "the 301st request in a minute is 429"
+    print("ok bad tokens, other kids, the cookie and the rate limit")
+
+
 def run() -> None:
     check_all()
+    check_auth()
 
 
 if __name__ == "__main__":

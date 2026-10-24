@@ -8,6 +8,6 @@ deadline or fails. It is **not** ElevenLabs output.
 - The `*.mp3` files are silent (made with ffmpeg), so captions play with no voice.
 - Regenerate it with `uv run python -m scripts.make_fallback_movie` from `brain/`.
 
-`movie.mp4` is not committed yet. Once `packages/movie` exists, render it from `brain/` with
-`node ../packages/movie/render.mjs kite_brain/studio/fallback/creation.json`. When `movie.mp4` is
-here, a fallback creation copies it and publishes `creation.video` right away.
+`movie.mp4` is rendered from `creation.json` by `packages/movie`. After regenerating, render it again
+from `brain/` with `node ../packages/movie/render.mjs kite_brain/studio/fallback/creation.json`.
+A fallback creation copies it and publishes `creation.video` right away.

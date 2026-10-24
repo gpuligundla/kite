@@ -92,6 +92,213 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/kids/{kid_id}/games/custom": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Custom Game */
+        post: operations["custom_game_kids__kid_id__games_custom_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/creations/{creation_id}/game.html": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Game Html */
+        get: operations["game_html_creations__creation_id__game_html_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/creations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create */
+        post: operations["create_creations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/creations/sprites/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sprite */
+        get: operations["sprite_creations_sprites__name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/creations/{creation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read
+         * @description The creation with its audio as URLs the player can fetch, plus a "sprites" map of slug to SVG markup.
+         */
+        get: operations["read_creations__creation_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/creations/{creation_id}/files/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** File */
+        get: operations["file_creations__creation_id__files__name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/creations/{creation_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer */
+        post: operations["answer_creations__creation_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/creations/{creation_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Result */
+        post: operations["result_creations__creation_id__result_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kids/{kid_id}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dashboard */
+        get: operations["get_dashboard_kids__kid_id__dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/families/{family_id}/policy/{topic}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Policy */
+        put: operations["put_policy_families__family_id__policy__topic__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kids/{kid_id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Contacts */
+        get: operations["get_contacts_kids__kid_id__contacts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kids/{kid_id}/movies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Movies */
+        get: operations["get_movies_kids__kid_id__movies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -109,15 +316,18 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/kids/{kid_id}/dashboard": {
+    "/trust": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Dashboard */
-        get: operations["dashboard_kids__kid_id__dashboard_get"];
+        /**
+         * Trust
+         * @description The eval results the Trust tab draws, from the files the night shift writes.
+         */
+        get: operations["trust_trust_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -130,6 +340,47 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Actor */
+        Actor: {
+            /** Sprite */
+            sprite: string;
+            /**
+             * Name
+             * @default null
+             */
+            name: string | null;
+            /**
+             * Entrance
+             * @enum {string}
+             */
+            entrance: "left" | "right" | "pop";
+            /**
+             * Motion
+             * @enum {string}
+             */
+            motion: "bounce" | "float" | "walk";
+        };
+        /** AlertView */
+        AlertView: {
+            /** Alert Id */
+            alert_id: string;
+            /** Kinds */
+            kinds: ("bullying" | "stranger" | "abuse" | "self_harm" | "sos")[];
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
+        };
+        /** Answer */
+        Answer: {
+            /** Choice */
+            choice: number;
+        };
         /** Body_post_turn_turns_post */
         Body_post_turn_turns_post: {
             /** Kid Id */
@@ -156,10 +407,258 @@ export interface components {
             /** Concept Id */
             concept_id?: string | null;
         };
+        /** CardView */
+        CardView: {
+            /** Card Id */
+            card_id: string;
+            /** Grade */
+            grade: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Topic */
+            topic: string;
+            /** Summary */
+            summary: string;
+            /** Starter */
+            starter: string;
+        };
+        /** CheckQuestion */
+        CheckQuestion: {
+            /** Question */
+            question: string;
+            /** Choices */
+            choices: string[];
+            /** Correct Index */
+            correct_index: number;
+            /** Concept Id */
+            concept_id: string;
+        };
+        /** ConceptLevel */
+        ConceptLevel: {
+            /** Concept Id */
+            concept_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "not_yet" | "learning" | "got_it" | "can_teach";
+        };
+        /** ContactView */
+        ContactView: {
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string;
+        };
+        /** Creation */
+        Creation: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "movie" | "game";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "ready" | "fallback";
+            /** @default null */
+            storyboard: components["schemas"]["Storyboard"] | null;
+            /** @default null */
+            game: components["schemas"]["GameSpec"] | null;
+            /**
+             * Audio
+             * @default {}
+             */
+            audio: {
+                [key: string]: string;
+            };
+            /**
+             * Timings
+             * @default {}
+             */
+            timings: {
+                [key: string]: components["schemas"]["Word"][];
+            };
+            /**
+             * Video Url
+             * @default null
+             */
+            video_url: string | null;
+            /**
+             * Html Url
+             * @default null
+             */
+            html_url: string | null;
+        };
+        /** CuriosityMap */
+        CuriosityMap: {
+            /** Topics */
+            topics: components["schemas"]["TopicScore"][];
+        };
+        /** CustomGame */
+        CustomGame: {
+            /** Topic */
+            topic: string;
+            /** Learning Goal */
+            learning_goal: string;
+        };
+        /** DashboardView */
+        DashboardView: {
+            profile: components["schemas"]["ProfileView"];
+            curiosity: components["schemas"]["CuriosityMap"];
+            skills: components["schemas"]["SkillsMap"];
+            /** Cards */
+            cards: components["schemas"]["CardView"][];
+            /** Alerts */
+            alerts: components["schemas"]["AlertView"][];
+            /** Moments By Grade */
+            moments_by_grade: {
+                [key: string]: string[];
+            };
+            /** Policy */
+            policy: {
+                [key: string]: "answer" | "answer_and_tell" | "ask_parent";
+            };
+        };
+        /** GameItem */
+        GameItem: {
+            /** Label */
+            label: string;
+            /** Sprite */
+            sprite: string;
+            /**
+             * Correct
+             * @default null
+             */
+            correct: boolean | null;
+            /**
+             * Bin
+             * @default null
+             */
+            bin: string | null;
+        };
+        /** GameSpec */
+        GameSpec: {
+            /**
+             * Template
+             * @enum {string}
+             */
+            template: "catch" | "sort";
+            /** Title */
+            title: string;
+            /** Instructions */
+            instructions: string;
+            /** Concept Id */
+            concept_id: string;
+            /** Items */
+            items: components["schemas"]["GameItem"][];
+            /**
+             * Bins
+             * @default []
+             */
+            bins: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** NarrationLine */
+        NarrationLine: {
+            /** Speaker */
+            speaker: string;
+            /**
+             * Voice
+             * @enum {string}
+             */
+            voice: "narrator" | "professor" | "explorer" | "storyteller" | "robot_buddy";
+            /** Text */
+            text: string;
+        };
+        /** NewCreation */
+        NewCreation: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "movie" | "game";
+            /** Topic */
+            topic: string;
+            /** Learning Goal */
+            learning_goal: string;
+        };
+        /** Palette */
+        Palette: {
+            /** Sky */
+            sky: string;
+            /** Ground */
+            ground: string;
+            /**
+             * Time Of Day
+             * @enum {string}
+             */
+            time_of_day: "morning" | "day" | "evening" | "night";
+        };
+        /** PolicyBody */
+        PolicyBody: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "answer" | "answer_and_tell" | "ask_parent";
+        };
+        /** ProfileView */
+        ProfileView: {
+            /** Interests */
+            interests: string[];
+            /** Characters */
+            characters: string[];
+            /** Styles */
+            styles: ("story" | "game" | "picture" | "explain" | "hands_on")[];
+        };
+        /** Result */
+        Result: {
+            /** Correct */
+            correct: number;
+            /** Total */
+            total: number;
+        };
+        /** Scene */
+        Scene: {
+            /**
+             * Background
+             * @enum {string}
+             */
+            background: "sky" | "space" | "ocean" | "forest" | "town" | "classroom";
+            palette: components["schemas"]["Palette"];
+            /** Actors */
+            actors: components["schemas"]["Actor"][];
+            /** Lines */
+            lines: components["schemas"]["NarrationLine"][];
+            /**
+             * Camera
+             * @enum {string}
+             */
+            camera: "still" | "pan" | "zoom";
+        };
+        /** SkillsMap */
+        SkillsMap: {
+            /** Concepts */
+            concepts: components["schemas"]["ConceptLevel"][];
+            /** Frontier */
+            frontier: string[];
+            /** Growing */
+            growing: string[];
+            /** Can Teach */
+            can_teach: string[];
         };
         /** Sos */
         Sos: {
@@ -167,6 +666,14 @@ export interface components {
             lat: number;
             /** Lng */
             lng: number;
+        };
+        /** Storyboard */
+        Storyboard: {
+            /** Title */
+            title: string;
+            /** Scenes */
+            scenes: components["schemas"]["Scene"][];
+            check: components["schemas"]["CheckQuestion"];
         };
         /** TeachStart */
         TeachStart: {
@@ -180,6 +687,17 @@ export interface components {
             /** Kid Name */
             kid_name: string;
         };
+        /** TopicScore */
+        TopicScore: {
+            /** Topic */
+            topic: string;
+            /** Score */
+            score: number;
+            /** By Grade */
+            by_grade: {
+                [key: string]: number;
+            };
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -192,6 +710,15 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** Word */
+        Word: {
+            /** Text */
+            text: string;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
         };
         /** AlertEvent */
         AlertEvent: {
@@ -795,177 +1322,6 @@ export interface components {
             style: "story" | "game" | "picture" | "explain" | "hands_on";
         };
         LearningPayload: components["schemas"]["ConceptEvidence"] | components["schemas"]["CuriositySignal"] | (components["schemas"]["InterestFact"] | components["schemas"]["CharacterFact"] | components["schemas"]["StyleFact"]) | components["schemas"]["Moment"];
-        /** Actor */
-        Actor: {
-            /** Sprite */
-            sprite: string;
-            /**
-             * Name
-             * @default null
-             */
-            name: string | null;
-            /**
-             * Entrance
-             * @enum {string}
-             */
-            entrance: "left" | "right" | "pop";
-            /**
-             * Motion
-             * @enum {string}
-             */
-            motion: "bounce" | "float" | "walk";
-        };
-        /** CheckQuestion */
-        CheckQuestion: {
-            /** Question */
-            question: string;
-            /** Choices */
-            choices: string[];
-            /** Correct Index */
-            correct_index: number;
-            /** Concept Id */
-            concept_id: string;
-        };
-        /** NarrationLine */
-        NarrationLine: {
-            /** Speaker */
-            speaker: string;
-            /**
-             * Voice
-             * @enum {string}
-             */
-            voice: "narrator" | "professor" | "explorer" | "storyteller" | "robot_buddy";
-            /** Text */
-            text: string;
-        };
-        /** Palette */
-        Palette: {
-            /** Sky */
-            sky: string;
-            /** Ground */
-            ground: string;
-            /**
-             * Time Of Day
-             * @enum {string}
-             */
-            time_of_day: "morning" | "day" | "evening" | "night";
-        };
-        /** Scene */
-        Scene: {
-            /**
-             * Background
-             * @enum {string}
-             */
-            background: "sky" | "space" | "ocean" | "forest" | "town" | "classroom";
-            palette: components["schemas"]["Palette"];
-            /** Actors */
-            actors: components["schemas"]["Actor"][];
-            /** Lines */
-            lines: components["schemas"]["NarrationLine"][];
-            /**
-             * Camera
-             * @enum {string}
-             */
-            camera: "still" | "pan" | "zoom";
-        };
-        /** Storyboard */
-        Storyboard: {
-            /** Title */
-            title: string;
-            /** Scenes */
-            scenes: components["schemas"]["Scene"][];
-            check: components["schemas"]["CheckQuestion"];
-        };
-        /** GameItem */
-        GameItem: {
-            /** Label */
-            label: string;
-            /** Sprite */
-            sprite: string;
-            /**
-             * Correct
-             * @default null
-             */
-            correct: boolean | null;
-            /**
-             * Bin
-             * @default null
-             */
-            bin: string | null;
-        };
-        /** GameSpec */
-        GameSpec: {
-            /**
-             * Template
-             * @enum {string}
-             */
-            template: "catch" | "sort";
-            /** Title */
-            title: string;
-            /** Instructions */
-            instructions: string;
-            /** Concept Id */
-            concept_id: string;
-            /** Items */
-            items: components["schemas"]["GameItem"][];
-            /**
-             * Bins
-             * @default []
-             */
-            bins: string[];
-        };
-        /** Word */
-        Word: {
-            /** Text */
-            text: string;
-            /** Start */
-            start: number;
-            /** End */
-            end: number;
-        };
-        /** Creation */
-        Creation: {
-            /** Id */
-            id: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "movie" | "game";
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "pending" | "ready" | "fallback";
-            /** @default null */
-            storyboard: components["schemas"]["Storyboard"] | null;
-            /** @default null */
-            game: components["schemas"]["GameSpec"] | null;
-            /**
-             * Audio
-             * @default {}
-             */
-            audio: {
-                [key: string]: string;
-            };
-            /**
-             * Timings
-             * @default {}
-             */
-            timings: {
-                [key: string]: components["schemas"]["Word"][];
-            };
-            /**
-             * Video Url
-             * @default null
-             */
-            video_url: string | null;
-            /**
-             * Html Url
-             * @default null
-             */
-            html_url: string | null;
-        };
         /** KidView */
         KidView: {
             /** Interests */
@@ -1159,11 +1515,50 @@ export interface operations {
             };
         };
     };
-    health_health_get: {
+    custom_game_kids__kid_id__games_custom_post: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomGame"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    game_html_creations__creation_id__game_html_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                creation_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -1174,19 +1569,92 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: boolean;
-                    };
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
-    dashboard_kids__kid_id__dashboard_get: {
+    create_creations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewCreation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sprite_creations_sprites__name__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                kid_id: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_creations__creation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                creation_id: string;
             };
             cookie?: never;
         };
@@ -1210,6 +1678,289 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    file_creations__creation_id__files__name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                creation_id: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    answer_creations__creation_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                creation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Answer"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    result_creations__creation_id__result_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                creation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Result"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_kids__kid_id__dashboard_get: {
+        parameters: {
+            query?: {
+                grade?: number | null;
+            };
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_policy_families__family_id__policy__topic__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                family_id: string;
+                topic: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_contacts_kids__kid_id__contacts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_movies_kids__kid_id__movies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Creation"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    health_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    trust_trust_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };

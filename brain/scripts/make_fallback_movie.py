@@ -3,10 +3,12 @@ storyboard, word timings estimated at a steady pace, and silent MP3s (needs ffmp
 calls ElevenLabs, so the fallback has captions and no voice until real narration replaces it.
 Run from brain/: uv run python -m scripts.make_fallback_movie"""
 
+import json
 import subprocess
 from pathlib import Path
 
 from kite_brain.contract import Creation, Storyboard, Word
+from kite_brain.studio import store
 from kite_brain.studio.storyboard import narration_lines
 
 OUT = Path("kite_brain/studio/fallback")
@@ -72,7 +74,9 @@ def main() -> None:
         )
         audio[key], timings[key] = name, words
     creation = Creation(id="fallback", kind="movie", status="fallback", storyboard=STORYBOARD, audio=audio, timings=timings)
-    (OUT / "creation.json").write_text(creation.model_dump_json(indent=2))
+    # Same shape as studio.store.save, so render.mjs finds the actors' art.
+    data = creation.model_dump(mode="json") | {"sprites": store.sprites_for(creation)}
+    (OUT / "creation.json").write_text(json.dumps(data, indent=2))
     print(f"wrote {len(audio)} silent lines to {OUT}")
 
 

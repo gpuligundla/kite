@@ -67,7 +67,7 @@ const Captions: React.FC<{ scene: TimelineScene; frame: number }> = ({ scene, fr
       {line.words.map((w, i) => {
         const on = frame >= w.fromFrame && frame < w.toFrame;
         return (
-          <span key={i} style={{ color: on ? "#ffd54f" : "#fff", display: "inline-block", transform: on ? "scale(1.12)" : "none", margin: "0 7px" }}>
+          <span key={i} style={{ color: on ? "#ffd54f" : "#fff", display: "inline-block", transform: on ? "scale(1.12)" : "none", margin: "0 0.3em" }}>
             {w.text}
           </span>
         );
