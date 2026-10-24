@@ -179,7 +179,7 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   - Use Playwright or similar.
 - **Teach Kite also fixed the evidence gap the reviewers found.** Claude used the SVG decision to drop the image model entirely. Claude chose Remotion's renderer for video (it drives headless Chrome itself) and Playwright for an end-to-end demo smoke test.
 
-## 2026-10-24 ~16:00 EDT: Session 1, the humans change the process: pstack, no test suite
+## 2026-10-24 ~15:00 EDT: Session 1, the humans change the process: pstack, no test suite
 
 - The humans switched every work item from the superpowers skills to pstack.
   - Each lane now runs through `/pstack:poteto-mode`.
@@ -194,7 +194,7 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
 - Along the way, a helper found that an earlier helper had left two of the spec's conditions out of the "strength topic" rule. The lead fixed it.
 - The pipeline's helper also overruled the spec on one point. The parent had to stop subscribing to kid events, because the kid's own words go out before routing, which would leak an abuse turn to the parent. The spec was updated.
 
-## 2026-10-24 ~18:30 EDT: Session 1, the humans want games built on the fly, all on Azure
+## 2026-10-24 ~16:10 EDT: Session 1, the humans want games built on the fly, all on Azure
 
 - The human asked whether games and videos could be generated on the fly by a real coding agent, like Claude Code, and whether Foundry agents could do it.
 - Their constraint: Azure billing only, no Anthropic API account.
