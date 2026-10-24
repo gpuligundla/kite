@@ -50,10 +50,10 @@ JSON
 )
 
 echo "== creating agent version"
-if curl -sf "${auth[@]}" "$AGENTS/$AGENT_NAME?$API" >/dev/null; then
-  CREATED=$(curl -sf "${auth[@]}" -X POST "$AGENTS/$AGENT_NAME/versions?$API" -d "{\"definition\": $DEFINITION}")
+if curl -sf "${auth[@]}" "$AGENTS/$AGENT_NAME?$API" >/dev/null 2>&1; then
+  CREATED=$(curl -sSf "${auth[@]}" -X POST "$AGENTS/$AGENT_NAME/versions?$API" -d "{\"definition\": $DEFINITION}")
 else
-  CREATED=$(curl -sf "${auth[@]}" -X POST "$AGENTS?$API" -d "{\"name\": \"$AGENT_NAME\", \"definition\": $DEFINITION}")
+  CREATED=$(curl -sSf "${auth[@]}" -X POST "$AGENTS?$API" -d "{\"name\": \"$AGENT_NAME\", \"definition\": $DEFINITION}")
 fi
 echo "$CREATED"
 VERSION=$(echo "$CREATED" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("version") or d.get("versions", [{}])[-1].get("version") or 1)')
@@ -61,7 +61,7 @@ VERSION=$(echo "$CREATED" | python3 -c 'import json,sys; d=json.load(sys.stdin);
 echo "== waiting for version $VERSION to be active"
 STATUS=creating
 for _ in $(seq 1 60); do
-  STATUS=$(curl -sf "${auth[@]}" "$AGENTS/$AGENT_NAME/versions/$VERSION?$API" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')
+  STATUS=$(curl -sSf "${auth[@]}" "$AGENTS/$AGENT_NAME/versions/$VERSION?$API" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')
   echo "  $STATUS"
   [ "$STATUS" = active ] && break
   [ "$STATUS" = failed ] && { curl -s "${auth[@]}" "$AGENTS/$AGENT_NAME/versions/$VERSION?$API"; exit 1; }
