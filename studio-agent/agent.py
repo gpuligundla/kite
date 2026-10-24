@@ -90,9 +90,25 @@ def brief(req: dict) -> str:
     return "\n".join(lines)
 
 
+def work_home() -> Path:
+    """A home this process can write to. The hosted platform sets HOME to its session folder,
+    which the image's non-root user cannot write, so the game, Claude Code's config and npm's
+    cache all live here instead."""
+    for candidate in (os.environ.get("KITE_WORK_HOME"), os.environ.get("HOME"), "/home/agent"):
+        if candidate:
+            path = Path(candidate)
+            try:
+                path.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                continue
+            if os.access(path, os.W_OK):
+                return path
+    raise PermissionError("no writable home for the game")
+
+
 def game_dir() -> Path:
-    """$HOME/game with the kit in it. Idempotent, so a retry on the same session is fine."""
-    d = Path(os.environ.get("KITE_GAME_DIR") or Path.home() / "game")
+    """<work home>/game with the kit in it. Idempotent, so a retry on the same session is fine."""
+    d = Path(os.environ.get("KITE_GAME_DIR") or work_home() / "game")
     shutil.copytree(KIT_DIR, d, dirs_exist_ok=True, ignore=shutil.ignore_patterns("node_modules", "dist", "samples"))
     modules = d / "node_modules"
     if not modules.exists():
@@ -102,7 +118,7 @@ def game_dir() -> Path:
 
 def foundry_env() -> dict[str, str]:
     """On Foundry with no key, hand Claude Code an Entra token from the sandbox's own identity."""
-    env = {"DISABLE_AUTOUPDATER": "1", "DISABLE_TELEMETRY": "1"}
+    env = {"DISABLE_AUTOUPDATER": "1", "DISABLE_TELEMETRY": "1", "HOME": str(work_home())}
     if os.environ.get("CLAUDE_CODE_USE_FOUNDRY") and not (
         os.environ.get("ANTHROPIC_FOUNDRY_API_KEY") or os.environ.get("ANTHROPIC_FOUNDRY_AUTH_TOKEN")
     ):
@@ -165,7 +181,8 @@ def playtest(cwd: Path) -> Playtest:
         return Playtest(False, ["NO_HTML: the agent never wrote game.html"])
     try:
         r = subprocess.run(
-            ["npm", "run", "--silent", "playtest"], cwd=cwd, capture_output=True, text=True, timeout=PLAYTEST_TIMEOUT_S
+            ["npm", "run", "--silent", "playtest"], cwd=cwd, capture_output=True, text=True, timeout=PLAYTEST_TIMEOUT_S,
+            env={**os.environ, "HOME": str(work_home())},
         )
         verdict = json.loads(r.stdout.strip().splitlines()[-1])
     except (subprocess.TimeoutExpired, ValueError, IndexError) as e:
@@ -204,8 +221,11 @@ def serve() -> None:
             return JSONResponse({"error": str(e)}, status_code=400)
 
         async def events():
-            async for item in build(req):
-                yield event_line(item)
+            try:
+                async for item in build(req):
+                    yield event_line(item)
+            except Exception as e:  # a crash still ends the stream with a result the brain can read
+                yield event_line(GameResult("failed", None, Playtest(False, [f"AGENT_CRASHED: {type(e).__name__}"])))
 
         return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 

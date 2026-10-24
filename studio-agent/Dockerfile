@@ -30,6 +30,7 @@ RUN useradd -m agent && chown -R agent /opt/game-kit /ms-playwright
 COPY agent.py instructions.md /app/
 WORKDIR /app
 USER agent
-ENV HOME=/home/agent
+ENV HOME=/home/agent \
+    KITE_WORK_HOME=/home/agent
 EXPOSE 8088
 CMD ["python", "agent.py"]
