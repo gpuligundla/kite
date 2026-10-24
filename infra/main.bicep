@@ -2,7 +2,7 @@
 // the hosted studio agent, a container registry, monitoring, and (from Sunday) the brain and web apps.
 // Deploy with infra/deploy.sh. Never output keys. infra/write-env.sh reads them with az.
 
-@description('Region. Each one listed had Claude 5.5 (version 1, GlobalStandard), Microsoft-Decision-1, text-embedding-3-small, Content Safety and hosted agents on 2026-10-24.')
+@description('Region. Each one listed had Claude 5.5 (version 1, GlobalStandard), Microsoft-Decision-1 (DataZoneStandard), text-embedding-3-small, Content Safety and hosted agents on 2026-10-24.')
 @allowed([
   'eastus2'
   'eastus'
@@ -60,10 +60,11 @@ param claudeVersion string = '1'
 param claudeSku string = 'GlobalStandard'
 
 // Claude and embeddings capacity is thousands of tokens per minute. Pay-as-you-go subscriptions get 40K
-// input TPM per Claude model. Microsoft documents Decision-1 limits only in requests per minute.
+// input TPM per Claude model. The catalog gives Decision-1 a default capacity of 500 and limits of 1 request
+// and 1,000 tokens per minute, which read as per unit, so a capacity of 1 would allow one request a minute.
 param sonnetCapacity int = 25
 param haikuCapacity int = 25
-param decisionCapacity int = 1
+param decisionCapacity int = 500
 param embedCapacity int = 50
 
 @description('Create the Container Apps environment and the kite-brain and kite-web apps. Needs the images in the registry first.')
@@ -94,10 +95,13 @@ var claudeProvider = {
 }
 
 // Deployment names equal model IDs, so Claude Code recognizes each model by its deployment name.
+// Decision-1 is the exception: Azure rejects resource names containing "Microsoft" with ContainsReservedWord.
+// On 2026-10-24 the catalog offered Decision-1 only as DataZoneStandard. GlobalStandard fails preflight
+// with SpecialFeatureOrQuotaIdRequired.
 var models = {
   answer: { name: 'claude-sonnet-5-5', format: 'Anthropic', version: claudeVersion, sku: claudeSku, capacity: sonnetCapacity }
   fast: { name: 'claude-haiku-5-5', format: 'Anthropic', version: claudeVersion, sku: claudeSku, capacity: haikuCapacity }
-  decision: { name: 'Microsoft-Decision-1', format: 'Microsoft', version: '1', sku: 'GlobalStandard', capacity: decisionCapacity }
+  decision: { name: 'decision-1', model: 'Microsoft-Decision-1', format: 'Microsoft', version: '1', sku: 'DataZoneStandard', capacity: decisionCapacity }
   embed: { name: 'text-embedding-3-small', format: 'OpenAI', version: '1', sku: 'GlobalStandard', capacity: embedCapacity }
 }
 
@@ -150,7 +154,7 @@ resource deployments 'Microsoft.CognitiveServices/accounts/deployments@2025-10-0
       {
         model: {
           format: m.value.format
-          name: m.value.name
+          name: m.value.?model ?? m.value.name
           version: m.value.version
         }
       },

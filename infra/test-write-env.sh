@@ -24,7 +24,7 @@ case "\$*" in
   "contentSafetyEndpoint": {"type": "String", "value": "https://kite-foundry-abc123.cognitiveservices.azure.com/"},
   "answerDeployment": {"type": "String", "value": "claude-sonnet-5-5"},
   "fastDeployment": {"type": "String", "value": "claude-haiku-5-5"},
-  "decisionDeployment": {"type": "String", "value": "Microsoft-Decision-1"},
+  "decisionDeployment": {"type": "String", "value": "decision-1"},
   "embedDeployment": {"type": "String", "value": "text-embedding-3-small"}
 }
 JSON
@@ -46,7 +46,7 @@ check "fresh file has every Azure value" '
   [ "$(value FOUNDRY_KEY)" = "$FAKE_KEY" ] &&
   [ "$(value ANSWER_DEPLOYMENT)" = claude-sonnet-5-5 ] &&
   [ "$(value FAST_DEPLOYMENT)" = claude-haiku-5-5 ] &&
-  [ "$(value DECISION_DEPLOYMENT)" = Microsoft-Decision-1 ] &&
+  [ "$(value DECISION_DEPLOYMENT)" = decision-1 ] &&
   [ "$(value EMBED_DEPLOYMENT)" = text-embedding-3-small ] &&
   [ "$(value CONTENT_SAFETY_ENDPOINT)" = https://kite-foundry-abc123.cognitiveservices.azure.com/ ] &&
   [ "$(value CONTENT_SAFETY_KEY)" = "$FAKE_KEY" ]'

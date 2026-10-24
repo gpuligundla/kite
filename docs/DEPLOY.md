@@ -4,7 +4,7 @@ This guide creates every Azure resource Kite uses and writes their endpoints and
 
 `infra/deploy.sh` creates these resources in one resource group:
 
-- A Microsoft Foundry account with four model deployments: `claude-sonnet-5-5`, `claude-haiku-5-5`, `Microsoft-Decision-1` and `text-embedding-3-small`. The same account serves Content Safety and Prompt Shields.
+- A Microsoft Foundry account with four model deployments: `claude-sonnet-5-5`, `claude-haiku-5-5`, `decision-1` (the Microsoft-Decision-1 model) and `text-embedding-3-small`. The same account serves Content Safety and Prompt Shields.
 - A Foundry project for the hosted studio agent.
 - A container registry for the brain, web and studio agent images.
 - A Log Analytics workspace and Application Insights.
@@ -78,6 +78,8 @@ az deployment group what-if --resource-group rg-kite --parameters infra/main.bic
 
 The template pins Claude to version `1` on `GlobalStandard`. Version `1` runs on Anthropic's infrastructure. Version `2` runs on Azure, and for both 5.5 models it exists only as `DataZoneStandard` in US regions.
 
+Microsoft-Decision-1 is in preview and is offered only as `DataZoneStandard`, so the template deploys it on that SKU. If you ask for `GlobalStandard`, preflight fails with `SpecialFeatureOrQuotaIdRequired`. Its deployment is named `decision-1` because Azure rejects resource names that contain "Microsoft".
+
 To see which models and versions a region offers, run this command:
 
 ```bash
@@ -92,7 +94,11 @@ param claudeVersion = '2'
 param claudeSku = 'DataZoneStandard'
 ```
 
-The other settings are `sonnetCapacity`, `haikuCapacity`, `decisionCapacity` and `embedCapacity`. For Claude and embeddings, capacity is in thousands of tokens per minute. Microsoft doesn't say what one unit of Decision-1 capacity buys, and its example deploys Decision-1 with a capacity of 1. If `scripts/probe_decision.py` returns HTTP 429, raise `decisionCapacity`. To find the largest value your subscription allows, read `skus[].capacity` in the output of the model list command.
+The other settings are `sonnetCapacity`, `haikuCapacity`, `decisionCapacity` and `embedCapacity`. For Claude and embeddings, capacity is in thousands of tokens per minute. Microsoft doesn't document what one unit of Decision-1 capacity buys. The catalog lists limits of 1 request and 1,000 tokens per minute, which appear to be per unit, and suggests a default capacity of 500, so the template deploys 500. If `scripts/probe_decision.py` returns HTTP 429, raise `decisionCapacity`. To find the largest value your subscription allows, read the limit for `AIServices.DataZoneStandard.Microsoft-Decision-1` in the output of this command:
+
+```bash
+az cognitiveservices usage list --location eastus2 --query "[?contains(name.value, 'Decision')]" -o table
+```
 
 ## Write brain/.env
 
