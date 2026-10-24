@@ -14,6 +14,7 @@ DECIDE_TOTAL_TIMEOUT_S = 10.0  # the whole backend chain; Haiku alone takes up t
 SAFETY_TIMEOUT_S = 3.0
 RECALL_TIMEOUT_S = 3.0
 UPLOAD_CAP_BYTES = 900_000
+STUDIO_AGENT_TIMEOUT_S = 360.0  # the agent's 3 min of work plus a 1-3 min sandbox cold start
 
 # Content Safety category to alert kind. Sexual and violence go to the counselor, the safer adult for ambiguous cases.
 CS_MAP = {"SelfHarm": "self_harm", "Sexual": "abuse", "Violence": "abuse", "Hate": "bullying"}
@@ -35,6 +36,7 @@ class Settings(BaseSettings):
     KITE_VOICES: str = "{}"
     KITE_MASTER_KEY: str = ""
     KITE_DB_PATH: str = "data/kite.db"
+    STUDIO_AGENT_ENDPOINT: str = ""
 
 
 @lru_cache
