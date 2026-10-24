@@ -14,7 +14,7 @@ import numpy as np
 from ulid import ULID
 
 from kite_brain.config import (
-    DECIDE_TOTAL_TIMEOUT_S, RECALL_TIMEOUT_S, SAFETY_TIMEOUT_S,
+    ABOUT_KITE_THRESHOLD, DECIDE_TOTAL_TIMEOUT_S, RECALL_TIMEOUT_S, SAFETY_TIMEOUT_S,
 )
 from kite_brain.contract import (
     AlertEvent, AnswerDoneEvent, AnswerSentenceEvent, CardEvent, ConceptEvidence, DecidedEvent, DeviceKind,
@@ -30,8 +30,10 @@ from kite_brain.memory import ledger
 from kite_brain.memory.embed import top_k
 from kite_brain.memory.recall import Recall, recall
 from kite_brain.memory.writer import FinishedTurn, write_memory
-from kite_brain.policy import HOMEWORK_LINES, about_me_context, band_for, fk_grade, system_prompt, turn_context
-from kite_brain.questions import ABOUT_ME, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions
+from kite_brain.policy import (
+    HOMEWORK_LINES, about_me_context, band_for, collab_log, fk_grade, system_prompt, turn_context,
+)
+from kite_brain.questions import ABOUT_KITE, ABOUT_ME, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions
 from kite_brain.turn.route import FALLBACK, RoutePlan, route, teach_start_line
 from kite_brain.turn.speak import END, SentenceSplitter, audio_b64, drain, speak_sentences
 from kite_brain.turn.teach import TeachGrade, earlier_attempts, grade_teach, merge_attempts, teach_feedback_context
@@ -68,6 +70,7 @@ class _Turn:
         self.read_only = False
         self.plan: RoutePlan | None = None
         self.teach: TeachGrade | None = None
+        self.about_kite = 0.0
 
     def load_kid(self) -> None:
         row = self.deps.conn.execute(
@@ -125,7 +128,7 @@ def _candidates(turn: _Turn, vec: np.ndarray | None) -> list[str]:
 
 
 async def _decide(turn: _Turn, text: str, candidates: list[str]) -> Decisions | None:
-    questions = [SAFETY, SENSITIVE_TOPIC, INITIATIVE, ABOUT_ME]
+    questions = [SAFETY, SENSITIVE_TOPIC, INITIATIVE, ABOUT_ME, ABOUT_KITE]
     if candidates:
         questions.append(concept_question(candidates, {c: turn.deps.catalog.get(c).name for c in candidates}))
     if turn.inp.mode == "teach" and turn.inp.concept_id:
@@ -170,6 +173,7 @@ async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | No
         context = turn_context(
             turn.kid_name, turn.grade, recalled.kid_view, " ".join(recalled.guidance) or None,
             recalled.depth_topic, recalled.history, HOMEWORK_LINES.get(plan.homework_mode, ""),
+            build_log=collab_log() if turn.about_kite >= ABOUT_KITE_THRESHOLD else None,
         )
     request = LlmRequest(
         system=system_prompt(turn.band, values=""), context=context,
@@ -291,6 +295,8 @@ async def _run(turn: _Turn) -> None:
         )
         concept_id = inp.concept_id or _concept(decisions)
         about_me = decisions.answers["about_me"]["yes"] if decisions else 0.0
+        if decisions:
+            turn.about_kite = decisions.answers.get("about_kite", {}).get("yes", 0.0)
         recalled = await _timed(
             turn, "recall", recall(deps, inp.kid_id, turn.grade, vec, concept_id, about_me), RECALL_TIMEOUT_S
         )

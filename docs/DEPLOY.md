@@ -208,11 +208,13 @@ az role assignment create --assignee <agent-principal-id> --role 53ca6127-db72-4
 
 Do this on Sunday, after the brain and web images exist.
 
-1. Build the brain image in the registry. `az acr build` builds on Azure, so you don't need Docker.
+1. Build the brain image in the registry. `az acr build` builds on Azure, so you don't need Docker. The build context is the repo root, because the image also carries `COLLAB_LOG.md`, `docs/trust/` and `packages/movie`. `.dockerignore` keeps every `.env` out.
 
 	```bash
-	az acr build --registry <acrName> --image kite-brain:latest brain
+	az acr build --registry <acrName> --image kite-brain:latest -f brain/Dockerfile .
 	```
+
+	The image holds `brain/data/demo-snapshot.db` (as `data/kite.db`) and `brain/data/concept_vectors.npy` when they exist at build time. Checkpoint the snapshot first, so no `-wal` file is left behind: `sqlite3 brain/data/demo-snapshot.db "PRAGMA wal_checkpoint(TRUNCATE)"`. The movie renderer's `npm ci` is skipped until `packages/movie` exists.
 
 2. Build the web image.
 

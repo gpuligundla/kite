@@ -1,9 +1,17 @@
-.env
+# Secrets: never in an image. The app's settings come from Container Apps env vars and secrets.
+**/.env
+**/.env.*
+!**/.env.example
+
 .git
-node_modules
-brain/.venv
+**/node_modules
+**/.venv
+**/__pycache__
+.audit/
+brain/evals/out/
+
+# Local data stays out, except the files the brain image copies on purpose.
 brain/data/*
 !brain/data/snapshot/
-brain/evals/out/
-.audit/
-**/__pycache__
+!brain/data/demo-snapshot.db
+!brain/data/concept_vectors.npy

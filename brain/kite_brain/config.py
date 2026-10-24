@@ -1,8 +1,15 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# brain/kite_brain/config.py -> the repo root, in a checkout and in the container alike (/app/brain/kite_brain).
+REPO_ROOT = Path(__file__).resolve().parents[2]
+COLLAB_LOG_PATH = REPO_ROOT / "COLLAB_LOG.md"
+TRUST_DIR = REPO_ROOT / "docs" / "trust"
+
 ALERT_THRESHOLD = 0.20
+ABOUT_KITE_THRESHOLD = 0.5
 ABOUT_ME_THRESHOLD = 0.20
 LEARNING_FACT_THRESHOLD = 0.80
 ASSIGNED_WORK_THRESHOLD = 0.5

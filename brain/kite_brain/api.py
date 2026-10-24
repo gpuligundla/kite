@@ -1,4 +1,5 @@
 import asyncio
+import json
 import sqlite3
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -6,11 +7,12 @@ from functools import partial
 from pathlib import Path
 
 import numpy as np
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from kite_brain.auth import RateLimiter, require
 from kite_brain.bus import EventBus
 from kite_brain.catalog import VECTORS_PATH, Catalog
+from kite_brain import config
 from kite_brain.config import DECIDE_TIMEOUT_S, Settings, get_settings
 from kite_brain.crypto import FamilyKeys, master_key
 from kite_brain.db import connect, init_db
@@ -20,7 +22,7 @@ from kite_brain.homework import load_assignments, store_assignments
 from kite_brain.llm import FoundryLlm
 from kite_brain.memory.embed import FoundryEmbed
 from kite_brain.memory.ledger import purge_loop
-from kite_brain.policy import fk_grade
+from kite_brain.policy import collab_log, fk_grade
 from kite_brain.routers import games, kids, stream, turns
 from kite_brain.safety import AzureSafety
 from kite_brain.voice import ElevenTts, ScribeStt
@@ -74,6 +76,7 @@ def create_app(conn: sqlite3.Connection | None = None) -> FastAPI:
         for kid in app.state.conn.execute("SELECT id FROM kid").fetchall():
             await store_assignments(app.state.deps, kid["id"], load_assignments(kid["id"], now))
         fk_grade("Warm up the reading-level dictionaries.")
+        collab_log()
         purge = asyncio.create_task(purge_loop(app.state.conn))
         yield
         purge.cancel()
@@ -90,6 +93,18 @@ def create_app(conn: sqlite3.Connection | None = None) -> FastAPI:
     @app.get("/health")
     def health() -> dict[str, bool]:
         return {"ok": True}
+
+    @app.get("/trust", dependencies=[require("parent")])
+    def trust() -> dict:
+        """The eval results the Trust tab draws, from the files the night shift writes."""
+        out = {}
+        for key in ("scorecard", "readability"):
+            path = config.TRUST_DIR / f"{key}.json"
+            try:
+                out[key] = json.loads(path.read_text())
+            except FileNotFoundError:
+                raise HTTPException(404, f"{path.name} not found: run the night shift to produce docs/trust/") from None
+        return out
 
     @app.get("/kids/{kid_id}/dashboard", dependencies=[require("parent")])
     def dashboard(kid_id: str) -> dict:
