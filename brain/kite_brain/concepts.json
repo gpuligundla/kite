@@ -1,0 +1,1909 @@
+[
+  {
+    "id": "light_see",
+    "name": "How we see with light",
+    "kid_name": "How we see things",
+    "subject": "science",
+    "grade": 1,
+    "standard": "1-PS4-2",
+    "prereqs": [],
+    "topic": "light",
+    "key_points": [
+      "We can only see things when there is light.",
+      "Light comes from a source like the sun or a lamp.",
+      "Light bounces off things and goes into our eyes.",
+      "In total darkness we cannot see anything."
+    ]
+  },
+  {
+    "id": "light_shadows",
+    "name": "Shadows and materials",
+    "kid_name": "Shadows",
+    "subject": "science",
+    "grade": 1,
+    "standard": "1-PS4-3",
+    "prereqs": [
+      "light_see"
+    ],
+    "topic": "light",
+    "key_points": [
+      "A shadow forms when something blocks the light.",
+      "See-through things like clear glass let light pass.",
+      "Solid things like a book block light and make dark shadows.",
+      "A shadow gets longer or shorter when the light moves."
+    ]
+  },
+  {
+    "id": "light_rainbow",
+    "name": "Rainbows and prisms",
+    "kid_name": "Rainbows",
+    "subject": "science",
+    "grade": 3,
+    "standard": "4-PS4-2",
+    "prereqs": [
+      "light_see"
+    ],
+    "topic": "light",
+    "key_points": [
+      "Sunlight looks white but has all the colors mixed in it.",
+      "Water drops or a prism can split sunlight into colors.",
+      "The colors always come in the same order: red to violet.",
+      "We see a rainbow when the sun is behind us and it is raining ahead."
+    ]
+  },
+  {
+    "id": "light_reflect",
+    "name": "Reflection of light",
+    "kid_name": "Mirrors and bouncing light",
+    "subject": "science",
+    "grade": 4,
+    "standard": "4-PS4-2",
+    "prereqs": [
+      "light_shadows"
+    ],
+    "topic": "light",
+    "key_points": [
+      "Light bounces off a shiny surface like a mirror.",
+      "Light travels in straight lines until it hits something.",
+      "We see an object because light bounces off it into our eyes.",
+      "Rough surfaces scatter light in many directions."
+    ]
+  },
+  {
+    "id": "light_refract",
+    "name": "Refraction",
+    "kid_name": "Why a straw looks bent in water",
+    "subject": "science",
+    "grade": 5,
+    "standard": "MS-PS4-2",
+    "prereqs": [
+      "light_reflect"
+    ],
+    "topic": "light",
+    "key_points": [
+      "Light changes direction when it goes from air into water or glass.",
+      "Light moves slower in water than in air.",
+      "That bending makes a straw look broken in a glass of water.",
+      "Lenses use bending light to focus it, like in glasses."
+    ]
+  },
+  {
+    "id": "light_waves",
+    "name": "Light as a wave",
+    "kid_name": "Light travels in waves",
+    "subject": "science",
+    "grade": 6,
+    "standard": "MS-PS4-1",
+    "prereqs": [
+      "light_refract"
+    ],
+    "topic": "light",
+    "key_points": [
+      "Light travels as a wave.",
+      "Wavelength is the distance from one wave peak to the next.",
+      "Different colors of light have different wavelengths.",
+      "Red has the longest visible wavelength and violet the shortest."
+    ]
+  },
+  {
+    "id": "light_sky_blue",
+    "name": "Why the sky is blue",
+    "kid_name": "Why the sky is blue",
+    "subject": "science",
+    "grade": 6,
+    "standard": "MS-PS4-2",
+    "prereqs": [
+      "light_waves",
+      "light_rainbow"
+    ],
+    "topic": "light",
+    "key_points": [
+      "Sunlight contains all the colors of the rainbow.",
+      "Air molecules scatter light, and short blue waves scatter much more than long red waves.",
+      "The scattered blue light reaches our eyes from every part of the sky.",
+      "The sky looks blue because we see that scattered blue light."
+    ]
+  },
+  {
+    "id": "light_sunset",
+    "name": "Why sunsets are red",
+    "kid_name": "Why sunsets are orange and red",
+    "subject": "science",
+    "grade": 7,
+    "standard": "MS-PS4-2",
+    "prereqs": [
+      "light_sky_blue"
+    ],
+    "topic": "light",
+    "key_points": [
+      "At sunset sunlight travels through much more air to reach us.",
+      "Along the long path, most blue light is scattered out of the beam.",
+      "The reds and oranges are scattered least, so they are left.",
+      "Dust and haze can make sunsets even redder."
+    ]
+  },
+  {
+    "id": "light_em_spectrum",
+    "name": "The electromagnetic spectrum",
+    "kid_name": "Light we can't see",
+    "subject": "science",
+    "grade": 9,
+    "standard": "HS-PS4-3",
+    "prereqs": [
+      "light_waves"
+    ],
+    "topic": "light",
+    "key_points": [
+      "Visible light is a small part of the electromagnetic spectrum.",
+      "Radio waves, microwaves, X-rays and gamma rays are the same kind of wave with other wavelengths.",
+      "All electromagnetic waves travel at the speed of light in a vacuum.",
+      "Shorter wavelength means higher frequency and more energy per photon."
+    ]
+  },
+  {
+    "id": "light_rayleigh",
+    "name": "Rayleigh scattering",
+    "kid_name": "The math of the blue sky",
+    "subject": "science",
+    "grade": 11,
+    "standard": "HS-PS4-3",
+    "prereqs": [
+      "light_sky_blue",
+      "light_em_spectrum"
+    ],
+    "topic": "light",
+    "key_points": [
+      "Rayleigh scattering happens when particles are much smaller than the wavelength.",
+      "Scattering strength goes as one over wavelength to the fourth power.",
+      "Blue light near 450 nm scatters about 5 times more than red light near 700 nm.",
+      "Violet scatters even more but the sun emits less of it and our eyes are less sensitive to it.",
+      "Larger particles like cloud droplets scatter all colors about equally, so clouds look white."
+    ]
+  },
+  {
+    "id": "dino_what",
+    "name": "What dinosaurs were",
+    "kid_name": "What dinosaurs were",
+    "subject": "science",
+    "grade": 0,
+    "standard": "K-LS1-1",
+    "prereqs": [],
+    "topic": "dinosaurs",
+    "key_points": [
+      "Dinosaurs were animals that lived a very long time ago.",
+      "Some dinosaurs were huge and some were as small as a chicken.",
+      "Dinosaurs are not alive today.",
+      "We learn about them from bones that were left behind."
+    ]
+  },
+  {
+    "id": "dino_diets",
+    "name": "Dinosaur diets",
+    "kid_name": "What dinosaurs ate",
+    "subject": "science",
+    "grade": 2,
+    "standard": "2-LS4-1",
+    "prereqs": [
+      "dino_what"
+    ],
+    "topic": "dinosaurs",
+    "key_points": [
+      "Some dinosaurs ate plants and some ate other animals.",
+      "Sharp pointy teeth are for tearing meat.",
+      "Flat teeth are for grinding leaves.",
+      "A dinosaur's teeth give clues about what it ate."
+    ]
+  },
+  {
+    "id": "dino_fossils",
+    "name": "Fossils",
+    "kid_name": "How fossils form",
+    "subject": "science",
+    "grade": 3,
+    "standard": "3-LS4-1",
+    "prereqs": [
+      "dino_what"
+    ],
+    "topic": "dinosaurs",
+    "key_points": [
+      "A fossil is the preserved remains or print of a living thing from long ago.",
+      "When an animal dies it can get buried quickly in mud or sand.",
+      "Over millions of years minerals slowly turn the bones to stone.",
+      "Scientists dig up fossils to learn what life was like."
+    ]
+  },
+  {
+    "id": "dino_extinction",
+    "name": "Why dinosaurs went extinct",
+    "kid_name": "What happened to the dinosaurs",
+    "subject": "science",
+    "grade": 3,
+    "standard": "3-LS4-4",
+    "prereqs": [
+      "dino_fossils"
+    ],
+    "topic": "dinosaurs",
+    "key_points": [
+      "Extinct means a kind of living thing has died out completely.",
+      "A big space rock hit Earth about 66 million years ago.",
+      "Dust and smoke blocked sunlight and the climate changed fast.",
+      "Plants and then animals that depended on them could not survive."
+    ]
+  },
+  {
+    "id": "dino_timeline",
+    "name": "Deep time and rock layers",
+    "kid_name": "How old are dinosaurs",
+    "subject": "science",
+    "grade": 4,
+    "standard": "4-ESS1-1",
+    "prereqs": [
+      "dino_fossils"
+    ],
+    "topic": "dinosaurs",
+    "key_points": [
+      "Rock forms in layers, with older layers deeper down.",
+      "Fossils in lower layers are older than fossils in upper layers.",
+      "Dinosaurs lived for about 165 million years.",
+      "Humans appeared only a tiny moment ago, millions of years after the dinosaurs."
+    ]
+  },
+  {
+    "id": "dino_birds",
+    "name": "Birds are living dinosaurs",
+    "kid_name": "Dinosaurs and birds",
+    "subject": "science",
+    "grade": 7,
+    "standard": "MS-LS4-2",
+    "prereqs": [
+      "dino_diets",
+      "dino_extinction"
+    ],
+    "topic": "dinosaurs",
+    "key_points": [
+      "Birds descended from small feathered theropod dinosaurs.",
+      "Fossils of feathered dinosaurs show many bird traits first appearing on land.",
+      "Birds share features with dinosaurs, like hollow bones and a wishbone.",
+      "Shared anatomy is evidence of common ancestry."
+    ]
+  },
+  {
+    "id": "dino_impact_evidence",
+    "name": "Evidence for the asteroid impact",
+    "kid_name": "How we know an asteroid did it",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-ESS1-4",
+    "prereqs": [
+      "dino_extinction",
+      "dino_timeline"
+    ],
+    "topic": "dinosaurs",
+    "key_points": [
+      "A thin layer of clay around the world is rich in iridium, which is rare on Earth but common in asteroids.",
+      "The Chicxulub crater in Mexico dates to the same time.",
+      "Shocked quartz in the layer forms only under extreme impact pressure.",
+      "Several lines of independent evidence agree on the cause."
+    ]
+  },
+  {
+    "id": "dino_evolution",
+    "name": "Mass extinctions and adaptive radiation",
+    "kid_name": "How life bounced back",
+    "subject": "science",
+    "grade": 10,
+    "standard": "HS-LS4-5",
+    "prereqs": [
+      "dino_birds",
+      "dino_impact_evidence"
+    ],
+    "topic": "dinosaurs",
+    "key_points": [
+      "A mass extinction removes many species in a geologically short time.",
+      "Surviving groups find empty ecological niches.",
+      "Mammals diversified rapidly after the dinosaurs disappeared.",
+      "Changes in the environment shift which traits help survival."
+    ]
+  },
+  {
+    "id": "ap_shapes",
+    "name": "Shapes, sides and corners",
+    "kid_name": "Shapes and their sides",
+    "subject": "math",
+    "grade": 2,
+    "standard": "2.G.A.1",
+    "prereqs": [],
+    "topic": "area_perimeter",
+    "key_points": [
+      "A shape has sides and corners.",
+      "A square has 4 sides that are the same length.",
+      "A rectangle has 4 sides and 4 square corners.",
+      "We can name shapes by counting their sides."
+    ]
+  },
+  {
+    "id": "ap_perimeter",
+    "name": "Perimeter",
+    "kid_name": "Perimeter: the distance around",
+    "subject": "math",
+    "grade": 3,
+    "standard": "3.MD.D.8",
+    "prereqs": [
+      "ap_shapes"
+    ],
+    "topic": "area_perimeter",
+    "key_points": [
+      "Perimeter is the distance all the way around the outside of a shape.",
+      "To find it, add up the lengths of all the sides.",
+      "Perimeter is measured in length units like centimeters or feet.",
+      "Walking around the edge of a park is walking its perimeter."
+    ]
+  },
+  {
+    "id": "ap_area_squares",
+    "name": "Area by counting squares",
+    "kid_name": "Area: covering with squares",
+    "subject": "math",
+    "grade": 3,
+    "standard": "3.MD.C.6",
+    "prereqs": [
+      "ap_shapes"
+    ],
+    "topic": "area_perimeter",
+    "key_points": [
+      "Area is how much flat space is inside a shape.",
+      "We can measure area by counting how many unit squares cover the shape.",
+      "Area is measured in square units like square centimeters.",
+      "Covering a floor with tiles is finding its area."
+    ]
+  },
+  {
+    "id": "ap_area_rect",
+    "name": "Area of a rectangle",
+    "kid_name": "Area of a rectangle",
+    "subject": "math",
+    "grade": 3,
+    "standard": "3.MD.C.7",
+    "prereqs": [
+      "ap_area_squares",
+      "mult_meaning"
+    ],
+    "topic": "area_perimeter",
+    "key_points": [
+      "A rectangle's area is its length times its width.",
+      "Rows of squares times squares in each row gives the total squares.",
+      "A 3 by 4 rectangle has an area of 12 square units.",
+      "Multiplying is a fast way to count all the squares."
+    ]
+  },
+  {
+    "id": "ap_compare",
+    "name": "Area versus perimeter",
+    "kid_name": "Area vs. perimeter",
+    "subject": "math",
+    "grade": 3,
+    "standard": "3.MD.D.8",
+    "prereqs": [
+      "ap_perimeter",
+      "ap_area_rect"
+    ],
+    "topic": "area_perimeter",
+    "key_points": [
+      "Perimeter is the distance around a shape; area is the space inside it.",
+      "Perimeter uses length units; area uses square units.",
+      "Two shapes can have the same perimeter but different areas.",
+      "Two shapes can have the same area but different perimeters."
+    ]
+  },
+  {
+    "id": "ap_formulas",
+    "name": "Area and perimeter formulas",
+    "kid_name": "Formulas for area and perimeter",
+    "subject": "math",
+    "grade": 4,
+    "standard": "4.MD.A.3",
+    "prereqs": [
+      "ap_compare"
+    ],
+    "topic": "area_perimeter",
+    "key_points": [
+      "Perimeter of a rectangle is 2 times length plus 2 times width.",
+      "Area of a rectangle is length times width.",
+      "If we know the area and one side, we can find the missing side by dividing.",
+      "Real problems, like fencing a garden or laying carpet, tell us which one to use."
+    ]
+  },
+  {
+    "id": "ap_triangles",
+    "name": "Area of triangles and polygons",
+    "kid_name": "Area of triangles",
+    "subject": "math",
+    "grade": 6,
+    "standard": "6.G.A.1",
+    "prereqs": [
+      "ap_formulas"
+    ],
+    "topic": "area_perimeter",
+    "key_points": [
+      "A triangle is half of a rectangle with the same base and height.",
+      "Area of a triangle is one half times base times height.",
+      "Split a complicated polygon into rectangles and triangles and add the areas.",
+      "Height is measured straight up, perpendicular to the base."
+    ]
+  },
+  {
+    "id": "ap_circles",
+    "name": "Circumference and area of circles",
+    "kid_name": "Circles: around and inside",
+    "subject": "math",
+    "grade": 7,
+    "standard": "7.G.B.4",
+    "prereqs": [
+      "ap_triangles"
+    ],
+    "topic": "area_perimeter",
+    "key_points": [
+      "Circumference is the distance around a circle.",
+      "Pi is the ratio of circumference to diameter, about 3.14.",
+      "Circumference is pi times diameter, or 2 times pi times radius.",
+      "Area of a circle is pi times radius squared."
+    ]
+  },
+  {
+    "id": "ap_surface_volume",
+    "name": "Surface area and volume",
+    "kid_name": "Wrapping paper and boxes",
+    "subject": "math",
+    "grade": 7,
+    "standard": "7.G.B.6",
+    "prereqs": [
+      "ap_triangles"
+    ],
+    "topic": "area_perimeter",
+    "key_points": [
+      "Surface area is the total area of all the faces of a solid.",
+      "Volume is the space inside, measured in cubic units.",
+      "Volume of a prism is the area of the base times the height.",
+      "A net unfolds a solid to show every face for adding up surface area."
+    ]
+  },
+  {
+    "id": "water_where",
+    "name": "Where water is found",
+    "kid_name": "Where water lives",
+    "subject": "science",
+    "grade": 2,
+    "standard": "2-ESS2-3",
+    "prereqs": [],
+    "topic": "water_cycle",
+    "key_points": [
+      "Water is in oceans, lakes, rivers, ponds and underground.",
+      "Water can be a liquid, like rain, or a solid, like ice.",
+      "Most of Earth's water is salty ocean water.",
+      "Clouds and rain are water too."
+    ]
+  },
+  {
+    "id": "water_rain_clouds",
+    "name": "Clouds and rain",
+    "kid_name": "Clouds and rain",
+    "subject": "science",
+    "grade": 3,
+    "standard": "3-ESS2-1",
+    "prereqs": [
+      "water_where"
+    ],
+    "topic": "water_cycle",
+    "key_points": [
+      "Clouds are made of tiny drops of water floating in the air.",
+      "When the drops get big and heavy they fall as rain, or snow if it is cold.",
+      "Puddles dry up because the water goes into the air.",
+      "The sun's warmth helps water go up into the air."
+    ]
+  },
+  {
+    "id": "water_cycle_basic",
+    "name": "The water cycle",
+    "kid_name": "The water cycle",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-ESS2-1",
+    "prereqs": [
+      "water_rain_clouds"
+    ],
+    "topic": "water_cycle",
+    "key_points": [
+      "Evaporation is liquid water warming up and turning into invisible water vapor.",
+      "Condensation is water vapor cooling and turning into tiny drops that form clouds.",
+      "Precipitation is water falling as rain, snow or hail.",
+      "Collection is water gathering in oceans, lakes and underground before the cycle repeats."
+    ]
+  },
+  {
+    "id": "water_amounts",
+    "name": "Fresh water and Earth's water",
+    "kid_name": "How much water is there",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-ESS2-2",
+    "prereqs": [
+      "water_where"
+    ],
+    "topic": "water_cycle",
+    "key_points": [
+      "About 97 percent of Earth's water is salt water in the oceans.",
+      "Most fresh water is frozen in glaciers and ice caps.",
+      "Only a tiny fraction of all water is easy for people to use.",
+      "Using water carefully helps protect what we have."
+    ]
+  },
+  {
+    "id": "water_energy",
+    "name": "Energy and the water cycle",
+    "kid_name": "What powers the water cycle",
+    "subject": "science",
+    "grade": 7,
+    "standard": "MS-ESS2-4",
+    "prereqs": [
+      "water_cycle_basic"
+    ],
+    "topic": "water_cycle",
+    "key_points": [
+      "Energy from the sun drives evaporation.",
+      "Gravity pulls precipitation down and moves water downhill in rivers.",
+      "Condensation releases heat, which powers storms.",
+      "Water moves through the cycle but the total amount stays about the same."
+    ]
+  },
+  {
+    "id": "water_watershed",
+    "name": "Watersheds and groundwater",
+    "kid_name": "Where rain goes",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-ESS2-4",
+    "prereqs": [
+      "water_energy"
+    ],
+    "topic": "water_cycle",
+    "key_points": [
+      "A watershed is all the land that drains into one river or lake.",
+      "Some rain runs off over the ground and some soaks in as groundwater.",
+      "An aquifer is underground rock that holds groundwater.",
+      "What we put on land can end up in the water downstream."
+    ]
+  },
+  {
+    "id": "water_properties",
+    "name": "Water's special properties",
+    "kid_name": "Why water is weird",
+    "subject": "science",
+    "grade": 10,
+    "standard": "HS-ESS2-5",
+    "prereqs": [
+      "water_energy",
+      "matter_atoms"
+    ],
+    "topic": "water_cycle",
+    "key_points": [
+      "Water molecules are polar, so they attract each other strongly.",
+      "Water has a high specific heat, so oceans store and move huge amounts of heat.",
+      "Ice is less dense than liquid water, so it floats.",
+      "Water dissolves many substances, which is why it shapes rock and carries nutrients."
+    ]
+  },
+  {
+    "id": "gravity_things_fall",
+    "name": "Gravity as a pull",
+    "kid_name": "Why things fall down",
+    "subject": "science",
+    "grade": 0,
+    "standard": "K-PS2-1",
+    "prereqs": [],
+    "topic": "gravity",
+    "key_points": [
+      "When you drop something it falls down.",
+      "Gravity is a pull that brings things toward the ground.",
+      "Gravity pulls on everything.",
+      "Gravity keeps us on the ground."
+    ]
+  },
+  {
+    "id": "gravity_weight",
+    "name": "Weight and gravity",
+    "kid_name": "Weight",
+    "subject": "science",
+    "grade": 2,
+    "standard": "K-PS2-1",
+    "prereqs": [
+      "gravity_things_fall"
+    ],
+    "topic": "gravity",
+    "key_points": [
+      "Weight is how hard gravity pulls on something.",
+      "Heavier things feel the pull more when we lift them.",
+      "A scale measures how hard we are pulled down.",
+      "On the Moon the pull is weaker, so you would feel lighter."
+    ]
+  },
+  {
+    "id": "gravity_forces",
+    "name": "Balanced and unbalanced forces",
+    "kid_name": "Pushes, pulls and gravity",
+    "subject": "science",
+    "grade": 3,
+    "standard": "3-PS2-1",
+    "prereqs": [
+      "gravity_weight"
+    ],
+    "topic": "gravity",
+    "key_points": [
+      "A force is a push or a pull.",
+      "When forces are balanced the object does not change how it moves.",
+      "Unbalanced forces make an object speed up, slow down or turn.",
+      "A book on a table is held up by the table pushing back against gravity."
+    ]
+  },
+  {
+    "id": "gravity_earth_pull",
+    "name": "Earth's gravity pulls toward its center",
+    "kid_name": "Why 'down' is the same for everyone",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-PS2-1",
+    "prereqs": [
+      "gravity_forces"
+    ],
+    "topic": "gravity",
+    "key_points": [
+      "Gravity pulls objects toward the center of Earth.",
+      "That is why down is toward the ground everywhere on the planet.",
+      "People on the other side of Earth are pulled toward Earth too, not off into space.",
+      "Without other forces, things fall at the same rate in air-free space."
+    ]
+  },
+  {
+    "id": "gravity_orbits",
+    "name": "Gravity and the solar system",
+    "kid_name": "Why planets go around the sun",
+    "subject": "science",
+    "grade": 6,
+    "standard": "MS-ESS1-2",
+    "prereqs": [
+      "gravity_earth_pull",
+      "solar_system"
+    ],
+    "topic": "gravity",
+    "key_points": [
+      "Gravity holds the planets in orbit around the sun.",
+      "The Moon orbits Earth because of Earth's gravity.",
+      "Moving sideways fast while being pulled in makes a curved path.",
+      "The sun has the most mass, so it has the strongest pull in the solar system."
+    ]
+  },
+  {
+    "id": "gravity_mass_distance",
+    "name": "Gravity depends on mass and distance",
+    "kid_name": "How strong is gravity",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-PS2-4",
+    "prereqs": [
+      "gravity_orbits"
+    ],
+    "topic": "gravity",
+    "key_points": [
+      "Gravity is always attractive between objects with mass.",
+      "More mass means a stronger gravitational pull.",
+      "The farther apart two objects are, the weaker the pull.",
+      "Gravity is noticeable only when at least one object is huge, like a planet."
+    ]
+  },
+  {
+    "id": "gravity_newton",
+    "name": "Newton's law of gravitation",
+    "kid_name": "Newton's law of gravity",
+    "subject": "science",
+    "grade": 10,
+    "standard": "HS-PS2-4",
+    "prereqs": [
+      "gravity_mass_distance",
+      "forces_second_law"
+    ],
+    "topic": "gravity",
+    "key_points": [
+      "The force is F equals G times m1 times m2 divided by r squared.",
+      "Doubling the distance cuts the force to one quarter.",
+      "Near Earth's surface the acceleration is about 9.8 meters per second squared.",
+      "Objects of different mass fall with the same acceleration when air resistance is ignored."
+    ]
+  },
+  {
+    "id": "gravity_relativity",
+    "name": "Gravity as curved spacetime",
+    "kid_name": "Gravity bends space",
+    "subject": "science",
+    "grade": 12,
+    "standard": "HS-ESS1-4",
+    "prereqs": [
+      "gravity_newton"
+    ],
+    "topic": "gravity",
+    "key_points": [
+      "Einstein's general relativity describes gravity as curved spacetime.",
+      "Mass and energy tell spacetime how to curve, and curved spacetime tells objects how to move.",
+      "Light bends as it passes massive objects, which we observe as gravitational lensing.",
+      "Newton's law is an excellent approximation when gravity is weak and speeds are low."
+    ]
+  },
+  {
+    "id": "frac_parts",
+    "name": "Equal parts of a whole",
+    "kid_name": "Halves and fourths",
+    "subject": "math",
+    "grade": 1,
+    "standard": "1.G.A.3",
+    "prereqs": [],
+    "topic": "fractions",
+    "key_points": [
+      "We can split a whole into 2 or 4 equal parts.",
+      "Half means 2 equal parts.",
+      "A fourth means 4 equal parts.",
+      "Equal parts must be the same size."
+    ]
+  },
+  {
+    "id": "frac_unit",
+    "name": "Unit fractions",
+    "kid_name": "What a fraction means",
+    "subject": "math",
+    "grade": 3,
+    "standard": "3.NF.A.1",
+    "prereqs": [
+      "frac_parts"
+    ],
+    "topic": "fractions",
+    "key_points": [
+      "A fraction names equal parts of a whole.",
+      "The bottom number says how many equal parts the whole has.",
+      "The top number says how many of those parts we have.",
+      "A fraction is also a point on a number line."
+    ]
+  },
+  {
+    "id": "frac_equivalent",
+    "name": "Equivalent fractions",
+    "kid_name": "Fractions that are the same",
+    "subject": "math",
+    "grade": 4,
+    "standard": "4.NF.A.1",
+    "prereqs": [
+      "frac_unit",
+      "mult_facts"
+    ],
+    "topic": "fractions",
+    "key_points": [
+      "Different fractions can name the same amount, like 1/2 and 2/4.",
+      "Multiply top and bottom by the same number to make an equivalent fraction.",
+      "Equivalent fractions sit at the same point on a number line.",
+      "We can compare fractions by making common denominators."
+    ]
+  },
+  {
+    "id": "frac_add",
+    "name": "Adding fractions with like denominators",
+    "kid_name": "Adding fractions",
+    "subject": "math",
+    "grade": 4,
+    "standard": "4.NF.B.3",
+    "prereqs": [
+      "frac_equivalent"
+    ],
+    "topic": "fractions",
+    "key_points": [
+      "To add fractions with the same denominator, add the numerators.",
+      "The denominator stays the same.",
+      "A fraction bigger than 1 can be written as a mixed number.",
+      "Unlike denominators need to be made the same first."
+    ]
+  },
+  {
+    "id": "frac_multiply",
+    "name": "Multiplying fractions",
+    "kid_name": "Multiplying fractions",
+    "subject": "math",
+    "grade": 5,
+    "standard": "5.NF.B.4",
+    "prereqs": [
+      "frac_add"
+    ],
+    "topic": "fractions",
+    "key_points": [
+      "Multiply the numerators and multiply the denominators.",
+      "Multiplying by a fraction less than 1 makes a smaller number.",
+      "Finding 1/2 of 1/3 is the same as multiplying 1/2 by 1/3.",
+      "An area model of a rectangle shows why the rule works."
+    ]
+  },
+  {
+    "id": "frac_divide",
+    "name": "Dividing fractions",
+    "kid_name": "Dividing fractions",
+    "subject": "math",
+    "grade": 6,
+    "standard": "6.NS.A.1",
+    "prereqs": [
+      "frac_multiply",
+      "mult_division"
+    ],
+    "topic": "fractions",
+    "key_points": [
+      "Dividing by a fraction is the same as multiplying by its reciprocal.",
+      "The reciprocal flips the numerator and the denominator.",
+      "How many 1/4s fit into 3 is 3 divided by 1/4, which is 12.",
+      "A quotient can be larger than the number we started with."
+    ]
+  },
+  {
+    "id": "count_100",
+    "name": "Counting to 100",
+    "kid_name": "Counting to 100",
+    "subject": "math",
+    "grade": 0,
+    "standard": "K.CC.A.1",
+    "prereqs": [],
+    "topic": "number_sense",
+    "key_points": [
+      "We count in order: 1, 2, 3, and so on.",
+      "We can count by tens to get to 100.",
+      "Each number is one more than the number before it.",
+      "Counting tells us how many things there are."
+    ]
+  },
+  {
+    "id": "place_value_tens",
+    "name": "Tens and ones",
+    "kid_name": "Tens and ones",
+    "subject": "math",
+    "grade": 1,
+    "standard": "1.NBT.B.2",
+    "prereqs": [
+      "count_100"
+    ],
+    "topic": "number_sense",
+    "key_points": [
+      "A two-digit number has tens and ones.",
+      "In 34 the 3 means 3 tens and the 4 means 4 ones.",
+      "Ten ones make one ten.",
+      "The place of a digit tells us its value."
+    ]
+  },
+  {
+    "id": "place_value_hundreds",
+    "name": "Hundreds, tens and ones",
+    "kid_name": "Hundreds, tens and ones",
+    "subject": "math",
+    "grade": 2,
+    "standard": "2.NBT.A.1",
+    "prereqs": [
+      "place_value_tens"
+    ],
+    "topic": "number_sense",
+    "key_points": [
+      "A three-digit number has hundreds, tens and ones.",
+      "Ten tens make one hundred.",
+      "In 352 the 3 means 300.",
+      "We can write a number as a sum of its place values."
+    ]
+  },
+  {
+    "id": "add_sub_20",
+    "name": "Adding and subtracting within 20",
+    "kid_name": "Adding and taking away",
+    "subject": "math",
+    "grade": 1,
+    "standard": "1.OA.C.6",
+    "prereqs": [
+      "count_100"
+    ],
+    "topic": "number_sense",
+    "key_points": [
+      "Adding puts groups together to make a total.",
+      "Subtracting takes some away or finds the difference.",
+      "We can count on from the bigger number.",
+      "Addition and subtraction are opposites."
+    ]
+  },
+  {
+    "id": "mult_meaning",
+    "name": "What multiplication means",
+    "kid_name": "What multiplying means",
+    "subject": "math",
+    "grade": 3,
+    "standard": "3.OA.A.1",
+    "prereqs": [
+      "add_sub_20",
+      "place_value_hundreds"
+    ],
+    "topic": "multiplication",
+    "key_points": [
+      "Multiplying is adding equal groups.",
+      "3 times 4 means 3 groups of 4.",
+      "An array of rows and columns shows multiplication.",
+      "Multiplying in a different order gives the same answer."
+    ]
+  },
+  {
+    "id": "mult_division",
+    "name": "Division as sharing",
+    "kid_name": "Dividing and sharing",
+    "subject": "math",
+    "grade": 3,
+    "standard": "3.OA.A.2",
+    "prereqs": [
+      "mult_meaning"
+    ],
+    "topic": "multiplication",
+    "key_points": [
+      "Dividing splits a total into equal groups.",
+      "12 shared among 3 friends gives 4 each.",
+      "Division undoes multiplication.",
+      "A remainder is what is left over when groups cannot be equal."
+    ]
+  },
+  {
+    "id": "mult_facts",
+    "name": "Multiplication facts",
+    "kid_name": "Times tables",
+    "subject": "math",
+    "grade": 3,
+    "standard": "3.OA.C.7",
+    "prereqs": [
+      "mult_meaning"
+    ],
+    "topic": "multiplication",
+    "key_points": [
+      "Patterns help us remember times tables.",
+      "Skip counting by a number gives its multiples.",
+      "Any number times 0 is 0 and times 1 is itself.",
+      "If we know 6 times 7 we also know 7 times 6."
+    ]
+  },
+  {
+    "id": "decimals",
+    "name": "Decimals",
+    "kid_name": "Decimals",
+    "subject": "math",
+    "grade": 4,
+    "standard": "4.NF.C.6",
+    "prereqs": [
+      "frac_unit",
+      "place_value_hundreds"
+    ],
+    "topic": "number_sense",
+    "key_points": [
+      "A decimal point separates whole numbers from parts of a whole.",
+      "The first place after the point is tenths and the next is hundredths.",
+      "0.5 is the same as 1/2.",
+      "Money uses decimals for dollars and cents."
+    ]
+  },
+  {
+    "id": "negative_numbers",
+    "name": "Negative numbers",
+    "kid_name": "Numbers below zero",
+    "subject": "math",
+    "grade": 6,
+    "standard": "6.NS.C.5",
+    "prereqs": [
+      "decimals"
+    ],
+    "topic": "number_sense",
+    "key_points": [
+      "Negative numbers are less than zero.",
+      "They describe things like below-zero temperatures or debt.",
+      "On a number line, negatives are left of zero.",
+      "A number and its opposite are the same distance from zero."
+    ]
+  },
+  {
+    "id": "exponents",
+    "name": "Exponents",
+    "kid_name": "Powers and exponents",
+    "subject": "math",
+    "grade": 8,
+    "standard": "8.EE.A.1",
+    "prereqs": [
+      "mult_facts"
+    ],
+    "topic": "number_sense",
+    "key_points": [
+      "An exponent says how many times to multiply a number by itself.",
+      "2 to the 5th means 2 times 2 times 2 times 2 times 2, which is 32.",
+      "Anything to the power of 0 is 1.",
+      "When multiplying powers with the same base, add the exponents."
+    ]
+  },
+  {
+    "id": "ratios",
+    "name": "Ratios and rates",
+    "kid_name": "Ratios",
+    "subject": "math",
+    "grade": 6,
+    "standard": "6.RP.A.1",
+    "prereqs": [
+      "frac_equivalent",
+      "mult_division"
+    ],
+    "topic": "ratios",
+    "key_points": [
+      "A ratio compares two quantities.",
+      "2 cups of flour to 1 cup of sugar is a 2 to 1 ratio.",
+      "Equivalent ratios scale both amounts by the same factor.",
+      "A unit rate tells how much for one of something, like miles per hour."
+    ]
+  },
+  {
+    "id": "proportional",
+    "name": "Proportional relationships",
+    "kid_name": "Things that scale together",
+    "subject": "math",
+    "grade": 7,
+    "standard": "7.RP.A.2",
+    "prereqs": [
+      "ratios"
+    ],
+    "topic": "ratios",
+    "key_points": [
+      "In a proportional relationship the ratio between two quantities is constant.",
+      "The graph is a straight line through the origin.",
+      "The constant of proportionality is the unit rate.",
+      "We can solve problems by setting up equal ratios."
+    ]
+  },
+  {
+    "id": "alg_equations",
+    "name": "Solving linear equations",
+    "kid_name": "Solving for x",
+    "subject": "math",
+    "grade": 8,
+    "standard": "8.EE.C.7",
+    "prereqs": [
+      "proportional",
+      "negative_numbers"
+    ],
+    "topic": "algebra",
+    "key_points": [
+      "A variable is a letter standing for an unknown number.",
+      "An equation says two things are equal, like a balanced scale.",
+      "Do the same operation to both sides to keep it balanced.",
+      "Undo operations in reverse order to isolate the variable."
+    ]
+  },
+  {
+    "id": "alg_functions",
+    "name": "Linear functions",
+    "kid_name": "Lines and slope",
+    "subject": "math",
+    "grade": 8,
+    "standard": "8.F.A.1",
+    "prereqs": [
+      "alg_equations"
+    ],
+    "topic": "algebra",
+    "key_points": [
+      "A function gives exactly one output for each input.",
+      "A linear function has the form y equals mx plus b.",
+      "Slope m is the rate of change and b is the y-intercept.",
+      "Its graph is a straight line."
+    ]
+  },
+  {
+    "id": "alg_quadratics",
+    "name": "Quadratic equations",
+    "kid_name": "Quadratics and parabolas",
+    "subject": "math",
+    "grade": 9,
+    "standard": "HSA-REI.B.4",
+    "prereqs": [
+      "alg_functions",
+      "exponents"
+    ],
+    "topic": "algebra",
+    "key_points": [
+      "A quadratic has a squared term and graphs as a parabola.",
+      "We can solve by factoring, completing the square or the quadratic formula.",
+      "The solutions are where the parabola crosses the x-axis.",
+      "The discriminant tells how many real solutions there are."
+    ]
+  },
+  {
+    "id": "alg_exponential",
+    "name": "Exponential growth",
+    "kid_name": "Exponential growth",
+    "subject": "math",
+    "grade": 10,
+    "standard": "HSF-LE.A.1",
+    "prereqs": [
+      "alg_functions",
+      "exponents"
+    ],
+    "topic": "algebra",
+    "key_points": [
+      "Exponential growth multiplies by the same factor each step.",
+      "It has the form y equals a times b to the x.",
+      "It starts slowly and then grows extremely fast, like compound interest.",
+      "Linear growth adds the same amount each step; exponential multiplies."
+    ]
+  },
+  {
+    "id": "geo_pythagorean",
+    "name": "Pythagorean theorem",
+    "kid_name": "Right triangles and a squared plus b squared",
+    "subject": "math",
+    "grade": 8,
+    "standard": "8.G.B.7",
+    "prereqs": [
+      "ap_triangles",
+      "exponents"
+    ],
+    "topic": "geometry",
+    "key_points": [
+      "In a right triangle the hypotenuse is the side opposite the right angle.",
+      "a squared plus b squared equals c squared.",
+      "We can find a missing side if we know the other two.",
+      "It also finds the distance between two points on a grid."
+    ]
+  },
+  {
+    "id": "geo_trig",
+    "name": "Trigonometric ratios",
+    "kid_name": "Sine, cosine and tangent",
+    "subject": "math",
+    "grade": 10,
+    "standard": "HSG-SRT.C.6",
+    "prereqs": [
+      "geo_pythagorean",
+      "ratios"
+    ],
+    "topic": "geometry",
+    "key_points": [
+      "Sine, cosine and tangent are ratios of sides in a right triangle.",
+      "Sine is opposite over hypotenuse, cosine is adjacent over hypotenuse, tangent is opposite over adjacent.",
+      "Similar right triangles with the same angle have the same ratios.",
+      "We use them to find heights or distances we cannot measure directly."
+    ]
+  },
+  {
+    "id": "stat_mean",
+    "name": "Mean, median and mode",
+    "kid_name": "Averages",
+    "subject": "math",
+    "grade": 6,
+    "standard": "6.SP.B.5",
+    "prereqs": [
+      "decimals"
+    ],
+    "topic": "statistics",
+    "key_points": [
+      "The mean is the sum of the values divided by how many there are.",
+      "The median is the middle value when the data are in order.",
+      "The mode is the value that appears most often.",
+      "An outlier can pull the mean much more than the median."
+    ]
+  },
+  {
+    "id": "stat_correlation",
+    "name": "Scatter plots and association",
+    "kid_name": "Patterns in data",
+    "subject": "math",
+    "grade": 8,
+    "standard": "8.SP.A.1",
+    "prereqs": [
+      "stat_mean",
+      "alg_functions"
+    ],
+    "topic": "statistics",
+    "key_points": [
+      "A scatter plot shows two measurements for each item.",
+      "Points trending up show a positive association; trending down is negative.",
+      "A line of best fit summarizes the trend.",
+      "Correlation does not mean one thing causes the other."
+    ]
+  },
+  {
+    "id": "stat_inference",
+    "name": "Sampling and standard deviation",
+    "kid_name": "Spread and sampling",
+    "subject": "math",
+    "grade": 11,
+    "standard": "HSS-ID.A.4",
+    "prereqs": [
+      "stat_correlation"
+    ],
+    "topic": "statistics",
+    "key_points": [
+      "Standard deviation measures how spread out data are around the mean.",
+      "In a normal distribution about 68 percent of data fall within 1 standard deviation.",
+      "A random sample lets us estimate a population.",
+      "Bigger samples give less variable estimates."
+    ]
+  },
+  {
+    "id": "prob_basic",
+    "name": "Probability",
+    "kid_name": "Chance and probability",
+    "subject": "math",
+    "grade": 7,
+    "standard": "7.SP.C.5",
+    "prereqs": [
+      "frac_unit",
+      "decimals"
+    ],
+    "topic": "probability",
+    "key_points": [
+      "Probability is a number from 0 to 1 that tells how likely an event is.",
+      "0 means impossible and 1 means certain.",
+      "Probability is favorable outcomes divided by all equally likely outcomes.",
+      "Experiments with many trials get closer to the real probability."
+    ]
+  },
+  {
+    "id": "prob_compound",
+    "name": "Compound events",
+    "kid_name": "Chances of more than one thing",
+    "subject": "math",
+    "grade": 7,
+    "standard": "7.SP.C.8",
+    "prereqs": [
+      "prob_basic",
+      "frac_multiply"
+    ],
+    "topic": "probability",
+    "key_points": [
+      "A compound event has two or more steps, like flipping two coins.",
+      "A tree diagram or table lists all the outcomes.",
+      "For independent events, multiply the probabilities.",
+      "Probability of at least one often equals 1 minus the chance of none."
+    ]
+  },
+  {
+    "id": "plants_parts",
+    "name": "Parts of a plant",
+    "kid_name": "Parts of a plant",
+    "subject": "science",
+    "grade": 1,
+    "standard": "1-LS1-1",
+    "prereqs": [],
+    "topic": "plants",
+    "key_points": [
+      "Plants have roots, stems, leaves and flowers.",
+      "Roots hold the plant in the ground and take in water.",
+      "Leaves catch sunlight.",
+      "Each part helps the plant live and grow."
+    ]
+  },
+  {
+    "id": "plants_needs",
+    "name": "What plants need",
+    "kid_name": "What plants need to grow",
+    "subject": "science",
+    "grade": 2,
+    "standard": "2-LS2-1",
+    "prereqs": [
+      "plants_parts"
+    ],
+    "topic": "plants",
+    "key_points": [
+      "Plants need sunlight, water, air and space.",
+      "Without light a plant turns pale and weak.",
+      "Plants do not need to eat food like animals do.",
+      "We can test what a plant needs by changing one thing at a time."
+    ]
+  },
+  {
+    "id": "plants_photosynthesis",
+    "name": "Photosynthesis",
+    "kid_name": "How plants make food",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-LS1-1",
+    "prereqs": [
+      "plants_needs",
+      "light_see"
+    ],
+    "topic": "plants",
+    "key_points": [
+      "Plants make their own food using light from the sun.",
+      "Leaves take in carbon dioxide from the air and water from the roots.",
+      "The plant makes sugar for energy and releases oxygen.",
+      "Plant food ends up in the food we eat."
+    ]
+  },
+  {
+    "id": "animals_habitats",
+    "name": "Animals and habitats",
+    "kid_name": "Where animals live",
+    "subject": "science",
+    "grade": 0,
+    "standard": "K-ESS3-1",
+    "prereqs": [],
+    "topic": "animals",
+    "key_points": [
+      "A habitat is the place where an animal lives.",
+      "Animals need food, water, air and shelter.",
+      "Different animals live in different habitats like forests and oceans.",
+      "Animals have body parts that help them live in their habitat."
+    ]
+  },
+  {
+    "id": "animals_food_chain",
+    "name": "Food chains and webs",
+    "kid_name": "Who eats whom",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-LS2-1",
+    "prereqs": [
+      "animals_habitats",
+      "plants_photosynthesis"
+    ],
+    "topic": "ecosystems",
+    "key_points": [
+      "A food chain shows who eats whom.",
+      "Plants are producers, and animals that eat them are consumers.",
+      "Decomposers like fungi break down dead things and return nutrients to the soil.",
+      "Arrows show the direction energy moves."
+    ]
+  },
+  {
+    "id": "eco_energy",
+    "name": "Energy flow in ecosystems",
+    "kid_name": "Energy in ecosystems",
+    "subject": "science",
+    "grade": 7,
+    "standard": "MS-LS2-3",
+    "prereqs": [
+      "animals_food_chain",
+      "water_energy"
+    ],
+    "topic": "ecosystems",
+    "key_points": [
+      "Energy enters most ecosystems as sunlight captured by producers.",
+      "Only about 10 percent of energy passes to the next level.",
+      "That is why there are far fewer top predators than plants.",
+      "Matter cycles through an ecosystem, but energy flows through and is lost as heat."
+    ]
+  },
+  {
+    "id": "eco_climate",
+    "name": "Climate change",
+    "kid_name": "Climate change",
+    "subject": "science",
+    "grade": 9,
+    "standard": "HS-ESS3-5",
+    "prereqs": [
+      "eco_energy",
+      "light_em_spectrum"
+    ],
+    "topic": "ecosystems",
+    "key_points": [
+      "Greenhouse gases like carbon dioxide trap heat in the atmosphere.",
+      "Burning fossil fuels has raised carbon dioxide levels sharply.",
+      "Global average temperatures have risen in step with it.",
+      "Effects include sea level rise, stronger storms and shifting habitats."
+    ]
+  },
+  {
+    "id": "cells",
+    "name": "Cells",
+    "kid_name": "Cells, the building blocks of life",
+    "subject": "science",
+    "grade": 7,
+    "standard": "MS-LS1-1",
+    "prereqs": [
+      "plants_parts"
+    ],
+    "topic": "cells_genetics",
+    "key_points": [
+      "All living things are made of cells.",
+      "Some organisms are a single cell and others have trillions.",
+      "Organelles do jobs inside cells, like the nucleus holding instructions.",
+      "Plant cells have a cell wall and chloroplasts that animal cells lack."
+    ]
+  },
+  {
+    "id": "genetics_traits",
+    "name": "Inherited traits",
+    "kid_name": "Why you look like your family",
+    "subject": "science",
+    "grade": 3,
+    "standard": "3-LS3-1",
+    "prereqs": [
+      "animals_habitats"
+    ],
+    "topic": "cells_genetics",
+    "key_points": [
+      "Plants and animals look like their parents because traits are inherited.",
+      "Not all traits are inherited; some come from the environment.",
+      "Offspring are similar but not identical to their parents.",
+      "A scar or a haircut is not passed on to children."
+    ]
+  },
+  {
+    "id": "genetics_dna",
+    "name": "DNA and genes",
+    "kid_name": "DNA",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-LS3-1",
+    "prereqs": [
+      "cells",
+      "genetics_traits"
+    ],
+    "topic": "cells_genetics",
+    "key_points": [
+      "DNA in the nucleus holds the instructions for building an organism.",
+      "A gene is a section of DNA that codes for a trait.",
+      "You get one set of chromosomes from each parent.",
+      "Changes in DNA called mutations can alter or not alter a trait."
+    ]
+  },
+  {
+    "id": "natural_selection",
+    "name": "Natural selection",
+    "kid_name": "How living things change over time",
+    "subject": "science",
+    "grade": 7,
+    "standard": "MS-LS4-4",
+    "prereqs": [
+      "genetics_traits"
+    ],
+    "topic": "evolution",
+    "key_points": [
+      "Individuals in a species vary in their traits.",
+      "Traits that help survive and reproduce get passed on more often.",
+      "Over many generations the helpful traits become common.",
+      "It is the environment, not a wish or need, that selects."
+    ]
+  },
+  {
+    "id": "evolution_evidence",
+    "name": "Evidence for evolution",
+    "kid_name": "Evidence for evolution",
+    "subject": "science",
+    "grade": 10,
+    "standard": "HS-LS4-1",
+    "prereqs": [
+      "natural_selection",
+      "genetics_dna",
+      "dino_fossils"
+    ],
+    "topic": "evolution",
+    "key_points": [
+      "Fossils show gradual changes in species through time.",
+      "Similar anatomy across species points to common ancestry.",
+      "DNA comparisons show how closely species are related.",
+      "Embryos of different animals share early features."
+    ]
+  },
+  {
+    "id": "matter_states",
+    "name": "States of matter",
+    "kid_name": "Solid, liquid, gas",
+    "subject": "science",
+    "grade": 2,
+    "standard": "2-PS1-1",
+    "prereqs": [
+      "water_where"
+    ],
+    "topic": "matter",
+    "key_points": [
+      "Matter is anything that takes up space.",
+      "Solids keep their shape, liquids flow, and gases spread out.",
+      "Heating can melt a solid and cooling can freeze a liquid.",
+      "Water can be ice, liquid or steam."
+    ]
+  },
+  {
+    "id": "matter_particles",
+    "name": "Particles of matter",
+    "kid_name": "Everything is made of tiny bits",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-PS1-1",
+    "prereqs": [
+      "matter_states"
+    ],
+    "topic": "matter",
+    "key_points": [
+      "All matter is made of particles too small to see.",
+      "In solids the particles are packed tight and only jiggle.",
+      "In liquids they slide past each other; in gases they zoom around.",
+      "Heat makes particles move faster."
+    ]
+  },
+  {
+    "id": "matter_atoms",
+    "name": "Atoms and molecules",
+    "kid_name": "Atoms and molecules",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-PS1-1",
+    "prereqs": [
+      "matter_particles"
+    ],
+    "topic": "matter",
+    "key_points": [
+      "Atoms are the smallest units of an element.",
+      "A molecule is two or more atoms bonded together.",
+      "There are about 118 elements, each with its own kind of atom.",
+      "A water molecule is two hydrogen atoms and one oxygen atom."
+    ]
+  },
+  {
+    "id": "matter_reactions",
+    "name": "Chemical reactions",
+    "kid_name": "Chemical changes",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-PS1-2",
+    "prereqs": [
+      "matter_atoms"
+    ],
+    "topic": "matter",
+    "key_points": [
+      "In a chemical reaction atoms rearrange to make new substances.",
+      "Signs of a reaction include gas bubbles, color change and heat.",
+      "Mass is conserved because no atoms are created or destroyed.",
+      "Reactants are what we start with and products are what we get."
+    ]
+  },
+  {
+    "id": "matter_periodic",
+    "name": "The periodic table",
+    "kid_name": "The periodic table",
+    "subject": "science",
+    "grade": 9,
+    "standard": "HS-PS1-1",
+    "prereqs": [
+      "matter_atoms"
+    ],
+    "topic": "matter",
+    "key_points": [
+      "Elements are arranged by atomic number, the number of protons.",
+      "Elements in the same column behave in similar ways.",
+      "Outer electrons decide how an atom bonds.",
+      "Metals are on the left and nonmetals on the right."
+    ]
+  },
+  {
+    "id": "energy_forms",
+    "name": "Forms of energy",
+    "kid_name": "Energy",
+    "subject": "science",
+    "grade": 4,
+    "standard": "4-PS3-2",
+    "prereqs": [
+      "light_see"
+    ],
+    "topic": "energy",
+    "key_points": [
+      "Energy makes things move, heat up and light up.",
+      "Energy comes in forms like motion, heat, light, sound and electricity.",
+      "Energy can change from one form to another.",
+      "A moving object has more energy when it moves faster."
+    ]
+  },
+  {
+    "id": "energy_conservation",
+    "name": "Conservation of energy",
+    "kid_name": "Energy is never used up",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-PS3-5",
+    "prereqs": [
+      "energy_forms"
+    ],
+    "topic": "energy",
+    "key_points": [
+      "Energy cannot be created or destroyed, only transferred or transformed.",
+      "A roller coaster trades height energy for motion energy.",
+      "Some energy always leaks away as heat from friction.",
+      "Kinetic energy depends on mass and the square of speed."
+    ]
+  },
+  {
+    "id": "energy_hs",
+    "name": "Energy transfer and efficiency",
+    "kid_name": "Energy efficiency",
+    "subject": "science",
+    "grade": 10,
+    "standard": "HS-PS3-1",
+    "prereqs": [
+      "energy_conservation",
+      "exponents"
+    ],
+    "topic": "energy",
+    "key_points": [
+      "The total energy of a closed system stays constant.",
+      "Efficiency is useful energy out divided by total energy in.",
+      "No real machine is 100 percent efficient.",
+      "Power is the rate of transferring energy, in watts."
+    ]
+  },
+  {
+    "id": "electric_circuits",
+    "name": "Electric circuits",
+    "kid_name": "Circuits",
+    "subject": "science",
+    "grade": 4,
+    "standard": "4-PS3-4",
+    "prereqs": [
+      "energy_forms"
+    ],
+    "topic": "electricity",
+    "key_points": [
+      "A circuit is a complete loop that electricity can flow around.",
+      "A battery pushes the electricity and a bulb uses the energy.",
+      "A switch opens or closes the loop.",
+      "Metals like copper carry electricity and plastic does not."
+    ]
+  },
+  {
+    "id": "electric_ohm",
+    "name": "Voltage, current and resistance",
+    "kid_name": "Ohm's law",
+    "subject": "science",
+    "grade": 10,
+    "standard": "HS-PS2-5",
+    "prereqs": [
+      "electric_circuits",
+      "alg_equations"
+    ],
+    "topic": "electricity",
+    "key_points": [
+      "Voltage is the push, current is the flow, and resistance is what slows the flow.",
+      "Ohm's law says V equals I times R.",
+      "In a series circuit the same current goes through every part.",
+      "Parallel branches each get the full voltage."
+    ]
+  },
+  {
+    "id": "forces_motion",
+    "name": "Force and motion",
+    "kid_name": "Why things start and stop moving",
+    "subject": "science",
+    "grade": 3,
+    "standard": "3-PS2-1",
+    "prereqs": [
+      "gravity_things_fall"
+    ],
+    "topic": "forces",
+    "key_points": [
+      "A push or pull can make something start, stop or turn.",
+      "Heavier things need a bigger push to move.",
+      "Friction slows things down when surfaces rub together.",
+      "Something at rest stays at rest unless a force acts on it."
+    ]
+  },
+  {
+    "id": "forces_second_law",
+    "name": "Newton's second law",
+    "kid_name": "Force, mass and acceleration",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-PS2-2",
+    "prereqs": [
+      "forces_motion",
+      "alg_equations"
+    ],
+    "topic": "forces",
+    "key_points": [
+      "A net force makes an object accelerate.",
+      "F equals m times a.",
+      "More mass means less acceleration for the same force.",
+      "If the net force is zero, the speed and direction do not change."
+    ]
+  },
+  {
+    "id": "forces_momentum",
+    "name": "Momentum",
+    "kid_name": "Momentum and collisions",
+    "subject": "science",
+    "grade": 11,
+    "standard": "HS-PS2-2",
+    "prereqs": [
+      "forces_second_law",
+      "energy_conservation"
+    ],
+    "topic": "forces",
+    "key_points": [
+      "Momentum is mass times velocity.",
+      "In a collision the total momentum of a closed system is conserved.",
+      "A force acting over time changes momentum, which is impulse.",
+      "Crumple zones in cars lengthen the stopping time to reduce force."
+    ]
+  },
+  {
+    "id": "sound_vibration",
+    "name": "Sound and vibration",
+    "kid_name": "How sound is made",
+    "subject": "science",
+    "grade": 1,
+    "standard": "1-PS4-1",
+    "prereqs": [],
+    "topic": "sound",
+    "key_points": [
+      "Sound is made when things vibrate.",
+      "Vibrations travel through the air to our ears.",
+      "A bigger vibration makes a louder sound.",
+      "You can feel a vibration with your fingers on a speaker."
+    ]
+  },
+  {
+    "id": "weather_patterns",
+    "name": "Weather patterns",
+    "kid_name": "Weather",
+    "subject": "science",
+    "grade": 3,
+    "standard": "3-ESS2-1",
+    "prereqs": [
+      "water_rain_clouds"
+    ],
+    "topic": "weather",
+    "key_points": [
+      "Weather is what the air outside is like today.",
+      "We describe weather by temperature, wind, clouds and rain.",
+      "Weather changes from day to day but follows patterns in each season.",
+      "Climate is the pattern of weather over many years."
+    ]
+  },
+  {
+    "id": "weather_fronts",
+    "name": "Air masses and fronts",
+    "kid_name": "Why storms happen",
+    "subject": "science",
+    "grade": 7,
+    "standard": "MS-ESS2-5",
+    "prereqs": [
+      "weather_patterns",
+      "water_energy"
+    ],
+    "topic": "weather",
+    "key_points": [
+      "Air masses are large bodies of air with similar temperature and moisture.",
+      "A front is where two different air masses meet.",
+      "Warm air rises, cools and forms clouds and storms.",
+      "Weather maps show highs, lows and fronts to forecast."
+    ]
+  },
+  {
+    "id": "earth_seasons",
+    "name": "Day, night and seasons",
+    "kid_name": "Day, night and seasons",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-ESS1-2",
+    "prereqs": [
+      "light_shadows"
+    ],
+    "topic": "earth_space",
+    "key_points": [
+      "Earth spins once every 24 hours, giving day and night.",
+      "Earth is tilted as it goes around the sun.",
+      "When our half tilts toward the sun, we get summer.",
+      "The seasons are caused by tilt, not by distance from the sun."
+    ]
+  },
+  {
+    "id": "space_stars",
+    "name": "Stars and distance",
+    "kid_name": "Why stars look tiny",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-ESS1-1",
+    "prereqs": [
+      "light_see"
+    ],
+    "topic": "earth_space",
+    "key_points": [
+      "Stars are huge, hot balls that make their own light.",
+      "The sun is a star that is much closer than the others.",
+      "Far-away stars look small and dim.",
+      "Stars look like they move at night because Earth spins."
+    ]
+  },
+  {
+    "id": "solar_system",
+    "name": "The solar system",
+    "kid_name": "The solar system",
+    "subject": "science",
+    "grade": 6,
+    "standard": "MS-ESS1-3",
+    "prereqs": [
+      "space_stars"
+    ],
+    "topic": "earth_space",
+    "key_points": [
+      "The solar system has the sun, eight planets, moons and smaller bodies.",
+      "The four inner planets are rocky and the four outer planets are giants.",
+      "Planets orbit the sun in nearly circular paths.",
+      "Distances are so large that we measure them in astronomical units."
+    ]
+  },
+  {
+    "id": "moon_phases",
+    "name": "Phases of the Moon",
+    "kid_name": "Phases of the Moon",
+    "subject": "science",
+    "grade": 6,
+    "standard": "MS-ESS1-1",
+    "prereqs": [
+      "earth_seasons",
+      "solar_system"
+    ],
+    "topic": "earth_space",
+    "key_points": [
+      "The Moon does not make its own light; it reflects sunlight.",
+      "We always see half of the Moon lit, but from Earth we see different amounts of it.",
+      "The phases come from the Moon's position as it orbits Earth.",
+      "The cycle takes about 29.5 days."
+    ]
+  },
+  {
+    "id": "earth_tectonics",
+    "name": "Plate tectonics",
+    "kid_name": "Moving continents",
+    "subject": "science",
+    "grade": 8,
+    "standard": "MS-ESS2-2",
+    "prereqs": [
+      "dino_timeline"
+    ],
+    "topic": "earth_systems",
+    "key_points": [
+      "Earth's outer layer is broken into plates that slowly move.",
+      "Plates move a few centimeters a year, about as fast as fingernails grow.",
+      "Earthquakes and volcanoes happen mostly at plate edges.",
+      "Continents were once joined as a supercontinent called Pangaea."
+    ]
+  },
+  {
+    "id": "earth_layers",
+    "name": "Earth's layers",
+    "kid_name": "What is inside Earth",
+    "subject": "science",
+    "grade": 5,
+    "standard": "5-ESS2-1",
+    "prereqs": [
+      "gravity_earth_pull"
+    ],
+    "topic": "earth_systems",
+    "key_points": [
+      "Earth has a crust, a mantle, an outer core and an inner core.",
+      "The crust is a thin rocky skin we live on.",
+      "The inner core is solid metal and extremely hot.",
+      "We learn about the inside from how earthquake waves travel."
+    ]
+  }
+]

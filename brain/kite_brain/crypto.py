@@ -24,6 +24,16 @@ def open_sealed(key: bytes, blob: bytes, aad: str) -> bytes:
     return AESGCM(key).decrypt(blob[:NONCE_BYTES], blob[NONCE_BYTES:], aad.encode())
 
 
+def master_key(hex_value: str) -> bytes:
+    key = bytes.fromhex(hex_value) if hex_value else b""
+    if len(key) != 32:
+        raise SystemExit(
+            "KITE_MASTER_KEY must be 64 hex characters: "
+            'python -c "import secrets; print(secrets.token_hex(32))"'
+        )
+    return key
+
+
 class FamilyKeys:
     """Per-family data keys, wrapped under the master key and stored in `family`."""
 
