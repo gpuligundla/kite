@@ -8,7 +8,7 @@ from pydantic import TypeAdapter, ValidationError
 from kite_brain.crypto import FamilyKeys, aad, new_key, open_sealed, seal
 from kite_brain.contract import KiteEvent, LearningPayload
 from kite_brain.db import connect, init_db
-from scripts.checks import audiences, decide, ledger, route, voice
+from scripts.checks import audiences, decide, ledger, memory, route, voice
 
 
 def check_encryption() -> None:
@@ -69,6 +69,6 @@ if __name__ == "__main__":
     check_encryption()
     check_shred()
     check_contract()
-    for area in (audiences, decide, ledger, route, voice):
+    for area in (audiences, decide, ledger, memory, route, voice):
         area.run()
     print("ok")

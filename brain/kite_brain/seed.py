@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import hashlib
 import hmac
 import sqlite3
@@ -78,7 +79,10 @@ def main() -> None:
     for kind, token in result.tokens.items():
         print(f"{kind}: {token}")
     if args.assets:
-        print("--assets: concept vectors and the simulated class are built by Tasks 7 and 12")
+        from scripts.build_catalog_vectors import build_catalog_vectors
+
+        vectors = asyncio.run(build_catalog_vectors())
+        print(f"concept vectors: {vectors.shape}")
 
 
 if __name__ == "__main__":

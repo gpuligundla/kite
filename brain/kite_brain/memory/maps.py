@@ -14,6 +14,7 @@ SIGNAL_WEIGHT = {"own_question": 1, "follow_up_why": 2, "return_visit": 3, "chos
 HALF_LIFE_DAYS = 180
 TOP_CURIOSITY = 3
 STRENGTH_CONCEPTS = 2
+STRENGTH_SCORE = 0.6
 MASTERED = ("got_it", "can_teach")
 
 
@@ -94,10 +95,17 @@ def curiosity_map(evts: list[LedgerEvent], as_of: datetime) -> CuriosityMap:
 
 
 def strength_topics(skills: SkillsMap, curiosity: CuriosityMap, catalog: Catalog, grade: Grade) -> list[str]:
-    """Top-curiosity topics where at least 2 evidenced concepts reached got_it or better.
-    `grade` is the as-of grade the inputs were already filtered to."""
-    mastered: dict[str, int] = defaultdict(int)
+    """Spec 6: a top-3 curiosity topic scoring at least 0.6 whose evidenced concepts at or
+    below `grade` number at least 2 and are all got_it or better."""
+    levels: dict[str, list[str]] = defaultdict(list)
     for c in skills.concepts:
-        if c.level in MASTERED:
-            mastered[catalog.get(c.concept_id).topic] += 1
-    return [t.topic for t in curiosity.topics[:TOP_CURIOSITY] if mastered[t.topic] >= STRENGTH_CONCEPTS]
+        concept = catalog.get(c.concept_id)
+        if concept.grade <= grade:
+            levels[concept.topic].append(c.level)
+    return [
+        t.topic
+        for t in curiosity.topics[:TOP_CURIOSITY]
+        if t.score >= STRENGTH_SCORE
+        and len(levels[t.topic]) >= STRENGTH_CONCEPTS
+        and all(level in MASTERED for level in levels[t.topic])
+    ]
