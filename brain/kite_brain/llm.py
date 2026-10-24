@@ -1,4 +1,4 @@
-"""Claude on Foundry: streamed answers (Sonnet) and structured parses (Haiku)."""
+"""Claude on Foundry: streamed answers (Sonnet) and structured parses (Haiku, or Sonnet for the studio)."""
 
 import base64
 from collections.abc import AsyncIterator
@@ -14,7 +14,9 @@ T = TypeVar("T", bound=BaseModel)
 
 ANSWER_MAX_TOKENS = 2048
 PARSE_MAX_TOKENS = 1024
+DEEP_PARSE_MAX_TOKENS = 8192  # a storyboard plus the thinking that comes before it
 EFFORT_LOW = {"effort": "low"}
+EFFORT_MEDIUM = {"effort": "medium"}
 
 TOOLS = [
     {
@@ -91,15 +93,16 @@ class FoundryLlm:
                 yield ToolCall(name=block.name, topic=block.input["topic"],
                                learning_goal=block.input["learning_goal"])
 
-    async def parse(self, req: LlmRequest, model_cls: type[T]) -> T:
-        """Haiku with structured output. Raises LlmRefused on a refusal."""
+    async def parse(self, req: LlmRequest, model_cls: type[T], *, deep: bool = False) -> T:
+        """Haiku with structured output, or with `deep` Sonnet at medium effort (storyboards and
+        game specs). Raises LlmRefused on a refusal."""
         response = await self.client.messages.parse(
-            model=self.fast_model,
-            max_tokens=PARSE_MAX_TOKENS,
+            model=self.answer_model if deep else self.fast_model,
+            max_tokens=DEEP_PARSE_MAX_TOKENS if deep else PARSE_MAX_TOKENS,
             system=_system(req),
             messages=_messages(req),
             thinking={"type": "adaptive"},  # Foundry: structured output on 5.5 models needs adaptive thinking
-            output_config=EFFORT_LOW,
+            output_config=EFFORT_MEDIUM if deep else EFFORT_LOW,
             output_format=model_cls,
         )
         if response.stop_reason == "refusal":

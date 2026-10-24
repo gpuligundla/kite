@@ -34,6 +34,9 @@ from kite_brain.policy import (
     HOMEWORK_LINES, about_me_context, band_for, collab_log, fk_grade, system_prompt, turn_context,
 )
 from kite_brain.questions import ABOUT_KITE, ABOUT_ME, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions
+from kite_brain.studio.game import start_game
+from kite_brain.studio.movie import start_movie
+from kite_brain.studio.store import spawn
 from kite_brain.turn.route import FALLBACK, RoutePlan, route, teach_start_line
 from kite_brain.turn.speak import END, SentenceSplitter, audio_b64, drain, speak_sentences
 from kite_brain.turn.teach import TeachGrade, earlier_attempts, grade_teach, merge_attempts, teach_feedback_context
@@ -154,9 +157,14 @@ def _voice(band, situation: Situation) -> VoiceSpec | None:
         return None
 
 
-def act_on_tool_call(call: ToolCall, turn_id: str) -> None:
-    """Task 13 (the studio) replaces this with the real movie and game makers."""
+def act_on_tool_call(call: ToolCall, turn_id: str, turn: _Turn | None = None) -> None:
+    """Start the movie or game Claude asked for. It runs in the background and reaches the kid
+    as creation events. A time-travel turn still gets its creation but records no evidence."""
     log.info("turn %s: tool call %s", turn_id, call.name)
+    if turn is None:
+        return
+    start = start_movie if call.name == "make_movie" else start_game
+    spawn(start(turn.deps, turn.inp.kid_id, call.topic, call.learning_goal, turn.grade, read_only=turn.read_only))
 
 
 async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | None, publish) -> str:
@@ -187,7 +195,7 @@ async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | No
             if speaker.done():  # a flagged sentence ended the answer
                 break
             if isinstance(item, ToolCall):
-                act_on_tool_call(item, turn.turn_id)
+                act_on_tool_call(item, turn.turn_id, turn)
             else:
                 for sentence in splitter.feed(item):
                     queue.put_nowait(sentence)

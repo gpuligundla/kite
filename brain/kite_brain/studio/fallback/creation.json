@@ -1,0 +1,525 @@
+{
+  "id": "fallback",
+  "kind": "movie",
+  "status": "fallback",
+  "storyboard": {
+    "title": "Why the sky is blue",
+    "scenes": [
+      {
+        "background": "sky",
+        "palette": {
+          "sky": "#7ec8f5",
+          "ground": "#8fd18b",
+          "time_of_day": "day"
+        },
+        "actors": [
+          {
+            "sprite": "sun",
+            "name": null,
+            "entrance": "pop",
+            "motion": "float"
+          },
+          {
+            "sprite": "cloud",
+            "name": null,
+            "entrance": "left",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Narrator",
+            "voice": "narrator",
+            "text": "Look up at the sky on a sunny day. Why is it blue?"
+          },
+          {
+            "speaker": "Professor",
+            "voice": "professor",
+            "text": "Sunlight looks white, but it hides every color of the rainbow inside."
+          }
+        ],
+        "camera": "still"
+      },
+      {
+        "background": "sky",
+        "palette": {
+          "sky": "#5aa9e6",
+          "ground": "#8fd18b",
+          "time_of_day": "day"
+        },
+        "actors": [
+          {
+            "sprite": "rainbow",
+            "name": null,
+            "entrance": "pop",
+            "motion": "float"
+          },
+          {
+            "sprite": "sun",
+            "name": null,
+            "entrance": "right",
+            "motion": "bounce"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Explorer",
+            "voice": "explorer",
+            "text": "When sunlight zooms into our air, it bumps into tiny bits of gas!"
+          },
+          {
+            "speaker": "Professor",
+            "voice": "professor",
+            "text": "Blue light is the bounciest color, so it scatters all across the sky."
+          }
+        ],
+        "camera": "pan"
+      },
+      {
+        "background": "sky",
+        "palette": {
+          "sky": "#4a90d9",
+          "ground": "#8fd18b",
+          "time_of_day": "day"
+        },
+        "actors": [
+          {
+            "sprite": "kid",
+            "name": null,
+            "entrance": "left",
+            "motion": "bounce"
+          },
+          {
+            "sprite": "robot",
+            "name": null,
+            "entrance": "right",
+            "motion": "bounce"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Narrator",
+            "voice": "narrator",
+            "text": "So blue light is bouncing toward your eyes from every part of the sky."
+          },
+          {
+            "speaker": "Robot Buddy",
+            "voice": "robot_buddy",
+            "text": "That is why the sky is blue. Pretty cool, right?"
+          }
+        ],
+        "camera": "zoom"
+      }
+    ],
+    "check": {
+      "question": "Why does the sky look blue?",
+      "choices": [
+        "Blue light bounces around the most in our air",
+        "The ocean paints it blue",
+        "The sun is a blue star"
+      ],
+      "correct_index": 0,
+      "concept_id": "light_sky_blue"
+    }
+  },
+  "game": null,
+  "audio": {
+    "0-0": "0-0.mp3",
+    "0-1": "0-1.mp3",
+    "1-0": "1-0.mp3",
+    "1-1": "1-1.mp3",
+    "2-0": "2-0.mp3",
+    "2-1": "2-1.mp3"
+  },
+  "timings": {
+    "0-0": [
+      {
+        "text": "Look",
+        "start": 0.3,
+        "end": 0.6799999999999999
+      },
+      {
+        "text": "up",
+        "start": 0.6799999999999999,
+        "end": 1.06
+      },
+      {
+        "text": "at",
+        "start": 1.06,
+        "end": 1.44
+      },
+      {
+        "text": "the",
+        "start": 1.44,
+        "end": 1.8199999999999998
+      },
+      {
+        "text": "sky",
+        "start": 1.8199999999999998,
+        "end": 2.1999999999999997
+      },
+      {
+        "text": "on",
+        "start": 2.1999999999999997,
+        "end": 2.5799999999999996
+      },
+      {
+        "text": "a",
+        "start": 2.5799999999999996,
+        "end": 2.9599999999999995
+      },
+      {
+        "text": "sunny",
+        "start": 2.9599999999999995,
+        "end": 3.3399999999999994
+      },
+      {
+        "text": "day.",
+        "start": 3.3399999999999994,
+        "end": 3.7199999999999993
+      },
+      {
+        "text": "Why",
+        "start": 3.7199999999999993,
+        "end": 4.1
+      },
+      {
+        "text": "is",
+        "start": 4.1,
+        "end": 4.4799999999999995
+      },
+      {
+        "text": "it",
+        "start": 4.4799999999999995,
+        "end": 4.859999999999999
+      },
+      {
+        "text": "blue?",
+        "start": 4.859999999999999,
+        "end": 5.239999999999999
+      }
+    ],
+    "0-1": [
+      {
+        "text": "Sunlight",
+        "start": 0.3,
+        "end": 0.6799999999999999
+      },
+      {
+        "text": "looks",
+        "start": 0.6799999999999999,
+        "end": 1.06
+      },
+      {
+        "text": "white,",
+        "start": 1.06,
+        "end": 1.44
+      },
+      {
+        "text": "but",
+        "start": 1.44,
+        "end": 1.8199999999999998
+      },
+      {
+        "text": "it",
+        "start": 1.8199999999999998,
+        "end": 2.1999999999999997
+      },
+      {
+        "text": "hides",
+        "start": 2.1999999999999997,
+        "end": 2.5799999999999996
+      },
+      {
+        "text": "every",
+        "start": 2.5799999999999996,
+        "end": 2.9599999999999995
+      },
+      {
+        "text": "color",
+        "start": 2.9599999999999995,
+        "end": 3.3399999999999994
+      },
+      {
+        "text": "of",
+        "start": 3.3399999999999994,
+        "end": 3.7199999999999993
+      },
+      {
+        "text": "the",
+        "start": 3.7199999999999993,
+        "end": 4.1
+      },
+      {
+        "text": "rainbow",
+        "start": 4.1,
+        "end": 4.4799999999999995
+      },
+      {
+        "text": "inside.",
+        "start": 4.4799999999999995,
+        "end": 4.859999999999999
+      }
+    ],
+    "1-0": [
+      {
+        "text": "When",
+        "start": 0.3,
+        "end": 0.6799999999999999
+      },
+      {
+        "text": "sunlight",
+        "start": 0.6799999999999999,
+        "end": 1.06
+      },
+      {
+        "text": "zooms",
+        "start": 1.06,
+        "end": 1.44
+      },
+      {
+        "text": "into",
+        "start": 1.44,
+        "end": 1.8199999999999998
+      },
+      {
+        "text": "our",
+        "start": 1.8199999999999998,
+        "end": 2.1999999999999997
+      },
+      {
+        "text": "air,",
+        "start": 2.1999999999999997,
+        "end": 2.5799999999999996
+      },
+      {
+        "text": "it",
+        "start": 2.5799999999999996,
+        "end": 2.9599999999999995
+      },
+      {
+        "text": "bumps",
+        "start": 2.9599999999999995,
+        "end": 3.3399999999999994
+      },
+      {
+        "text": "into",
+        "start": 3.3399999999999994,
+        "end": 3.7199999999999993
+      },
+      {
+        "text": "tiny",
+        "start": 3.7199999999999993,
+        "end": 4.1
+      },
+      {
+        "text": "bits",
+        "start": 4.1,
+        "end": 4.4799999999999995
+      },
+      {
+        "text": "of",
+        "start": 4.4799999999999995,
+        "end": 4.859999999999999
+      },
+      {
+        "text": "gas!",
+        "start": 4.859999999999999,
+        "end": 5.239999999999999
+      }
+    ],
+    "1-1": [
+      {
+        "text": "Blue",
+        "start": 0.3,
+        "end": 0.6799999999999999
+      },
+      {
+        "text": "light",
+        "start": 0.6799999999999999,
+        "end": 1.06
+      },
+      {
+        "text": "is",
+        "start": 1.06,
+        "end": 1.44
+      },
+      {
+        "text": "the",
+        "start": 1.44,
+        "end": 1.8199999999999998
+      },
+      {
+        "text": "bounciest",
+        "start": 1.8199999999999998,
+        "end": 2.1999999999999997
+      },
+      {
+        "text": "color,",
+        "start": 2.1999999999999997,
+        "end": 2.5799999999999996
+      },
+      {
+        "text": "so",
+        "start": 2.5799999999999996,
+        "end": 2.9599999999999995
+      },
+      {
+        "text": "it",
+        "start": 2.9599999999999995,
+        "end": 3.3399999999999994
+      },
+      {
+        "text": "scatters",
+        "start": 3.3399999999999994,
+        "end": 3.7199999999999993
+      },
+      {
+        "text": "all",
+        "start": 3.7199999999999993,
+        "end": 4.1
+      },
+      {
+        "text": "across",
+        "start": 4.1,
+        "end": 4.4799999999999995
+      },
+      {
+        "text": "the",
+        "start": 4.4799999999999995,
+        "end": 4.859999999999999
+      },
+      {
+        "text": "sky.",
+        "start": 4.859999999999999,
+        "end": 5.239999999999999
+      }
+    ],
+    "2-0": [
+      {
+        "text": "So",
+        "start": 0.3,
+        "end": 0.6799999999999999
+      },
+      {
+        "text": "blue",
+        "start": 0.6799999999999999,
+        "end": 1.06
+      },
+      {
+        "text": "light",
+        "start": 1.06,
+        "end": 1.44
+      },
+      {
+        "text": "is",
+        "start": 1.44,
+        "end": 1.8199999999999998
+      },
+      {
+        "text": "bouncing",
+        "start": 1.8199999999999998,
+        "end": 2.1999999999999997
+      },
+      {
+        "text": "toward",
+        "start": 2.1999999999999997,
+        "end": 2.5799999999999996
+      },
+      {
+        "text": "your",
+        "start": 2.5799999999999996,
+        "end": 2.9599999999999995
+      },
+      {
+        "text": "eyes",
+        "start": 2.9599999999999995,
+        "end": 3.3399999999999994
+      },
+      {
+        "text": "from",
+        "start": 3.3399999999999994,
+        "end": 3.7199999999999993
+      },
+      {
+        "text": "every",
+        "start": 3.7199999999999993,
+        "end": 4.1
+      },
+      {
+        "text": "part",
+        "start": 4.1,
+        "end": 4.4799999999999995
+      },
+      {
+        "text": "of",
+        "start": 4.4799999999999995,
+        "end": 4.859999999999999
+      },
+      {
+        "text": "the",
+        "start": 4.859999999999999,
+        "end": 5.239999999999999
+      },
+      {
+        "text": "sky.",
+        "start": 5.239999999999999,
+        "end": 5.619999999999999
+      }
+    ],
+    "2-1": [
+      {
+        "text": "That",
+        "start": 0.3,
+        "end": 0.6799999999999999
+      },
+      {
+        "text": "is",
+        "start": 0.6799999999999999,
+        "end": 1.06
+      },
+      {
+        "text": "why",
+        "start": 1.06,
+        "end": 1.44
+      },
+      {
+        "text": "the",
+        "start": 1.44,
+        "end": 1.8199999999999998
+      },
+      {
+        "text": "sky",
+        "start": 1.8199999999999998,
+        "end": 2.1999999999999997
+      },
+      {
+        "text": "is",
+        "start": 2.1999999999999997,
+        "end": 2.5799999999999996
+      },
+      {
+        "text": "blue.",
+        "start": 2.5799999999999996,
+        "end": 2.9599999999999995
+      },
+      {
+        "text": "Pretty",
+        "start": 2.9599999999999995,
+        "end": 3.3399999999999994
+      },
+      {
+        "text": "cool,",
+        "start": 3.3399999999999994,
+        "end": 3.7199999999999993
+      },
+      {
+        "text": "right?",
+        "start": 3.7199999999999993,
+        "end": 4.1
+      }
+    ]
+  },
+  "video_url": null,
+  "html_url": null
+}
