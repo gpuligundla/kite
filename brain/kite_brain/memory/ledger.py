@@ -140,7 +140,7 @@ def forget_turn(conn: sqlite3.Connection, kid_id: str, turn_id: str) -> int:
     marks = ",".join("?" * len(event_ids))
     conn.execute(f"DELETE FROM moment_vector WHERE event_id IN ({marks})", event_ids)
     conn.execute(f"DELETE FROM learning_event WHERE id IN ({marks})", event_ids)
-    conn.execute("DELETE FROM session_turn WHERE kid_id = ? AND id = ?", (kid_id, turn_id))
+    conn.execute("DELETE FROM session_turn WHERE kid_id = ? AND id IN (?, ?)", (kid_id, turn_id, f"{turn_id}-kite"))
     conn.execute("DELETE FROM big_question_card WHERE kid_id = ? AND source_turn_id = ?", (kid_id, turn_id))
     conn.commit()
     return len(event_ids)

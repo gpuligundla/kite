@@ -19,6 +19,7 @@ from kite_brain.deps import Deps
 from kite_brain.llm import FoundryLlm
 from kite_brain.memory.embed import FoundryEmbed
 from kite_brain.memory.ledger import purge_loop
+from kite_brain.policy import fk_grade
 from kite_brain.routers import kids, stream, turns
 from kite_brain.safety import AzureSafety
 from kite_brain.voice import ElevenTts, ScribeStt
@@ -68,6 +69,7 @@ def create_app(conn: sqlite3.Connection | None = None) -> FastAPI:
             app.state.conn = connect(settings.KITE_DB_PATH)
             init_db(app.state.conn)
         app.state.deps = build_deps(app.state.conn, app.state.bus, settings)
+        fk_grade("Warm up the reading-level dictionaries.")
         purge = asyncio.create_task(purge_loop(app.state.conn))
         yield
         purge.cancel()

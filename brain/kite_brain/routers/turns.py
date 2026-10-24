@@ -29,7 +29,12 @@ class UploadCap:
 
 
 async def _bytes(upload: UploadFile | None) -> bytes | None:
-    return await upload.read() if upload else None
+    if upload is None:
+        return None
+    data = await upload.read()
+    if len(data) > UPLOAD_CAP_BYTES:  # chunked uploads carry no Content-Length for UploadCap to see
+        raise HTTPException(413, "upload over 900 KB")
+    return data
 
 
 @router.post("/turns")

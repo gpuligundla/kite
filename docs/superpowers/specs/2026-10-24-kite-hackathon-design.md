@@ -144,11 +144,11 @@ Every device has a **kind**: `os` and `handheld` belong to the kid, plus `parent
 | Subscriber | Receives |
 |---|---|
 | Kid devices | `kid` events only |
-| Parent | `kid` and `parent` events |
+| Parent | `parent` events only |
 | Counselor | `counselor` events |
 
 - **The kid's events** are only `heard` (its own words), `answer.sentence`, `answer.done` and `creation.*`.
-- **A turn's grown-up events** (`heard`, `decided`, `recalled`, `routed`, `alert`, `card`) are published *after* routing, so their audience is known.
+- **A turn's grown-up events** (`heard`, `decided`, `recalled`, `routed`, `alert`, `card`) are published *after* routing, so their audience is known. The pipeline also publishes a grown-up copy of each `answer.sentence` and `answer.done`, and the studio does the same for `creation.*`. That's why the parent never subscribes to `kid` events: the kid's `heard` goes out before routing, so the parent can't receive it without seeing an abuse turn too.
   - If a turn is routed to the counselor, all of these events go only to `counselor`. The parent never sees that turn.
 - **The stage x-ray** uses a parent token.
 - **One dependency, `require(kinds)`, checks every endpoint:**
