@@ -92,6 +92,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/kids/{kid_id}/kid-view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kid View
+         * @description What Kite remembers, as the kid may see it. Never levels or scores.
+         */
+        get: operations["kid_view_kids__kid_id__kid_view_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kids/{kid_id}/games/custom": {
         parameters: {
             query?: never;
@@ -299,6 +319,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/counselor/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Alerts
+         * @description Counselor-routed alerts for the kid this device is bound to, newest first, with their
+         *     excerpts. Every excerpt returned is recorded as a receipt.
+         */
+        get: operations["get_alerts_counselor_alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -455,6 +496,20 @@ export interface components {
             /** Phone */
             phone: string;
         };
+        /** CounselorAlertView */
+        CounselorAlertView: {
+            /** Alert Id */
+            alert_id: string;
+            /** Kinds */
+            kinds: ("bullying" | "stranger" | "abuse" | "self_harm" | "sos")[];
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Excerpt */
+            excerpt: string;
+        };
         /** Creation */
         Creation: {
             /** Id */
@@ -574,6 +629,17 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** KidView */
+        KidView: {
+            /** Interests */
+            interests: string[];
+            /** Characters */
+            characters: string[];
+            /** Moments */
+            moments: string[];
+            /** Deep Topics */
+            deep_topics: string[];
         };
         /** NarrationLine */
         NarrationLine: {
@@ -1326,17 +1392,6 @@ export interface components {
             style: "story" | "game" | "picture" | "explain" | "hands_on";
         };
         LearningPayload: components["schemas"]["ConceptEvidence"] | components["schemas"]["CuriositySignal"] | (components["schemas"]["InterestFact"] | components["schemas"]["CharacterFact"] | components["schemas"]["StyleFact"]) | components["schemas"]["Moment"];
-        /** KidView */
-        KidView: {
-            /** Interests */
-            interests: string[];
-            /** Characters */
-            characters: string[];
-            /** Moments */
-            moments: string[];
-            /** Deep Topics */
-            deep_topics: string[];
-        };
     };
     responses: never;
     parameters: never;
@@ -1506,6 +1561,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Teachable"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    kid_view_kids__kid_id__kid_view_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KidView"];
                 };
             };
             /** @description Validation Error */
@@ -1921,6 +2007,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_alerts_counselor_alerts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounselorAlertView"][];
                 };
             };
         };

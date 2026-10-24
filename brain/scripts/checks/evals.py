@@ -32,18 +32,20 @@ SCRIPT = [
 
 
 class SimStand(StandIns):
-    """Answers every decision question with its first label, plays Maya from SCRIPT, and
-    makes a movie when she asks for one."""
+    """Answers every decision question with its first label (but she never asks Kite to
+    forget), plays Maya from SCRIPT, and makes a movie when she asks for one."""
 
     def __init__(self):
         super().__init__()
         self.moves = itertools.cycle(SCRIPT)
 
     async def decide(self, context, questions):
-        answers = {
-            q.name: {a: float(a == ("covered" if q.name.startswith("teach_point") else q.answers[0])) for a in q.answers}
-            for q in questions
-        }
+        def pick(q):
+            if q.name.startswith("teach_point"):
+                return "covered"
+            return "no" if q.name == "forget_request" else q.answers[0]
+
+        answers = {q.name: {a: float(a == pick(q)) for a in q.answers} for q in questions}
         return Decisions(answers, "decision1")
 
     async def parse(self, request, model_cls):

@@ -2,8 +2,9 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from kite_brain.auth import require
-from kite_brain.contract import AlertEvent
+from kite_brain.contract import AlertEvent, KidView
 from kite_brain.memory import ledger
+from kite_brain.memory.recall import remembered
 from kite_brain.turn.pipeline import start_teach
 
 router = APIRouter()
@@ -57,3 +58,9 @@ def teachable(kid_id: str, request: Request) -> list[Teachable]:
         e.concept_id for e in reversed(ledger.events(deps.conn, deps.keys, kid_id, grade)) if e.concept_id
     )
     return [Teachable(concept_id=c, kid_name=deps.catalog.get(c).kid_name) for c in met]
+
+
+@router.get("/kids/{kid_id}/kid-view", dependencies=[require("os", "handheld")])
+def kid_view(kid_id: str, request: Request) -> KidView:
+    """What Kite remembers, as the kid may see it. Never levels or scores."""
+    return remembered(request.app.state.deps, kid_id)

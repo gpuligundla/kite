@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from kite_brain import studio_pro
 from kite_brain.contract import (
-    AlertView, CardView, Creation, DashboardView, Grade, Moment, PolicyAction,
+    AlertView, CardView, Creation, DashboardView, DeviceKind, Grade, Moment, PolicyAction,
 )
 from kite_brain.crypto import aad, open_sealed
 from kite_brain.deps import Deps
@@ -44,10 +44,10 @@ def set_policy(deps: Deps, family_id: str, topic: str, action: PolicyAction) -> 
     deps.conn.commit()
 
 
-def receipt(deps: Deps, kid_id: str, what: str) -> None:
+def receipt(deps: Deps, kid_id: str, what: str, who: DeviceKind = "parent") -> None:
     deps.conn.execute(
-        "INSERT INTO access_receipt(who, kid_id, what, at) VALUES ('parent', ?, ?, ?)",
-        (kid_id, what, ledger.iso(deps.clock())),
+        "INSERT INTO access_receipt(who, kid_id, what, at) VALUES (?, ?, ?, ?)",
+        (who, kid_id, what, ledger.iso(deps.clock())),
     )
     deps.conn.commit()
 

@@ -274,6 +274,13 @@ class AlertView(BaseModel):
     lng: float | None = None
 
 
+class CounselorAlertView(BaseModel):
+    alert_id: str
+    kinds: list[AlertKind]
+    at: datetime
+    excerpt: str  # the flagged message plus the 2 turns before it
+
+
 class DashboardView(BaseModel):
     profile: ProfileView
     curiosity: CuriosityMap

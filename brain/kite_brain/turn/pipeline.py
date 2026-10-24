@@ -33,7 +33,9 @@ from kite_brain.memory.writer import FinishedTurn, write_memory
 from kite_brain.policy import (
     HOMEWORK_LINES, about_me_context, band_for, collab_log, fk_grade, system_prompt, turn_context,
 )
-from kite_brain.questions import ABOUT_KITE, ABOUT_ME, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions
+from kite_brain.questions import (
+    ABOUT_KITE, ABOUT_ME, FORGET_REQUEST, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions,
+)
 from kite_brain.studio.game import start_game
 from kite_brain.studio.movie import start_movie
 from kite_brain.studio.store import spawn
@@ -131,7 +133,7 @@ def _candidates(turn: _Turn, vec: np.ndarray | None) -> list[str]:
 
 
 async def _decide(turn: _Turn, text: str, candidates: list[str]) -> Decisions | None:
-    questions = [SAFETY, SENSITIVE_TOPIC, INITIATIVE, ABOUT_ME, ABOUT_KITE]
+    questions = [SAFETY, SENSITIVE_TOPIC, INITIATIVE, ABOUT_ME, ABOUT_KITE, FORGET_REQUEST]
     if candidates:
         questions.append(concept_question(candidates, {c: turn.deps.catalog.get(c).name for c in candidates}))
     if turn.inp.mode == "teach" and turn.inp.concept_id:
@@ -253,6 +255,16 @@ def _record_teach(turn: _Turn, session_id: str, concept_id: str) -> PayloadKind:
     return evidence.kind
 
 
+def _forget_previous(turn: _Turn) -> None:
+    """The kid's latest stored turn, the one recall's history ends with."""
+    row = turn.deps.conn.execute(
+        "SELECT id FROM session_turn WHERE kid_id = ? AND role = 'kid' ORDER BY at DESC, id DESC LIMIT 1",
+        (turn.inp.kid_id,),
+    ).fetchone()
+    if row:
+        ledger.forget_turn(turn.deps.conn, turn.inp.kid_id, row["id"])
+
+
 def _write_card(turn: _Turn, answer: str) -> str:
     plan, kid_id = turn.plan, turn.inp.kid_id
     card_id = str(ULID())
@@ -321,6 +333,8 @@ async def _run(turn: _Turn) -> None:
 
     if plan.route == "teach":
         turn.teach = _grade_teach(turn, decisions, concept_id)
+    if plan.forget and not turn.read_only:  # a time-travel turn deletes nothing, as it writes nothing
+        _forget_previous(turn)
 
     # 5. Grown-up events, to the audience the plan chose
     turn.emit(HeardEvent, plan.audience, text=text)

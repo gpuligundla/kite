@@ -71,16 +71,32 @@ def _history(deps: Deps, kid_id: str) -> list[tuple[str, str]]:
     ]
 
 
+def _read(deps: Deps, kid_id: str, grade: Grade) -> tuple[list[ledger.LedgerEvent], SkillsMap, list[str]]:
+    start_year = deps.conn.execute("SELECT school_start_year FROM kid WHERE id = ?", (kid_id,)).fetchone()[0]
+    evts = ledger.events(deps.conn, deps.keys, kid_id, grade)
+    skills = maps.skills_map(evts, deps.catalog, grade)
+    curiosity = maps.curiosity_map(evts, maps.school_year_end(start_year, grade))
+    return evts, skills, maps.strength_topics(skills, curiosity, deps.catalog, grade)
+
+
+def remembered(deps: Deps, kid_id: str) -> KidView:
+    """The 'what Kite remembers' page: the kid view as of the current grade, with every moment
+    newest first instead of the ones nearest a question."""
+    grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (kid_id,)).fetchone()[0]
+    evts, _, strength = _read(deps, kid_id, grade)
+    moments = [
+        e.payload.text(deps.catalog.get(e.payload.concept_id).kid_name)
+        for e in reversed(evts) if isinstance(e.payload, Moment)
+    ]
+    return kid_view(maps.profile_view(evts), list(dict.fromkeys(moments)), strength)
+
+
 async def recall(
     deps: Deps, kid_id: str, grade: Grade, query_vec: np.ndarray | None, concept_id: str | None, about_me_p: float
 ) -> Recall:
     """Everything is read as of `grade`. Guidance is empty when the child may be asking
     about themselves, so an about-me answer cannot echo it."""
-    start_year = deps.conn.execute("SELECT school_start_year FROM kid WHERE id = ?", (kid_id,)).fetchone()[0]
-    evts = ledger.events(deps.conn, deps.keys, kid_id, grade)
-    skills = maps.skills_map(evts, deps.catalog, grade)
-    curiosity = maps.curiosity_map(evts, maps.school_year_end(start_year, grade))
-    strength = maps.strength_topics(skills, curiosity, deps.catalog, grade)
+    evts, skills, strength = _read(deps, kid_id, grade)
     topic = deps.catalog.get(concept_id).topic if concept_id else None
     guidance = []
     if concept_id and about_me_p < ABOUT_ME_THRESHOLD:

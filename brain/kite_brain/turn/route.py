@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from kite_brain.config import ABOUT_ME_THRESHOLD, ALERT_THRESHOLD
+from kite_brain.config import ABOUT_ME_THRESHOLD, ALERT_THRESHOLD, FORGET_THRESHOLD
 from kite_brain.contract import AlertKind, HomeworkMode, Mode, PolicyAction, RouteName
 from kite_brain.decide import Decisions, alert_kinds, top
 from kite_brain.deps import SafetyResult
@@ -14,6 +14,7 @@ FALLBACK = "Let me think about that one later. Ask a grown-up too!"
 ASK_PARENT = "That's a big question, and a grown-up who loves you is the best person to talk it through. I'll let them know you asked."
 PAUSE_REPLY = "That looks like it could be for your quiz right now, so I can't help with it. You've got this! Ask me again once it's over."
 TEACH_START = "I'm all ears! Teach me everything you know about {concept}."
+FORGOT = "Okay, I forgot that."
 
 
 def teach_start_line(concept_name: str) -> str:
@@ -53,6 +54,7 @@ class RoutePlan:
     call_llm: bool
     write_memory: bool
     situation: Situation
+    forget: bool = False  # forget the kid's previous turn before replying
 
 
 def route(
@@ -85,6 +87,10 @@ def route(
 
     if decisions is None or safety is None or safety.jailbreak or not recall_ok:
         return plan("fallback", reply=FALLBACK)
+
+    if decisions.answers.get("forget_request", {}).get("yes", 0.0) >= FORGET_THRESHOLD:
+        # ponytail: reuses about_me because RouteName is frozen for the UI; a "forget" name once it thaws.
+        return plan("about_me", reply=FORGOT, forget=True)
 
     if homework.near_live_quiz or homework.status == "exam_live":
         return plan("pause", reply=PAUSE_REPLY, homework_mode="pause", assignment_title=homework.title)
