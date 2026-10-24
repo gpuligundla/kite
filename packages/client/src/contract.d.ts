@@ -24,7 +24,787 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        /** AlertEvent */
+        AlertEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "alert";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Alert Id */
+            alert_id: string;
+            /** Kinds */
+            kinds: ("bullying" | "stranger" | "abuse" | "self_harm" | "sos")[];
+            /**
+             * Routed To
+             * @enum {string}
+             */
+            routed_to: "parent" | "counselor";
+            /**
+             * Lat
+             * @default null
+             */
+            lat: number | null;
+            /**
+             * Lng
+             * @default null
+             */
+            lng: number | null;
+        };
+        /** AnswerDoneEvent */
+        AnswerDoneEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "answer.done";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Text */
+            text: string;
+            /** Fk Grade */
+            fk_grade: number | null;
+            /** Depth Override */
+            depth_override: boolean;
+            /**
+             * Route
+             * @enum {string}
+             */
+            route: "alert" | "pause" | "ask_parent" | "teach" | "homework" | "about_me" | "answer" | "unheard" | "fallback";
+        };
+        /** AnswerSentenceEvent */
+        AnswerSentenceEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "answer.sentence";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Index */
+            index: number;
+            /** Text */
+            text: string;
+            /** Audio B64 */
+            audio_b64: string;
+        };
+        /** CardEvent */
+        CardEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "card";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Card Id */
+            card_id: string;
+            /** Topic */
+            topic: string;
+        };
+        /** CreationProgressEvent */
+        CreationProgressEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "creation.progress";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Creation Id */
+            creation_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "movie" | "game";
+            /** Step */
+            step: number;
+            /** Steps Total */
+            steps_total: number;
+        };
+        /** CreationReadyEvent */
+        CreationReadyEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "creation.ready";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Creation Id */
+            creation_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "movie" | "game";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ready" | "fallback";
+        };
+        /** CreationVideoEvent */
+        CreationVideoEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "creation.video";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Creation Id */
+            creation_id: string;
+            /** Video Url */
+            video_url: string;
+        };
+        /** DecidedEvent */
+        DecidedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "decided";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /**
+             * Backend
+             * @enum {string}
+             */
+            backend: "decision1" | "openrouter" | "haiku";
+            /** Safety */
+            safety: {
+                [key: string]: number;
+            };
+            /**
+             * Sensitive Topic
+             * @enum {string}
+             */
+            sensitive_topic: "death" | "religion" | "bodies" | "war" | "divorce" | "none";
+            /**
+             * Initiative
+             * @enum {string}
+             */
+            initiative: "own_question" | "follow_up_why" | "assigned_work";
+            /** Concept Id */
+            concept_id: string | null;
+            /** About Me */
+            about_me: number;
+        };
+        /** HeardEvent */
+        HeardEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "heard";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Text */
+            text: string;
+        };
+        /** MemorySavedEvent */
+        MemorySavedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "memory.saved";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Count */
+            count: number;
+            /** Kinds */
+            kinds: ("concept_evidence" | "curiosity_signal" | "profile_fact" | "moment")[];
+        };
+        /** RecalledEvent */
+        RecalledEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recalled";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Moments */
+            moments: string[];
+            /** Strength Topics */
+            strength_topics: string[];
+            /** Guidance Used */
+            guidance_used: boolean;
+        };
+        /** RoutedEvent */
+        RoutedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "routed";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /**
+             * Route
+             * @enum {string}
+             */
+            route: "alert" | "pause" | "ask_parent" | "teach" | "homework" | "about_me" | "answer" | "unheard" | "fallback";
+            /**
+             * Alert Kinds
+             * @default []
+             */
+            alert_kinds: ("bullying" | "stranger" | "abuse" | "self_harm" | "sos")[];
+            /**
+             * Action
+             * @default null
+             */
+            action: ("answer" | "answer_and_tell" | "ask_parent") | null;
+            /**
+             * Homework Mode
+             * @default null
+             */
+            homework_mode: ("help" | "pause" | "explain") | null;
+            /**
+             * Assignment Title
+             * @default null
+             */
+            assignment_title: string | null;
+        };
+        /** TaughtEvent */
+        TaughtEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "taught";
+            /** Kid Id */
+            kid_id: string;
+            /** Turn Id */
+            turn_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Audience
+             * @enum {string}
+             */
+            audience: "kid" | "parent" | "counselor";
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /** Concept Id */
+            concept_id: string;
+            /** Points */
+            points: {
+                [key: string]: "covered" | "partly" | "missing" | "wrong";
+            };
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "got_it" | "partly" | "not_yet";
+        };
+        KiteEvent: components["schemas"]["HeardEvent"] | components["schemas"]["DecidedEvent"] | components["schemas"]["RecalledEvent"] | components["schemas"]["RoutedEvent"] | components["schemas"]["AnswerSentenceEvent"] | components["schemas"]["AnswerDoneEvent"] | components["schemas"]["TaughtEvent"] | components["schemas"]["MemorySavedEvent"] | components["schemas"]["AlertEvent"] | components["schemas"]["CardEvent"] | components["schemas"]["CreationProgressEvent"] | components["schemas"]["CreationReadyEvent"] | components["schemas"]["CreationVideoEvent"];
+        /** CharacterFact */
+        CharacterFact: {
+            /**
+             * Kind
+             * @default profile_fact
+             * @constant
+             */
+            kind: "profile_fact";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            fact_kind: "favorite_character";
+            /** Name */
+            name: string;
+            /** Sprite */
+            sprite: string;
+        };
+        /** ConceptEvidence */
+        ConceptEvidence: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "concept_evidence";
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "got_it" | "partly" | "not_yet";
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "teach_back" | "check_question" | "game";
+            /**
+             * Points
+             * @default null
+             */
+            points: {
+                [key: string]: "covered" | "partly" | "missing" | "wrong";
+            } | null;
+        };
+        /** CuriositySignal */
+        CuriositySignal: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "curiosity_signal";
+            /**
+             * Signal
+             * @enum {string}
+             */
+            signal: "own_question" | "follow_up_why" | "return_visit" | "chose_creation";
+        };
+        /** InterestFact */
+        InterestFact: {
+            /**
+             * Kind
+             * @default profile_fact
+             * @constant
+             */
+            kind: "profile_fact";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            fact_kind: "interest";
+            /** Topic */
+            topic: string;
+        };
+        /** Moment */
+        Moment: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "moment";
+            /** Concept Id */
+            concept_id: string;
+            /**
+             * Character
+             * @default null
+             */
+            character: string | null;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "answer" | "movie" | "game" | "teach_back";
+        };
+        /** StyleFact */
+        StyleFact: {
+            /**
+             * Kind
+             * @default profile_fact
+             * @constant
+             */
+            kind: "profile_fact";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            fact_kind: "learning_style";
+            /**
+             * Style
+             * @enum {string}
+             */
+            style: "story" | "game" | "picture" | "explain" | "hands_on";
+        };
+        LearningPayload: components["schemas"]["ConceptEvidence"] | components["schemas"]["CuriositySignal"] | (components["schemas"]["InterestFact"] | components["schemas"]["CharacterFact"] | components["schemas"]["StyleFact"]) | components["schemas"]["Moment"];
+        /** Actor */
+        Actor: {
+            /** Sprite */
+            sprite: string;
+            /**
+             * Name
+             * @default null
+             */
+            name: string | null;
+            /**
+             * Entrance
+             * @enum {string}
+             */
+            entrance: "left" | "right" | "pop";
+            /**
+             * Motion
+             * @enum {string}
+             */
+            motion: "bounce" | "float" | "walk";
+        };
+        /** CheckQuestion */
+        CheckQuestion: {
+            /** Question */
+            question: string;
+            /** Choices */
+            choices: string[];
+            /** Correct Index */
+            correct_index: number;
+            /** Concept Id */
+            concept_id: string;
+        };
+        /** NarrationLine */
+        NarrationLine: {
+            /** Speaker */
+            speaker: string;
+            /**
+             * Voice
+             * @enum {string}
+             */
+            voice: "narrator" | "professor" | "explorer" | "storyteller" | "robot_buddy";
+            /** Text */
+            text: string;
+        };
+        /** Palette */
+        Palette: {
+            /** Sky */
+            sky: string;
+            /** Ground */
+            ground: string;
+            /**
+             * Time Of Day
+             * @enum {string}
+             */
+            time_of_day: "morning" | "day" | "evening" | "night";
+        };
+        /** Scene */
+        Scene: {
+            /**
+             * Background
+             * @enum {string}
+             */
+            background: "sky" | "space" | "ocean" | "forest" | "town" | "classroom";
+            palette: components["schemas"]["Palette"];
+            /** Actors */
+            actors: components["schemas"]["Actor"][];
+            /** Lines */
+            lines: components["schemas"]["NarrationLine"][];
+            /**
+             * Camera
+             * @enum {string}
+             */
+            camera: "still" | "pan" | "zoom";
+        };
+        /** Storyboard */
+        Storyboard: {
+            /** Title */
+            title: string;
+            /** Scenes */
+            scenes: components["schemas"]["Scene"][];
+            check: components["schemas"]["CheckQuestion"];
+        };
+        /** GameItem */
+        GameItem: {
+            /** Label */
+            label: string;
+            /** Sprite */
+            sprite: string;
+            /**
+             * Correct
+             * @default null
+             */
+            correct: boolean | null;
+            /**
+             * Bin
+             * @default null
+             */
+            bin: string | null;
+        };
+        /** GameSpec */
+        GameSpec: {
+            /**
+             * Template
+             * @enum {string}
+             */
+            template: "catch" | "sort";
+            /** Title */
+            title: string;
+            /** Instructions */
+            instructions: string;
+            /** Concept Id */
+            concept_id: string;
+            /** Items */
+            items: components["schemas"]["GameItem"][];
+            /**
+             * Bins
+             * @default []
+             */
+            bins: string[];
+        };
+        /** Word */
+        Word: {
+            /** Text */
+            text: string;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+        };
+        /** Creation */
+        Creation: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "movie" | "game";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "ready" | "fallback";
+            /** @default null */
+            storyboard: components["schemas"]["Storyboard"] | null;
+            /** @default null */
+            game: components["schemas"]["GameSpec"] | null;
+            /**
+             * Audio
+             * @default {}
+             */
+            audio: {
+                [key: string]: string;
+            };
+            /**
+             * Timings
+             * @default {}
+             */
+            timings: {
+                [key: string]: components["schemas"]["Word"][];
+            };
+            /**
+             * Video Url
+             * @default null
+             */
+            video_url: string | null;
+        };
+        /** KidView */
+        KidView: {
+            /** Interests */
+            interests: string[];
+            /** Characters */
+            characters: string[];
+            /** Moments */
+            moments: string[];
+            /** Deep Topics */
+            deep_topics: string[];
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
