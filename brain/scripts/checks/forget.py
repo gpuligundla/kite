@@ -108,6 +108,10 @@ def check_kid_view_endpoint_has_no_skills() -> None:
     assert view["interests"] == ["light", "gravity"] and view["moments"][-1].startswith(SKY), view
     assert rows(deps, "SELECT COUNT(*) FROM access_receipt") == 0, "the kid reading their own view is not a grown-up access"
 
+    me = client.get(f"/kids/{KID_ID}/me", headers=bearer["os"])
+    assert me.status_code == 200 and set(me.json()) == {"name", "grade"}, me.text
+    assert client.get(f"/kids/{KID_ID}/me", headers=bearer["parent"]).status_code == 403, "me is for the kid's devices"
+
 
 def run() -> None:
     use_sample_voices()

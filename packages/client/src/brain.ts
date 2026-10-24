@@ -76,6 +76,10 @@ export interface Brain {
   gameUrl(creationId: string): string;
   /** Parent devices only. */
   dashboard(grade?: Grade): Promise<DashboardView>;
+  /** Any other route, with this device's auth. Paths start at the brain's root, e.g. `/kids/maya/contacts`. */
+  get<T>(path: string): Promise<T>;
+  post<T>(path: string, json?: unknown): Promise<T>;
+  put<T>(path: string, json: unknown): Promise<T>;
 }
 
 export function createBrain(config: BrainConfig): Brain {
@@ -156,6 +160,9 @@ export function createBrain(config: BrainConfig): Brain {
     gameUrl: (creationId) => endpoint(config, `/creations/${creationId}/game.html`),
     // 0 is K, so test for undefined rather than truthiness.
     dashboard: (grade) => request<DashboardView>(config, "GET", `${kid}/dashboard${grade === undefined ? "" : `?grade=${grade}`}`),
+    get: (path) => request(config, "GET", path),
+    post: (path, json) => request(config, "POST", path, { json }),
+    put: (path, json) => request(config, "PUT", path, { json }),
   };
 }
 
@@ -167,7 +174,7 @@ const authHeaders = (config: BrainConfig): Record<string, string> =>
 /** The one fetch. Never reads the query string for auth, and never sets Content-Type on a FormData, which needs its boundary. */
 async function request<T>(
   config: BrainConfig,
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PUT",
   path: string,
   body: { json?: unknown; form?: FormData } = {},
 ): Promise<T> {

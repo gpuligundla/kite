@@ -112,6 +112,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/kids/{kid_id}/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Me
+         * @description The kid's name and grade, so their screen can greet them and match its look to their age.
+         */
+        get: operations["me_kids__kid_id__me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kids/{kid_id}/games/custom": {
         parameters: {
             query?: never;
@@ -649,6 +669,13 @@ export interface components {
             moments: string[];
             /** Deep Topics */
             deep_topics: string[];
+        };
+        /** Me */
+        Me: {
+            /** Name */
+            name: string;
+            /** Grade */
+            grade: number;
         };
         /** NarrationLine */
         NarrationLine: {
@@ -1601,6 +1628,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KidView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    me_kids__kid_id__me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
                 };
             };
             /** @description Validation Error */

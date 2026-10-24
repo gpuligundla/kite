@@ -10,6 +10,11 @@ from kite_brain.turn.pipeline import start_teach
 router = APIRouter()
 
 
+class Me(BaseModel):
+    name: str
+    grade: int
+
+
 class Sos(BaseModel):
     lat: float
     lng: float
@@ -64,3 +69,10 @@ def teachable(kid_id: str, request: Request) -> list[Teachable]:
 def kid_view(kid_id: str, request: Request) -> KidView:
     """What Kite remembers, as the kid may see it. Never levels or scores."""
     return remembered(request.app.state.deps, kid_id)
+
+
+@router.get("/kids/{kid_id}/me", dependencies=[require("os", "handheld")])
+def me(kid_id: str, request: Request) -> Me:
+    """The kid's name and grade, so their screen can greet them and match its look to their age."""
+    row = request.app.state.deps.conn.execute("SELECT display_name, grade FROM kid WHERE id = ?", (kid_id,)).fetchone()
+    return Me(name=row["display_name"], grade=row["grade"])

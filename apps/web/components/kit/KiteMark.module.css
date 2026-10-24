@@ -1,0 +1,7 @@
+.kite { display: block; overflow: visible; }
+.body { transform-origin: 50px 52px; }
+.tail { transform-origin: 50px 100px; }
+.kite[data-speaking="true"] .body { animation: bob 1.6s ease-in-out infinite; }
+.kite[data-speaking="true"] .tail { animation: wave 0.9s ease-in-out infinite alternate; }
+@keyframes bob { 50% { transform: translateY(-3px) rotate(-2deg); } }
+@keyframes wave { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }

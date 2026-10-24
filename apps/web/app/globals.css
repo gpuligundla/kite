@@ -1,0 +1,76 @@
+/* Tokens. Kite colors come from ripstop kite nylon; the kid side flies them against the sky,
+   the grown-up side keeps them for data and actions only. See DESIGN.md. */
+:root {
+  --ink: #1d2b53;
+  --ink-soft: #4a5677;
+  --sky: #cdebf7;
+  --sky-deep: #8fcde8;
+  --kite-red: #e8443a;
+  --kite-red-deep: #c4302a;
+  --kite-yellow: #ffc93c;
+  --tail-teal: #12a39a;
+  --paper: #ffffff;
+  --mist: #f3f5f9;
+  --line: #d5dce8;
+
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 24px;
+
+  /* Major third scale on a 17px base: kids read larger text. */
+  --step--1: 0.85rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.33rem;
+  --step-2: 1.66rem;
+  --step-3: 2.07rem;
+  --step-4: 2.59rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Motion (Emil Kowalski's curves; never ease-in on UI). Durations stay under 300ms except the band change. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 140ms;
+  --dur-pop: 200ms;
+  --dur-panel: 260ms;
+  --dur-band: 450ms;
+}
+
+/* The kid screen grows up with the grade band. data-band sits on the kid page's root. */
+[data-band="k2"] { --band-bg: #bfe6f7; --kid-text: var(--step-2); --target: 76px; --radius-kid: 30px; --kite-size: 150px; }
+[data-band="g35"] { --band-bg: var(--sky); --kid-text: var(--step-1); --target: 64px; --radius-kid: 24px; --kite-size: 124px; }
+[data-band="g68"] { --band-bg: #dcf0f8; --kid-text: 1.18rem; --target: 54px; --radius-kid: 18px; --kite-size: 96px; }
+[data-band="g912"] { --band-bg: #edf4f8; --kid-text: var(--step-0); --target: 48px; --radius-kid: 12px; --kite-size: 72px; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: var(--step-0);
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-display), system-ui, sans-serif; line-height: 1.15; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: var(--step-4); font-weight: 800; }
+h2 { font-size: var(--step-2); font-weight: 700; }
+h3 { font-size: var(--step-1); font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+a { color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: var(--radius-s); }
+
+.kid { min-height: 100dvh; background: var(--band-bg, var(--sky)); transition: background-color var(--dur-band) var(--ease-in-out); }
+.grown { min-height: 100dvh; background: var(--mist); }
+.stub { padding: var(--space-4); border: 2px dashed var(--line); border-radius: var(--radius-m); background: var(--paper); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
