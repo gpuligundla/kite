@@ -412,10 +412,16 @@ export interface components {
              * Format: date-time
              */
             at: string;
-            /** Lat */
-            lat?: number | null;
-            /** Lng */
-            lng?: number | null;
+            /**
+             * Lat
+             * @default null
+             */
+            lat: number | null;
+            /**
+             * Lng
+             * @default null
+             */
+            lng: number | null;
         };
         /** Answer */
         Answer: {
@@ -582,8 +588,11 @@ export interface components {
             policy: {
                 [key: string]: "answer" | "answer_and_tell" | "ask_parent";
             };
-            /** How She Learns */
-            how_she_learns?: {
+            /**
+             * How She Learns
+             * @default null
+             */
+            how_she_learns: {
                 [key: string]: number;
             } | null;
         };

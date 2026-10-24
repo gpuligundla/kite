@@ -6,7 +6,7 @@ import sys
 from pydantic import TypeAdapter
 
 from kite_brain.api import create_app
-from kite_brain.contract import Creation, KidView, KiteEvent, LearningPayload, Storyboard
+from kite_brain.contract import Creation, DashboardView, KidView, KiteEvent, LearningPayload, Storyboard
 
 STREAM_SCHEMAS = {
     "KiteEvent": KiteEvent,
@@ -14,6 +14,7 @@ STREAM_SCHEMAS = {
     "Storyboard": Storyboard,
     "Creation": Creation,
     "KidView": KidView,
+    "DashboardView": DashboardView,
 }
 
 

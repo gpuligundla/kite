@@ -1,0 +1,9 @@
+{
+  "name": "@kite/client",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/brain.ts" },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
