@@ -1,0 +1,229 @@
+{
+  "id": "sample",
+  "kind": "movie",
+  "status": "ready",
+  "storyboard": {
+    "title": "Why is the sky blue?",
+    "scenes": [
+      {
+        "background": "sky",
+        "palette": {
+          "sky": "#81d4fa",
+          "ground": "#7cb342",
+          "time_of_day": "day"
+        },
+        "camera": "pan",
+        "actors": [
+          {
+            "sprite": "rexy",
+            "name": "Rexy",
+            "entrance": "left",
+            "motion": "bounce"
+          },
+          {
+            "sprite": "pip",
+            "name": "Pip",
+            "entrance": "pop",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Rexy",
+            "voice": "narrator",
+            "text": "Hi! I am Rexy the dinosaur."
+          },
+          {
+            "speaker": "Pip",
+            "voice": "explorer",
+            "text": "And I am Pip. Look at the big blue sky!"
+          }
+        ]
+      },
+      {
+        "background": "space",
+        "palette": {
+          "sky": "#1a237e",
+          "ground": "#9e9e9e",
+          "time_of_day": "night"
+        },
+        "camera": "zoom",
+        "actors": [
+          {
+            "sprite": "rexy",
+            "name": "Rexy",
+            "entrance": "right",
+            "motion": "walk"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Rexy",
+            "voice": "narrator",
+            "text": "Light from the sun looks white but hides every color."
+          }
+        ]
+      }
+    ],
+    "check": {
+      "question": "What color is sunlight really?",
+      "choices": [
+        "Only yellow",
+        "All the colors mixed",
+        "Only blue"
+      ],
+      "correct_index": 1,
+      "concept_id": "light_colors"
+    }
+  },
+  "game": null,
+  "audio": {
+    "0-0": "audio/0-0.wav",
+    "0-1": "audio/0-1.wav",
+    "1-0": "audio/1-0.wav"
+  },
+  "timings": {
+    "0-0": [
+      {
+        "text": "Hi!",
+        "start": 0,
+        "end": 0.33
+      },
+      {
+        "text": "I",
+        "start": 0.33,
+        "end": 0.67
+      },
+      {
+        "text": "am",
+        "start": 0.67,
+        "end": 1
+      },
+      {
+        "text": "Rexy",
+        "start": 1,
+        "end": 1.33
+      },
+      {
+        "text": "the",
+        "start": 1.33,
+        "end": 1.67
+      },
+      {
+        "text": "dinosaur.",
+        "start": 1.67,
+        "end": 2
+      }
+    ],
+    "0-1": [
+      {
+        "text": "And",
+        "start": 0,
+        "end": 0.25
+      },
+      {
+        "text": "I",
+        "start": 0.25,
+        "end": 0.5
+      },
+      {
+        "text": "am",
+        "start": 0.5,
+        "end": 0.75
+      },
+      {
+        "text": "Pip.",
+        "start": 0.75,
+        "end": 1
+      },
+      {
+        "text": "Look",
+        "start": 1,
+        "end": 1.25
+      },
+      {
+        "text": "at",
+        "start": 1.25,
+        "end": 1.5
+      },
+      {
+        "text": "the",
+        "start": 1.5,
+        "end": 1.75
+      },
+      {
+        "text": "big",
+        "start": 1.75,
+        "end": 2
+      },
+      {
+        "text": "blue",
+        "start": 2,
+        "end": 2.25
+      },
+      {
+        "text": "sky!",
+        "start": 2.25,
+        "end": 2.5
+      }
+    ],
+    "1-0": [
+      {
+        "text": "Light",
+        "start": 0,
+        "end": 0.3
+      },
+      {
+        "text": "from",
+        "start": 0.3,
+        "end": 0.6
+      },
+      {
+        "text": "the",
+        "start": 0.6,
+        "end": 0.9
+      },
+      {
+        "text": "sun",
+        "start": 0.9,
+        "end": 1.2
+      },
+      {
+        "text": "looks",
+        "start": 1.2,
+        "end": 1.5
+      },
+      {
+        "text": "white",
+        "start": 1.5,
+        "end": 1.8
+      },
+      {
+        "text": "but",
+        "start": 1.8,
+        "end": 2.1
+      },
+      {
+        "text": "hides",
+        "start": 2.1,
+        "end": 2.4
+      },
+      {
+        "text": "every",
+        "start": 2.4,
+        "end": 2.7
+      },
+      {
+        "text": "color.",
+        "start": 2.7,
+        "end": 3
+      }
+    ]
+  },
+  "video_url": null,
+  "html_url": null,
+  "sprites": {
+    "rexy": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><g fill=\"#43a047\"><path d=\"M10 56 L10 36 Q10 20 26 20 L40 20 L40 10 L56 10 L56 24 L46 24 L46 44 L36 44 L36 56 L28 56 L28 46 L20 46 L20 56 Z\"/></g><circle cx=\"44\" cy=\"22\" r=\"3\" fill=\"#fff\"/></svg>",
+    "pip": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><g fill=\"#fb8c00\"><circle cx=\"32\" cy=\"34\" r=\"22\"/><polygon points=\"20,18 24,4 32,16\"/><polygon points=\"44,18 40,4 32,16\"/></g><circle cx=\"44\" cy=\"22\" r=\"3\" fill=\"#fff\"/></svg>"
+  }
+}
