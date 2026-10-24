@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Catch the blue light</title>
+<style>html,body{margin:0;background:#101830}</style></head>
+<body>
+<script src="kaplay.js"></script>
+<script src="kite-kit.js"></script>
+<script>
+const k = kaplay({ width: 800, height: 600, background: [16, 24, 48], global: false });
+k.loadSprite("rexy", kite.sprite("dino", "#4caf50"));
+k.loadSprite("light", kite.sprite("circle", "#64b5f6"));
+k.loadSprite("red", kite.sprite("circle", "#ef5350"));
+
+const player = k.add([k.sprite("rexy"), k.pos(400, 520), k.area(), k.anchor("center"), "player"]);
+let caught = 0, total = 0;
+const label = k.add([k.text(kite.say("Catch the blue light!"), { size: 28 }), k.pos(20, 20)]);
+
+k.onKeyDown("left", () => player.move(-320, 0));
+k.onKeyDown("right", () => player.move(320, 0));
+k.onClick(() => player.moveTo(k.mousePos().x, player.pos.y));
+
+k.loop(0.8, () => {
+  const blue = Math.random() < 0.6;
+  k.add([k.sprite(blue ? "light" : "red"), k.pos(k.rand(40, 760), -40), k.area(), k.anchor("center"), k.move(k.DOWN, 220), k.offscreen({ destroy: true }), blue ? "blue" : "red"]);
+});
+player.onCollide("blue", (b) => { b.destroy(); caught++; total++; label.text = kite.say(`Blue light caught: ${caught}`); done(); });
+player.onCollide("red", (r) => { r.destroy(); total++; done(); });
+function done() { if (total >= 10) kite.finish({ correct: caught, total }); }
+kite.ready();
+</script>
+</body>
+</html>
