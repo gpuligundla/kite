@@ -9,6 +9,10 @@ ASSIGNED_WORK_THRESHOLD = 0.5
 DECIDE_TIMEOUT_S = 1.5
 MATCH_COSINE = 0.80
 NEAR_QUIZ_COSINE = 0.60
+CONTENT_SAFETY_SEVERITY_FLOOR = 4
+
+# Content Safety category to alert kind. Sexual and violence go to the counselor, the safer adult for ambiguous cases.
+CS_MAP = {"SelfHarm": "self_harm", "Sexual": "abuse", "Violence": "abuse", "Hate": "bullying"}
 
 
 class Settings(BaseSettings):
