@@ -8,7 +8,7 @@ import httpx
 from kite_brain.config import CONTENT_SAFETY_SEVERITY_FLOOR, CS_MAP, Settings
 from kite_brain.deps import SafetyResult
 
-ANALYZE = "/contentsafety/text:analyze?api-version=2023-10-01"
+ANALYZE = "/contentsafety/text:analyze?api-version=2024-09-01"
 SHIELD = "/contentsafety/text:shieldPrompt?api-version=2024-09-01"
 
 

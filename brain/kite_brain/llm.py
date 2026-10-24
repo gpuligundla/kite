@@ -98,6 +98,7 @@ class FoundryLlm:
             max_tokens=PARSE_MAX_TOKENS,
             system=_system(req),
             messages=_messages(req),
+            thinking={"type": "adaptive"},  # Foundry: structured output on 5.5 models needs adaptive thinking
             output_config=EFFORT_LOW,
             output_format=model_cls,
         )
