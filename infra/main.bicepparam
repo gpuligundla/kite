@@ -14,3 +14,7 @@ param appSecrets = {
   KITE_MASTER_KEY: readEnvironmentVariable('KITE_MASTER_KEY', '')
   OPENROUTER_KEY: readEnvironmentVariable('OPENROUTER_KEY', '')
 }
+// Pay-as-you-go tops out at 40. Subscriptions with more Claude quota (see `az cognitiveservices usage list`)
+// can raise these so Claude Code in the studio agent isn't throttled.
+param sonnetCapacity = int(readEnvironmentVariable('KITE_SONNET_CAPACITY', '40'))
+param haikuCapacity = int(readEnvironmentVariable('KITE_HAIKU_CAPACITY', '40'))

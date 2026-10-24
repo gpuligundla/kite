@@ -62,8 +62,8 @@ param claudeSku string = 'GlobalStandard'
 // Claude and embeddings capacity is thousands of tokens per minute. Pay-as-you-go subscriptions get 40K
 // input TPM per Claude model. The catalog gives Decision-1 a default capacity of 500 and limits of 1 request
 // and 1,000 tokens per minute, which read as per unit, so a capacity of 1 would allow one request a minute.
-param sonnetCapacity int = 25
-param haikuCapacity int = 25
+param sonnetCapacity int = 40
+param haikuCapacity int = 40
 param decisionCapacity int = 500
 param embedCapacity int = 50
 
