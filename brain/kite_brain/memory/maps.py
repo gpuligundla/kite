@@ -78,6 +78,19 @@ def skills_map(evts: list[LedgerEvent], catalog: Catalog, grade: Grade) -> Skill
     )
 
 
+def how_she_learns(evts: list[LedgerEvent]) -> dict[str, float]:
+    """Per evidence source a concept was first met in, the share of those concepts now at got_it or
+    better. `evts` is oldest first and already capped at the viewed grade (`ledger.events`)."""
+    by_concept: dict[str, list[LedgerEvent]] = defaultdict(list)
+    for e in evts:
+        if isinstance(e.payload, ConceptEvidence) and e.concept_id:
+            by_concept[e.concept_id].append(e)
+    met: dict[str, list[bool]] = defaultdict(list)
+    for ev in by_concept.values():
+        met[ev[0].payload.source].append(_level(ev) in MASTERED)
+    return {mode: sum(done) / len(done) for mode, done in met.items()}
+
+
 def curiosity_map(evts: list[LedgerEvent], as_of: datetime) -> CuriosityMap:
     """Decayed signal weight per topic and grade, divided by the kid's top topic total."""
     by_grade: dict[str, dict[int, float]] = defaultdict(lambda: defaultdict(float))

@@ -527,6 +527,10 @@ export interface components {
             policy: {
                 [key: string]: "answer" | "answer_and_tell" | "ask_parent";
             };
+            /** How She Learns */
+            how_she_learns?: {
+                [key: string]: number;
+            } | null;
         };
         /** GameItem */
         GameItem: {

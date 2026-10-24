@@ -282,6 +282,7 @@ class DashboardView(BaseModel):
     alerts: list[AlertView]
     moments_by_grade: dict[int, list[str]]
     policy: dict[str, PolicyAction]
+    how_she_learns: dict[str, float] | None = None
 
 
 # ---- Studio -----------------------------------------------------------------

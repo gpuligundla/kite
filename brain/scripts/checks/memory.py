@@ -162,8 +162,25 @@ def check_top_k_cosine() -> None:
     assert abs(got[0][1] - 0.96) < 1e-6, "scores are cosines"
 
 
+def check_how_she_learns() -> None:
+    conn, keys = fresh()
+    step = iter(range(100))
+    ev = lambda cid, outcome, source, grade=1: add(  # noqa: E731
+        conn, keys, ConceptEvidence(outcome=outcome, source=source), grade=grade, concept=cid,
+        at=T0 + timedelta(minutes=next(step)))
+    ev("light_see", "got_it", "game"), ev("light_see", "got_it", "teach_back")
+    ev("light_shadows", "not_yet", "check_question"), ev("light_shadows", "got_it", "game")
+    ev("light_rainbow", "partly", "game")
+    ev("light_reflect", "got_it", "teach_back", grade=4), ev("light_reflect", "got_it", "teach_back", grade=4)
+    got = maps.how_she_learns(ledger.events(conn, keys, KID_ID, 12))
+    assert got == {"game": 0.5, "check_question": 0.0, "teach_back": 1.0}, f"first-met mode keys, share math: {got}"
+    capped = maps.how_she_learns(ledger.events(conn, keys, KID_ID, 3))
+    assert capped == {"game": 0.5, "check_question": 0.0}, f"grade 3 hides the grade-4 concept: {capped}"
+    assert maps.how_she_learns([]) == {}, "no evidence, no modes"
+
+
 def run() -> None:
-    for check in (check_write_gate_fails_closed, check_interests_and_dedupe, check_curiosity_and_moment,
+    for check in (check_how_she_learns, check_write_gate_fails_closed, check_interests_and_dedupe, check_curiosity_and_moment,
                   check_guidance_and_recall, check_history_and_moments, check_top_k_cosine):
         check()
         print("ok", check.__name__)

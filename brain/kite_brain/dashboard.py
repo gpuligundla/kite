@@ -101,6 +101,7 @@ def dashboard_view(deps: Deps, kid_id: str, grade: Grade) -> DashboardView:
         alerts=_alerts(deps, kid_id, until),
         moments_by_grade=moments,
         policy=policy_for(deps, kid["family_id"]),
+        how_she_learns=maps.how_she_learns(evts),
     )
 
 
