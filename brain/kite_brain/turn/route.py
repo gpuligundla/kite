@@ -58,6 +58,7 @@ def route(
     homework: HomeworkSignal,
     mode: Mode,
     text_empty: bool,
+    recall_ok: bool = True,
 ) -> RoutePlan:
     def plan(route_name: RouteName, **fields) -> RoutePlan:
         defaults = dict(
@@ -78,7 +79,7 @@ def route(
         reply = ALERT_REPLY[next(k for k in ALERT_REPLY_PRIORITY if k in kinds)]
         return plan("alert", audience=to, alert_to=to, alert_kinds=sorted(kinds), reply=reply, situation="alert")
 
-    if decisions is None or safety is None or safety.jailbreak:
+    if decisions is None or safety is None or safety.jailbreak or not recall_ok:
         return plan("fallback", reply=FALLBACK)
 
     if homework.near_live_quiz or homework.status == "exam_live":

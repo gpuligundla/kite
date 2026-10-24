@@ -1,6 +1,7 @@
 """The learning ledger: grade-stamped, encrypted events, sessions, forgetting and expiry."""
 
 import asyncio
+import json
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -9,10 +10,12 @@ from pydantic import TypeAdapter
 from ulid import ULID
 
 from kite_brain.catalog import Catalog
-from kite_brain.contract import Grade, LearningPayload
+from kite_brain.contract import AlertKind, Grade, LearningPayload
 from kite_brain.crypto import FamilyKeys, aad, open_sealed, seal
 
 SESSION_GAP = timedelta(minutes=30)
+ALERT_TTL = timedelta(days=365)
+SESSION_TURN_TTL = timedelta(days=30)
 PURGE_INTERVAL_S = 3600
 _PAYLOAD = TypeAdapter(LearningPayload)
 
@@ -99,6 +102,31 @@ def session_for(conn: sqlite3.Connection, kid_id: str, at: datetime) -> str:
     if last and at - datetime.fromisoformat(last["at"]) <= SESSION_GAP:
         return last["session_id"]
     return str(ULID())
+
+
+def record_alert(
+    conn: sqlite3.Connection,
+    keys: FamilyKeys,
+    *,
+    kid_id: str,
+    kinds: list[AlertKind],
+    routed_to: str,
+    excerpt: str,
+    at: datetime,
+    location: dict[str, float] | None = None,
+) -> str:
+    """The safety record. Written even for read-only turns; kept for a year of real time."""
+    alert_id = str(ULID())
+    key, a = keys.for_kid(kid_id), aad("alert", kid_id, alert_id)
+    conn.execute(
+        "INSERT INTO alert(id, kid_id, kinds, routed_to, at, expires_at, excerpt, location)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (alert_id, kid_id, json.dumps(kinds), routed_to, iso(at),
+         iso(datetime.now(timezone.utc) + ALERT_TTL), seal(key, excerpt.encode(), a),
+         seal(key, json.dumps(location).encode(), a) if location else None),
+    )
+    conn.commit()
+    return alert_id
 
 
 def forget_turn(conn: sqlite3.Connection, kid_id: str, turn_id: str) -> int:

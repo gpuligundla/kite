@@ -10,6 +10,10 @@ DECIDE_TIMEOUT_S = 1.5
 MATCH_COSINE = 0.80
 NEAR_QUIZ_COSINE = 0.60
 CONTENT_SAFETY_SEVERITY_FLOOR = 4
+DECIDE_TOTAL_TIMEOUT_S = 10.0  # the whole backend chain; Haiku alone takes up to 6 s
+SAFETY_TIMEOUT_S = 3.0
+RECALL_TIMEOUT_S = 3.0
+UPLOAD_CAP_BYTES = 900_000
 
 # Content Safety category to alert kind. Sexual and violence go to the counselor, the safer adult for ambiguous cases.
 CS_MAP = {"SelfHarm": "self_harm", "Sexual": "abuse", "Violence": "abuse", "Hate": "bullying"}

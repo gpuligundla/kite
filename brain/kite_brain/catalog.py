@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, conlist
 from kite_brain.contract import Grade
 
 DEFAULT_PATH = Path(__file__).with_name("concepts.json")
+VECTORS_PATH = Path("data/concept_vectors.npy")  # built by seed --assets, relative to brain/
 
 
 class Concept(BaseModel):

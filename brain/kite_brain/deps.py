@@ -2,7 +2,7 @@ import sqlite3
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from kite_brain.decide import Decisions
     from kite_brain.llm import FoundryLlm
     from kite_brain.questions import Question
+    from kite_brain.safety import AzureSafety
     from kite_brain.voice import ElevenTts, ScribeStt
 
 
@@ -52,7 +53,7 @@ class Deps:
     decide: Callable[[str, list["Question"]], Awaitable["Decisions"]]
     llm: "FoundryLlm"
     embed: Callable[[list[str]], Awaitable[np.ndarray]]
-    safety: Any
+    safety: "AzureSafety"
     stt: "ScribeStt"
     tts: "ElevenTts"
     clock: Callable[[], datetime]

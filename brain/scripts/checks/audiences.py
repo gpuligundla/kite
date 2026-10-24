@@ -16,7 +16,7 @@ from kite_brain.seed import seed
 TABLE = {
     "os": {"kid": True, "parent": False, "counselor": False},
     "handheld": {"kid": True, "parent": False, "counselor": False},
-    "parent": {"kid": True, "parent": True, "counselor": False},
+    "parent": {"kid": False, "parent": True, "counselor": False},
     "counselor": {"kid": False, "parent": False, "counselor": True},
 }
 
@@ -53,7 +53,7 @@ def check_bus() -> None:
     bus.publish(event(RoutedEvent, "parent", route="answer"))
     bus.publish(event(RoutedEvent, "counselor", route="alert"))
     types = lambda evts: [(e.id, e.audience) for e in evts]  # noqa: E731
-    assert types(asyncio.run(drain(bus, "parent"))) == [(1, "kid"), (2, "parent")], "parent: kid+parent"
+    assert types(asyncio.run(drain(bus, "parent"))) == [(2, "parent")], "parent: its own copies only"
     assert types(asyncio.run(drain(bus, "os"))) == [(1, "kid")], "kid device: kid events only"
     assert types(asyncio.run(drain(bus, "counselor"))) == [(3, "counselor")], "counselor: its own only"
 

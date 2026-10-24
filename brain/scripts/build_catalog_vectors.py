@@ -6,11 +6,9 @@ from pathlib import Path
 
 import numpy as np
 
-from kite_brain.catalog import Catalog
+from kite_brain.catalog import VECTORS_PATH, Catalog
 from kite_brain.config import get_settings
 from kite_brain.memory.embed import FoundryEmbed
-
-VECTORS_PATH = Path("data/concept_vectors.npy")
 
 
 async def build_catalog_vectors(catalog: Catalog | None = None, embed=None, path: Path = VECTORS_PATH) -> np.ndarray:

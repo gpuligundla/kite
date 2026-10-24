@@ -6,12 +6,12 @@ from kite_brain.contract import Audience, DeviceKind, KiteEvent
 
 BUFFER_SIZE = 100
 
-# Which audiences each device kind may receive. The counselor never sees kid or
-# parent events, and the parent never sees counselor ones.
+# Which audiences each device kind may receive. Grown-ups get their own copies of the
+# kid's events once the route is known, so a counselor-routed turn never reaches the parent.
 AUDIENCES: dict[DeviceKind, set[Audience]] = {
     "os": {"kid"},
     "handheld": {"kid"},
-    "parent": {"kid", "parent"},
+    "parent": {"parent"},
     "counselor": {"counselor"},
 }
 

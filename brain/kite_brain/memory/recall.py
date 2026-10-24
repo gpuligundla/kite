@@ -43,9 +43,9 @@ def guidance_for(skills: SkillsMap, concept_id: str, catalog: Catalog) -> list[s
     return []
 
 
-def _top_moments(deps: Deps, evts: list[ledger.LedgerEvent], query_vec: np.ndarray) -> list[str]:
+def _top_moments(deps: Deps, evts: list[ledger.LedgerEvent], query_vec: np.ndarray | None) -> list[str]:
     moments = [e for e in evts if isinstance(e.payload, Moment)]
-    if not moments:
+    if not moments or query_vec is None:
         return []
     marks = ",".join("?" * len(moments))
     blobs = dict(deps.conn.execute(
@@ -72,7 +72,7 @@ def _history(deps: Deps, kid_id: str) -> list[tuple[str, str]]:
 
 
 async def recall(
-    deps: Deps, kid_id: str, grade: Grade, query_vec: np.ndarray, concept_id: str | None, about_me_p: float
+    deps: Deps, kid_id: str, grade: Grade, query_vec: np.ndarray | None, concept_id: str | None, about_me_p: float
 ) -> Recall:
     """Everything is read as of `grade`. Guidance is empty when the child may be asking
     about themselves, so an about-me answer cannot echo it."""
