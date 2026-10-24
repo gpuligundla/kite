@@ -1,0 +1,8 @@
+.env
+node_modules
+brain/.venv
+brain/data/
+brain/evals/out/
+.audit/
+__pycache__/
+.pytest_cache/

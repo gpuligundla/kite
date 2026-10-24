@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Blocks commits that stage a .env file or an API key.
+set -euo pipefail
+
+if git diff --cached --name-only | grep -Eq '(^|/)\.env$'; then
+  echo "pre-commit: refusing to commit a .env file" >&2
+  exit 1
+fi
+
+added=$(git diff --cached -U0 | grep -E '^\+[^+]' || true)
+
+if grep -Eq 'sk-ant-[A-Za-z0-9_-]{10,}' <<<"$added"; then
+  echo "pre-commit: staged diff contains an Anthropic key" >&2
+  exit 1
+fi
+
+if grep -E 'KEY' <<<"$added" | grep -Eq '[0-9a-fA-F]{32,}'; then
+  echo "pre-commit: staged diff has a 32+ character hex string on a KEY line" >&2
+  exit 1
+fi

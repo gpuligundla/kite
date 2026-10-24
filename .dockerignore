@@ -1,0 +1,9 @@
+.env
+.git
+node_modules
+brain/.venv
+brain/data/*
+!brain/data/snapshot/
+brain/evals/out/
+.audit/
+**/__pycache__

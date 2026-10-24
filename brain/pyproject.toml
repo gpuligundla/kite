@@ -1,0 +1,39 @@
+[project]
+name = "kite-brain"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "anthropic>=2.3.0",
+    "azure-ai-contentsafety>=1.0.0",
+    "cryptography>=50.0.2",
+    "elevenlabs>=2.74.1",
+    "fastapi>=0.162.0",
+    "httpx>=0.28.1",
+    "numpy>=2.5.4",
+    "pydantic>=2.14.1",
+    "pydantic-settings>=2.16.1",
+    "python-ulid>=4.0.1",
+    "sse-starlette>=3.5.1",
+    "textstat>=0.7.13",
+    "uvicorn>=0.54.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kite_brain"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+addopts = "-m 'not live'"
+markers = ["live: needs real Foundry, ElevenLabs or Content Safety keys"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
