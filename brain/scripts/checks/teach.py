@@ -13,10 +13,11 @@ from kite_brain.deps import Deps
 from kite_brain.memory import ledger, maps
 from kite_brain.policy import band_for
 from kite_brain.seed import KID_ID, seed
-from kite_brain.turn.route import TEACH_START
+from kite_brain.turn.route import PAUSE_REPLY, TEACH_START
 from kite_brain.turn.teach import TRY_AGAIN
 from kite_brain.voice import voice_for
 from scripts.checks.audiences import drain
+from scripts.checks.homework import with_class
 from scripts.checks.ledger import CATALOG, NOW, add, fresh
 from scripts.checks.memory import async_embed
 from scripts.checks.pipeline import StandIns, deps_for, make_decisions, rows, turn, types
@@ -137,6 +138,21 @@ def check_time_travel_teach_writes_nothing() -> None:
     assert types(seen["os"])[-1] == "answer.done" and stand.llm_calls == 1, "she still hears the answer"
 
 
+def check_teach_during_live_quiz_pauses() -> None:
+    stand = Recording(decide=make_decisions())
+    deps, bus = deps_for(stand)
+    with_class(deps)
+    stand.decide_result = teach_decisions(*["covered"] * 4)
+    seen = turn(deps, bus, stand, "q1", mode="teach", concept_id="water_cycle_basic")
+    routed = next(e for e in seen["parent"] if e.type == "routed")
+    assert routed.route == "pause" and stand.llm_calls == 0, "teaching the live quiz's concept pauses with no LLM call"
+    assert seen["os"][-1].text == PAUSE_REPLY, "a fixed reply"
+    assert rows(deps, "learning_event") == 0 and "taught" not in types(seen["parent"]), "nothing graded or recorded"
+
+    seen = turn(deps, bus, stand, "q2", mode="teach", concept_id=CONCEPT.id)
+    assert stand.llm_calls == 1 and [e.type for e in seen["parent"] if e.type == "taught"], "another concept is fine"
+
+
 def check_api() -> None:
     conn, keys = fresh()
     tokens = seed(conn, keys, NOW).tokens
@@ -187,7 +203,7 @@ def run() -> None:
     for check in (
         check_all_covered_celebrates_and_can_teach, check_missing_point_named_first,
         check_wrong_point_is_a_misconception, check_attempts_merge_within_session,
-        check_time_travel_teach_writes_nothing, check_api,
+        check_time_travel_teach_writes_nothing, check_teach_during_live_quiz_pauses, check_api,
     ):
         check()
         print("ok", check.__name__)

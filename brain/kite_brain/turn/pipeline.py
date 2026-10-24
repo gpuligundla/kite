@@ -24,6 +24,7 @@ from kite_brain.contract import (
 from kite_brain.crypto import aad, seal
 from kite_brain.decide import Decisions, top
 from kite_brain.deps import Deps, LlmRequest, ToolCall
+from kite_brain.homework import NO_HOMEWORK, homework_signal
 from kite_brain.llm import LlmRefused
 from kite_brain.memory import ledger
 from kite_brain.memory.embed import top_k
@@ -31,7 +32,7 @@ from kite_brain.memory.recall import Recall, recall
 from kite_brain.memory.writer import FinishedTurn, write_memory
 from kite_brain.policy import HOMEWORK_LINES, about_me_context, band_for, fk_grade, system_prompt, turn_context
 from kite_brain.questions import ABOUT_ME, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions
-from kite_brain.turn.route import FALLBACK, TEACH_START, HomeworkSignal, RoutePlan, route
+from kite_brain.turn.route import FALLBACK, TEACH_START, RoutePlan, route
 from kite_brain.turn.speak import END, SentenceSplitter, audio_b64, drain, speak_sentences
 from kite_brain.turn.teach import TeachGrade, earlier_attempts, grade_teach, merge_attempts, teach_feedback_context
 from kite_brain.voice import Situation, VoiceSpec, voice_for
@@ -41,9 +42,6 @@ log = logging.getLogger(__name__)
 CONCEPT_CANDIDATES = 6
 EXCERPT_ROWS = 4  # the 2 turns (kid and kite) before the flagged message
 T = TypeVar("T")
-
-# Task 12 replaces this with the real homework signal.
-NO_HOMEWORK = HomeworkSignal(status=None, title=None, near_live_quiz=False)
 
 
 @dataclass(frozen=True)
@@ -282,6 +280,7 @@ async def _run(turn: _Turn) -> None:
 
     # 2 and 3. Embed once, then decide and input safety together, then recall.
     decisions = safety = recalled = vec = None
+    homework = NO_HOMEWORK
     concept_id, about_me = inp.concept_id, 0.0
     if text:
         vec = await _timed(turn, "embed", deps.embed([text]), SAFETY_TIMEOUT_S)
@@ -295,10 +294,15 @@ async def _run(turn: _Turn) -> None:
         recalled = await _timed(
             turn, "recall", recall(deps, inp.kid_id, turn.grade, vec, concept_id, about_me), RECALL_TIMEOUT_S
         )
+        if decisions:
+            # The real clock, not turn.now, which a simulation can set: the class was resolved at app start.
+            homework = await homework_signal(
+                deps, inp.kid_id, vec, concept_id, decisions.answers["initiative"]["assigned_work"], deps.clock()
+            )
 
     # 4. Route
     plan = turn.plan = route(
-        decisions, safety, turn.policy(), NO_HOMEWORK, inp.mode, not text, recall_ok=recalled is not None
+        decisions, safety, turn.policy(), homework, inp.mode, not text, recall_ok=recalled is not None
     )
 
     if plan.route == "teach":

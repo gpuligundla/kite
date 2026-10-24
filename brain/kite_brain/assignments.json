@@ -1,0 +1,35 @@
+[
+  {
+    "id": "hw-area-perimeter",
+    "name": "Area and perimeter practice",
+    "description": "1. A rectangle is 8 cm long and 5 cm wide. What is its area?\n2. What is the perimeter of that same rectangle?\n3. A square garden has sides of 6 m. How much fence goes all the way around it?",
+    "is_quiz_assignment": false,
+    "unlock_at_offset_hours": -72,
+    "due_at_offset_hours": 24,
+    "lock_at_offset_hours": null,
+    "concept_id": "ap_formulas",
+    "topic": "area_perimeter"
+  },
+  {
+    "id": "quiz-light-color",
+    "name": "Light and color quiz",
+    "description": "1. Why does a prism split white light into a rainbow?\n2. What do you see when you mix all the colors of light together?\n3. Why does a red apple look red to us?",
+    "is_quiz_assignment": true,
+    "unlock_at_offset_hours": -192,
+    "due_at_offset_hours": -168,
+    "lock_at_offset_hours": -168,
+    "concept_id": "light_rainbow",
+    "topic": "light"
+  },
+  {
+    "id": "quiz-water-cycle",
+    "name": "Water cycle quiz",
+    "description": "1. What is evaporation, and what makes it happen?\n2. What happens to water vapor when it rises high and cools?\n3. Name three kinds of precipitation.\n4. Where does the water go after it falls as rain?",
+    "is_quiz_assignment": true,
+    "unlock_at_offset_hours": -1,
+    "due_at_offset_hours": 168,
+    "lock_at_offset_hours": 168,
+    "concept_id": "water_cycle_basic",
+    "topic": "water_cycle"
+  }
+]

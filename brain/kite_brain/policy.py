@@ -111,9 +111,9 @@ def turn_context(
 
 
 HOMEWORK_LINES: dict[HomeworkMode, str] = {
-    "help": "This is open homework. Guide with hints and questions. Do not give the final answer.",
+    "help": "This is open homework. Give hints and ask one guiding question. Never state the final answer.",
     "pause": "A live quiz may be near. Do not help with it.",
-    "explain": "This homework is closed, so explain the idea in full, with an example.",
+    "explain": "This homework is closed, so give the full worked solution and derive each step.",
 }
 
 

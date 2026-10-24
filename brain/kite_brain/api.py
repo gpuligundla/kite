@@ -16,6 +16,7 @@ from kite_brain.crypto import FamilyKeys, master_key
 from kite_brain.db import connect, init_db
 from kite_brain.decide import HaikuBackend, decide, foundry_backend, openrouter_backend
 from kite_brain.deps import Deps
+from kite_brain.homework import load_assignments, store_assignments
 from kite_brain.llm import FoundryLlm
 from kite_brain.memory.embed import FoundryEmbed
 from kite_brain.memory.ledger import purge_loop
@@ -69,6 +70,9 @@ def create_app(conn: sqlite3.Connection | None = None) -> FastAPI:
             app.state.conn = connect(settings.KITE_DB_PATH)
             init_db(app.state.conn)
         app.state.deps = build_deps(app.state.conn, app.state.bus, settings)
+        now = datetime.now(timezone.utc)
+        for kid in app.state.conn.execute("SELECT id FROM kid").fetchall():
+            await store_assignments(app.state.deps, kid["id"], load_assignments(kid["id"], now))
         fk_grade("Warm up the reading-level dictionaries.")
         purge = asyncio.create_task(purge_loop(app.state.conn))
         yield

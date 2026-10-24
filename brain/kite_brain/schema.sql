@@ -97,7 +97,9 @@ CREATE TABLE IF NOT EXISTS assignment (
   is_quiz INTEGER NOT NULL CHECK (is_quiz IN (0, 1)),
   unlock_at TEXT,
   due_at TEXT,
-  lock_at TEXT
+  lock_at TEXT,
+  concept_id TEXT NOT NULL,
+  topic TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS assignment_item (

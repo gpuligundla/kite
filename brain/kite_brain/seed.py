@@ -32,8 +32,8 @@ def device_token(master: bytes, kind: str) -> str:
 
 
 def seed(conn: sqlite3.Connection, keys: FamilyKeys, now: datetime) -> SeedResult:
-    """Idempotent. `now` is reserved for Task 12, which stores the simulated class with
-    dates relative to it."""
+    """Idempotent. `now` is unused: the simulated class is stored when the app starts, so
+    its dates are relative to that start."""
     if not conn.execute("SELECT 1 FROM family WHERE id = ?", (FAMILY_ID,)).fetchone():
         keys.create_family(FAMILY_ID, "Rivera")
     conn.execute(
@@ -68,7 +68,7 @@ def seed(conn: sqlite3.Connection, keys: FamilyKeys, now: datetime) -> SeedResul
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed the Rivera family and print device tokens.")
     parser.add_argument("--assets", action="store_true",
-                        help="also build concept vectors (Task 7) and the simulated class (Task 12)")
+                        help="also build the concept vectors")
     args = parser.parse_args()
 
     settings = get_settings()
