@@ -68,6 +68,20 @@ All need a `parent` token (Bearer or the `kite_token` cookie) for that kid.
 | `GET /kids/{kid}/contacts` | `[{name, phone}]` |
 | `GET /kids/{kid}/movies` | rendered movies, newest first (`Creation[]` with `video_url`) |
 | `GET /trust` | `{scorecard, readability}` for the Trust tab (404 until the night shift has run) |
+| `GET /kids/{kid}/dashboard` → `how_she_learns` | optional `{source: share}`, e.g. `{"teach_back": 1.0, "game": 0.5}`: of the concepts first met that way, the share now at got it or better |
 
 Every dashboard, contacts and movies read writes an access receipt, so don't poll them. Refresh on
 `alert` events from the parent stream instead.
+
+## Counselor page (Task 26)
+
+`GET /counselor/alerts` with a `counselor` token returns `[{alert_id, kinds, at, excerpt}]`, newest first,
+for the kid that counselor device is bound to. Only counselor-routed alerts (abuse) appear; bullying and
+SOS go to the parent. Each excerpt returned is recorded as a receipt.
+
+## "What Kite remembers" (Task 28)
+
+`GET /kids/{kid}/kid-view` with an `os` or `handheld` token returns `{interests, characters, moments, deep_topics}`
+as plain strings. It never has levels or scores. There is no per-item forget yet: the kid says "forget that"
+in a turn, Kite replies "Okay, I forgot that.", and the stream's `routed` event has `route: "forget"`.
+Refetch the kid view after that event.
