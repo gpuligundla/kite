@@ -204,3 +204,22 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
 - Claude recommended a hybrid, and the human said yes:
   - **Games** get a "brand-new game" path. A hosted agent runs Claude Code's harness, writes a KAPLAY game, play-tests it with Playwright and fixes it. The template game stays on screen while the new one is built, so the demo never waits on it.
   - **Movies** stay on templates. Rendering video inside a 2 vCPU sandbox is too slow for the stage.
+
+## 2026-10-24 ~17:40 EDT: Session 1, the night shift is caught failing halfway
+
+- **The human deployed everything to Azure and started the real night shift.**
+  - The Bicep, `write-env.sh`, the Decision-1 probe and the studio agent all went up.
+  - Their own deploy fixed two things the docs got wrong:
+    - Decision-1 can't be named with the word "Microsoft".
+    - Decision-1 is only offered as DataZoneStandard.
+- **Claude fixed the studio agent's deploy script after its first real run.**
+  - The new version sat under `versions.latest`, so the script read the version wrong.
+  - The new endpoint served only the Responses protocol. The script now routes it to Invocations and grants the agent's identity access to Claude.
+  - The agent is now live on version 2.
+- **Claude read the half-built database instead of waiting for the run to end.**
+  - After six grades it held 3 skill-evidence events. The demo-data check would have failed after 45 minutes.
+  - Cause: the Haiku persona playing Maya almost never chose to teach Kite back, and teach-backs are the only mastery evidence.
+- **Claude scheduled the lessons and proved the fix on real services before asking for a rerun.**
+  - Two sittings in three are now a mini-lesson: ask, react, teach it back.
+  - A 3-turn real smoke graded area-and-perimeter "not yet".
+  - A 6-turn real smoke graded it "partly", and graded a dinosaur concept "got it" with every point covered.
