@@ -1,6 +1,6 @@
 # Kite HarborHack Implementation Plan (v2)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** run this plan with pstack. Start `/pstack:poteto-mode`, which routes a lane this size to the figure-it-out playbook with Feature-style delegation. Each lane keeps its own decision trail under `.audit/`. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build Kite. One Python brain serves the Next.js Kite OS shell, the Expo Android launcher, the parent dashboard and the counselor view. The demo shows time travel across grades, Teach Kite, a live and rendered movie, the homework guard, camera and SOS, and ten simulated years of Maya.
 
