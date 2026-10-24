@@ -42,8 +42,8 @@ async def audio_b64(deps: Deps, text: str, spec: VoiceSpec | None) -> str:
         return ""
     try:
         return base64.b64encode(await deps.tts.speak(text, spec)).decode()
-    except Exception:
-        log.warning("tts failed", exc_info=True)
+    except Exception as e:  # the message may echo the text, so only the type is logged
+        log.warning("tts failed (%s)", type(e).__name__)
         return ""
 
 
@@ -58,8 +58,8 @@ async def speak_sentences(
         if moderate:
             try:
                 flagged = not await deps.safety.check_output(text)
-            except Exception:
-                log.warning("output safety check failed", exc_info=True)
+            except Exception as e:
+                log.warning("output safety check failed (%s)", type(e).__name__)
                 flagged = True
         if flagged:
             spoken, text = [], FALLBACK

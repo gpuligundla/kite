@@ -5,7 +5,9 @@ This is the one place stand-in Deps are allowed. Each stand-in records what it w
 asked, so a claim such as "no LLM call" is a count, not a guess."""
 
 import asyncio
+import io
 import json
+import logging
 from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
@@ -171,6 +173,42 @@ def check_answer_path() -> None:
     assert CATALOG.get("dino_diets").kid_name not in whole and "growing" not in whole, "no skills data in the request"
 
 
+def check_no_text_in_logs() -> None:
+    """Every vendor stand-in fails with the kid's words in its message, the way a real API
+    error body can. Nothing of it may reach the log."""
+    phrase = "secret-phrase-123"
+
+    class Leaky(StandIns):
+        async def speak(self, text, spec):
+            raise RuntimeError(text)
+
+        async def check_output(self, text):
+            raise RuntimeError(text)
+
+        async def check_input(self, text):
+            raise RuntimeError(text)
+
+        async def stream(self, request):
+            yield "One fine sentence. "
+            raise RuntimeError(request.messages[0]["content"])
+
+    buffer, handler = io.StringIO(), logging.StreamHandler(io.StringIO())
+    handler.stream = buffer
+    logger = logging.getLogger("kite_brain")
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    try:
+        stand = Leaky(heard=f"my {phrase} question", decide=make_decisions())
+        deps, bus = deps_for(stand)
+        turn(deps, bus, stand, "leak1")
+        deps.conn.close()  # the next turn hits a closed connection, the catch-all path
+        turn(deps, bus, stand, "leak2")
+    finally:
+        logger.removeHandler(handler)
+    assert phrase not in buffer.getvalue(), "conversation text reached a log line"
+    assert "leak1" in buffer.getvalue() and "leak2" in buffer.getvalue(), "turn ids are logged"
+
+
 def check_api() -> None:
     conn, keys = fresh()
     tokens = seed(conn, keys, NOW).tokens
@@ -212,7 +250,7 @@ def run() -> None:
     for check in (
         check_abuse_turn_invisible_to_parent, check_time_travel_writes_nothing,
         check_both_decide_paths_down_is_fallback, check_output_flag_stops_and_falls_back, check_unheard,
-        check_answer_path, check_api,
+        check_answer_path, check_no_text_in_logs, check_api,
     ):
         check()
         print("ok", check.__name__)

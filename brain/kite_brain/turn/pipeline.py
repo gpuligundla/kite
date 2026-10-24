@@ -65,14 +65,17 @@ class _Turn:
     def __init__(self, inp: TurnInput, deps: Deps, turn_id: str):
         self.inp, self.deps, self.turn_id = inp, deps, turn_id
         self.now = inp.now or deps.clock()
-        row = deps.conn.execute(
-            "SELECT display_name, grade, family_id FROM kid WHERE id = ?", (inp.kid_id,)
+        self.read_only = False
+        self.plan: RoutePlan | None = None
+
+    def load_kid(self) -> None:
+        row = self.deps.conn.execute(
+            "SELECT display_name, grade, family_id FROM kid WHERE id = ?", (self.inp.kid_id,)
         ).fetchone()
         self.kid_name, self.family_id = row["display_name"], row["family_id"]
-        self.grade = row["grade"] if inp.as_of_grade is None else inp.as_of_grade
+        self.grade = row["grade"] if self.inp.as_of_grade is None else self.inp.as_of_grade
         self.read_only = self.grade < row["grade"]
         self.band = band_for(self.grade)
-        self.plan: RoutePlan | None = None
 
     def emit(self, cls, audience, **fields):
         return self.deps.bus.publish(cls(
@@ -228,8 +231,8 @@ async def run_turn(inp: TurnInput, deps: Deps, turn_id: str) -> None:
     turn = _Turn(inp, deps, turn_id)
     try:
         await _run(turn)
-    except Exception:
-        log.exception("turn %s failed", turn_id)
+    except Exception as e:  # no traceback: a vendor error body can echo the kid's words
+        log.error("turn %s failed (%s)", turn_id, type(e).__name__)
         turn.emit_kid(AnswerSentenceEvent, index=0, text=FALLBACK, audio_b64="")
         turn.emit_kid(AnswerDoneEvent, text=FALLBACK, fk_grade=None, depth_override=False, route="fallback")
     log.info("turn %s: route=%s read_only=%s ms=%d", turn_id,
@@ -238,6 +241,7 @@ async def run_turn(inp: TurnInput, deps: Deps, turn_id: str) -> None:
 
 async def _run(turn: _Turn) -> None:
     inp, deps = turn.inp, turn.deps
+    turn.load_kid()
 
     # 1. Heard
     text = await _hear(turn)
