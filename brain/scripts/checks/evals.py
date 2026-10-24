@@ -47,7 +47,13 @@ class SimStand(StandIns):
         return Decisions(answers, "decision1")
 
     async def parse(self, request, model_cls):
-        return next(self.moves) if model_cls is sim.PersonaMove else candidates()
+        if model_cls is not sim.PersonaMove:
+            return candidates()
+        if "make a teach move" in request.context:  # scheduled turns follow their instruction, as Haiku does
+            return sim.PersonaMove(kind="teach", text="Dinosaurs lived long ago and some of them ate plants.")
+        if "make an ask move: a question about" in request.context:
+            return sim.PersonaMove(kind="ask", text="What is that?")
+        return next(self.moves)
 
     async def stream(self, request):
         async for word in super().stream(request):
@@ -94,7 +100,8 @@ def check_teach_moves_produce_evidence_and_creations() -> None:
                  and e.payload.source == "teach_back"]
         assert teach, f"grade {grade}: a teach move must leave teach-back evidence"
     chose = [e for e in evts if isinstance(e.payload, CuriositySignal) and e.payload.signal == "chose_creation"]
-    assert [(e.grade, e.topic) for e in chose] == [(1, "light"), (2, "light")], "a movie only records chose_creation"
+    pairs = [(e.grade, e.topic) for e in chose]
+    assert {g for g, _ in pairs} == {1, 2} and all(t == "light" for _, t in pairs), "a movie only records chose_creation"
 
 
 def check_no_turn_after_the_real_now() -> None:

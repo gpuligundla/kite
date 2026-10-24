@@ -337,7 +337,7 @@ Each band also sets content rules by age, humor, and how often Kite asks a quest
 A topic is a **strength topic** at grade *g* when both of these hold:
 
 - It's in the top 3 of the curiosity map, with a normalized score of at least 0.6, as of the end of grade *g*.
-- At least 2 of its concepts at or below *g* have evidence, and none of those evidenced concepts is below `got_it`.
+- At least 2 of its evidenced concepts at or below *g* are at `got_it` or better, and those make up at least 75% of its evidenced concepts. One shaky concept among several mastered ones doesn't erase a strength.
 
 On a strength topic, Kite may teach concepts up to **3 grades above** *g*. It still uses the kid's own band language and content rules. The per-turn depth line carries this, and `answer.done.depth_override` marks it.
 

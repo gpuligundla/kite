@@ -225,11 +225,16 @@ async def _play_grade(
         lesson = None if grade in SENSITIVE and i == turns // 2 else lesson_for(deps.catalog, grade, i // PER_SESSION)
         try:
             move = await next_move(deps.llm, grade, traits_for(deps.catalog, grade, i, turns, met, lesson), history)
+            if lesson and planned_kind(i % PER_SESSION) == "teach" and move.kind != "teach":
+                # A question written where an explanation was asked for grades as all-missing; ask once more.
+                move = await next_move(deps.llm, grade, traits_for(deps.catalog, grade, i, turns, met, lesson), history)
         except Exception as e:  # one bad persona call must not end a 45-minute night
             log.warning("grade %d turn %d: persona failed (%s)", grade, i, type(e).__name__)
             idea = random.Random(grade * 1000 + i).choice([c for c in deps.catalog.concepts if c.grade <= grade])
             move = PersonaMove(kind="ask", text=f"Can you tell me about {idea.kid_name}?")
-        if lesson and (kind := planned_kind(i % PER_SESSION)):
+        if lesson and planned_kind(i % PER_SESSION) == "teach" and move.kind != "teach":
+            move = move.model_copy(update={"kind": "follow_up"})  # still no explanation: don't grade a question
+        elif lesson and (kind := planned_kind(i % PER_SESSION)):
             move = move.model_copy(update={"kind": kind})
         elif lesson and move.kind == "teach":  # an unscheduled teach-back before Kite explains scores all-missing
             move = move.model_copy(update={"kind": "follow_up"})

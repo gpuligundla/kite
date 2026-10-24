@@ -15,6 +15,7 @@ HALF_LIFE_DAYS = 180
 TOP_CURIOSITY = 3
 STRENGTH_CONCEPTS = 2
 STRENGTH_SCORE = 0.6
+STRENGTH_SHARE = 0.75  # one shaky concept among several mastered ones doesn't erase a strength
 MASTERED = ("got_it", "can_teach")
 
 
@@ -95,8 +96,8 @@ def curiosity_map(evts: list[LedgerEvent], as_of: datetime) -> CuriosityMap:
 
 
 def strength_topics(skills: SkillsMap, curiosity: CuriosityMap, catalog: Catalog, grade: Grade) -> list[str]:
-    """Spec 6: a top-3 curiosity topic scoring at least 0.6 whose evidenced concepts at or
-    below `grade` number at least 2 and are all got_it or better."""
+    """Spec 6: a top-3 curiosity topic scoring at least 0.6 with at least 2 evidenced concepts
+    at or below `grade` at got_it or better, making up at least 75% of its evidenced concepts."""
     levels: dict[str, list[str]] = defaultdict(list)
     for c in skills.concepts:
         concept = catalog.get(c.concept_id)
@@ -106,6 +107,6 @@ def strength_topics(skills: SkillsMap, curiosity: CuriosityMap, catalog: Catalog
         t.topic
         for t in curiosity.topics[:TOP_CURIOSITY]
         if t.score >= STRENGTH_SCORE
-        and len(levels[t.topic]) >= STRENGTH_CONCEPTS
-        and all(level in MASTERED for level in levels[t.topic])
+        and (mastered := sum(level in MASTERED for level in levels[t.topic])) >= STRENGTH_CONCEPTS
+        and mastered >= STRENGTH_SHARE * len(levels[t.topic])
     ]
