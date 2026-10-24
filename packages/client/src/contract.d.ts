@@ -1038,6 +1038,112 @@ export interface components {
             /** Deep Topics */
             deep_topics: string[];
         };
+        /** AlertView */
+        AlertView: {
+            /** Alert Id */
+            alert_id: string;
+            /** Kinds */
+            kinds: ("bullying" | "stranger" | "abuse" | "self_harm" | "sos")[];
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Lat
+             * @default null
+             */
+            lat: number | null;
+            /**
+             * Lng
+             * @default null
+             */
+            lng: number | null;
+        };
+        /** CardView */
+        CardView: {
+            /** Card Id */
+            card_id: string;
+            /** Grade */
+            grade: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Topic */
+            topic: string;
+            /** Summary */
+            summary: string;
+            /** Starter */
+            starter: string;
+        };
+        /** ConceptLevel */
+        ConceptLevel: {
+            /** Concept Id */
+            concept_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "not_yet" | "learning" | "got_it" | "can_teach";
+        };
+        /** CuriosityMap */
+        CuriosityMap: {
+            /** Topics */
+            topics: components["schemas"]["TopicScore"][];
+        };
+        /** ProfileView */
+        ProfileView: {
+            /** Interests */
+            interests: string[];
+            /** Characters */
+            characters: string[];
+            /** Styles */
+            styles: ("story" | "game" | "picture" | "explain" | "hands_on")[];
+        };
+        /** SkillsMap */
+        SkillsMap: {
+            /** Concepts */
+            concepts: components["schemas"]["ConceptLevel"][];
+            /** Frontier */
+            frontier: string[];
+            /** Growing */
+            growing: string[];
+            /** Can Teach */
+            can_teach: string[];
+        };
+        /** TopicScore */
+        TopicScore: {
+            /** Topic */
+            topic: string;
+            /** Score */
+            score: number;
+            /** By Grade */
+            by_grade: {
+                [key: string]: number;
+            };
+        };
+        /** DashboardView */
+        DashboardView: {
+            profile: components["schemas"]["ProfileView"];
+            curiosity: components["schemas"]["CuriosityMap"];
+            skills: components["schemas"]["SkillsMap"];
+            /** Cards */
+            cards: components["schemas"]["CardView"][];
+            /** Alerts */
+            alerts: components["schemas"]["AlertView"][];
+            /** Moments By Grade */
+            moments_by_grade: {
+                [key: string]: string[];
+            };
+            /** Policy */
+            policy: {
+                [key: string]: "answer" | "answer_and_tell" | "ask_parent";
+            };
+        };
     };
     responses: never;
     parameters: never;
