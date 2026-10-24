@@ -866,3 +866,32 @@ Add `how_she_learns(evts) -> dict[str, float]`, keyed by the mode the kid first 
   - Click "make it a movie". Expect the player within 45 s.
   - Then `POST /kids/maya/sos`. Expect the alert on `/parent` within 2 s.
 - [ ] Run `npx playwright test e2e/demo.spec.ts`. Expected: pass. Then run `scripts/restore-demo.sh` again. Commit.
+
+### Task 32: Brand-new games through a Foundry hosted agent (M11, brain lane)
+
+**Files:**
+- Create `studio-agent/` at the repo root:
+  - `Dockerfile`: python:3.12-slim, Node 24, `@anthropic-ai/claude-code`, Playwright Chromium with its system deps, and a vendored KAPLAY
+  - `agent.py`: the Python handler on Foundry's hosted-agent protocol library, using the Invocations protocol
+  - `instructions.md`: the agent's fixed rules
+  - `game-kit/`: `kaplay.js`, `kite-kit.js`, `playtest.mjs`, and a `package.json` whose `npm run playtest` runs the play-test
+- Create `brain/kite_brain/studio_pro.py` and `brain/kite_brain/routers/games.py`.
+- Create `scripts/deploy-studio-agent.sh`. It builds the image with `az acr build` (there's no local Docker) and deploys the hosted agent.
+- Check: `brain/scripts/checks/studio_pro.py`.
+
+**Interfaces:**
+- The agent takes `{creation_id, topic, learning_goal, grade, kid_view}`. It streams progress lines, then returns `{status: "ready"|"failed", html, playtest: {passed, errors}}`.
+- `start_custom_game(deps, kid_id, topic, learning_goal) -> creation_id`. The creation id is `secrets.token_hex(16)`.
+- `POST /kids/{kid_id}/games/custom` is for kid kinds only. `GET /creations/{id}/game.html` is open, behind the unguessable id.
+- `Creation` gains `html_url: str | None`. The lead edits `contract.py` for this.
+- **Devices lane:** add a "Build me a brand-new one!" button under the template game, and a `CustomGameFrame` that renders `html_url` in `<iframe sandbox="allow-scripts">` with a content security policy that allows no network access.
+
+- [ ] **Step 1.** Build the game kit and the play-test. A hand-written sample game should pass. Games that throw an error, never call `ready()`, or have a frozen canvas should each fail with a named error.
+- [ ] **Step 2.** Run `agent.py` locally, with no container, against Foundry: `CLAUDE_CODE_USE_FOUNDRY=1`, `ANTHROPIC_FOUNDRY_RESOURCE`, the pinned model variables, and `az login` or a key. Expected: a `game.html` that passes the play-test within 3 minutes. Until there are keys, the result is INCONCLUSIVE.
+- [ ] **Step 3.** Wire up the brain using a stand-in agent client.
+  - A success publishes `creation.ready` with `status="ready"` to the kid, and a parent copy.
+  - A text flag, an agent failure or a timeout publishes `status="fallback"`.
+  - The endpoint is for kid devices only.
+  - Put these rules in `checks/studio_pro.py`.
+- [ ] **Step 4.** Deploy with `scripts/deploy-studio-agent.sh` to a hosted-agent region, then invoke it once from the brain. Expected: a real brand-new game.
+- [ ] **Step 5.** Commit.

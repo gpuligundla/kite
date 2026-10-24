@@ -61,7 +61,10 @@ At HarborHack we show a working glimpse of that future: a real system, two physi
    - A question from a live quiz gets a kind pause.
    - A question from a closed quiz gets the full worked solution.
 7. **The grown-ups' view stays private.** Kite doesn't tell Maya her levels or scores. On "tell me about me" turns, the model doesn't even have them.
-8. **Visible AI teammates:**
+8. **Brand-new games, built by a sandboxed coding agent.**
+   - "Build me a brand-new one!" sends a coding agent to write, play-test and fix a new game.
+   - The game arrives in 1–3 minutes. She plays the template game while she waits.
+9. **Visible AI teammates:**
    - a simulated childhood (grades 1–11), played by AI persona agents through the real turn pipeline
    - a red-team scorecard
    - a reading-level chart
@@ -116,6 +119,7 @@ At HarborHack we show a working glimpse of that future: a real system, two physi
 | M8 | **Homework guard.** Runs on a **simulated class** this weekend, because no LMS API is available. Open work gets `help`, a live quiz or exam gets `pause`, and closed work gets `explain`. |
 | M9 | **Models and voice.** Every model comes from **Azure Foundry**: Claude, Decision-1, embeddings and Content Safety. There is no image model; art is SVG. Everything spoken or heard goes through **ElevenLabs**. Voice adapts to grade band and situation (§6). |
 | M10 | **Teach Kite mode.** The kid explains and Kite listens without interrupting. Kite grades the explanation against the concept's key points, then celebrates or helps. A perfect explanation sets "can teach." |
+| M11 | **Brand-new games (Studio Pro).** A Foundry hosted agent runs the Claude Agent SDK (Claude Code's harness), with Claude on Foundry, in a VM sandbox created for each game. It writes a KAPLAY game, play-tests it with Playwright, fixes it and returns one HTML file. The template game always appears first. It's all billed through Azure. |
 
 ## 3. System shape
 
@@ -194,6 +198,7 @@ Every device has a **kind**: `os` and `handheld` belong to the kid, plus `parent
 | Embeddings | An embeddings deployment on Foundry, for example `text-embedding-3-small` |
 | Movie and game art | No image model. A vendored open-source SVG sprite set, plus simple SVG that Claude draws (§9) |
 | Movie rendering | Remotion (Node) renders the frames with its own headless Chrome, mixes in the ElevenLabs audio and writes the MP4 |
+| Brand-new games (M11) | A Foundry hosted agent with a Python handler, the Claude Agent SDK and the Claude Code CLI on Node, plus Playwright Chromium. It calls Claude Sonnet 5.5 on Foundry with the agent's own Entra identity (`CLAUDE_CODE_USE_FOUNDRY=1`). |
 | Speech to text | **ElevenLabs Scribe** (batch mode is enough for hold to talk) |
 | Live spoken answers | **ElevenLabs Flash** (lowest latency) |
 | Movie narration and character voices | **ElevenLabs v3** (expressive, supports audio tags), or a newer expressive model if your plan has one |
@@ -541,6 +546,24 @@ Claude doesn't write game code. It fills in a game template we built. With no ge
 - **Fallback.** If generation fails or takes longer than 20 s, the cached sky-is-blue `catch` game is used.
 - **Results.** The game's score is recorded as `concept_evidence` with source `game`.
 
+### Brand-new games (Studio Pro, M11)
+
+1. **Trigger.** The kid presses "Build me a brand-new one!", which calls `POST /kids/{id}/games/custom {topic, learning_goal}`. Kite keeps the template game on screen and says "I'm building you a brand-new game!"
+2. **Request.** The brain calls the `kite-studio` hosted agent over its Invocations endpoint with an Entra token. It sends the creation id as the session id, plus the topic, the goal, the grade and the `KidView`. It never sends levels.
+3. **Inside the sandbox.**
+   - The handler starts the Claude Agent SDK with fixed instructions. Use only KAPLAY. Produce one HTML file with no network calls. Make it kid-safe and use her characters. The game isn't done until `npm run playtest` passes.
+   - Tools are limited to Read, Write, Edit and Bash, inside `$HOME/game`. There is no web access.
+   - The play-test passes when the game loads, runs for 5 s with no errors, calls `kite.ready()`, and the canvas changes after a simulated input.
+   - The run is capped at 8 turns or 3 minutes.
+4. **Back in the brain.**
+   - Content Safety checks every text string in the game.
+   - The brain saves `game.html` under the creation and publishes `creation.ready` with `status="ready"` (a grown-up copy goes to the parent too).
+   - Any failure, timeout or flag publishes `creation.ready` with `status="fallback"`. She keeps the template game.
+5. **Play.** The browser runs `game.html` in `<iframe sandbox="allow-scripts">` with a content security policy that allows no network access.
+6. **Results.** `kite.finish({correct, total})` records `concept_evidence` with source `game`, the same as the template games.
+
+The handler is Python, because hosted agents support only Python and C#. The container also holds Node 24, the Claude Code CLI, Playwright's Chromium, and a vendored copy of KAPLAY. The Foundry project must be in a hosted-agent region. Cold starts are unpublished, so expect 1–3 minutes per game.
+
 ## 10. Homework guard on a simulated class (M8)
 
 - **Source.**
@@ -698,9 +721,10 @@ The night shift always starts from a **fresh database**, so if it crashes, it's 
 4. Passkey and receipts
 5. Counselor inbox
 6. Game maker
-7. Forget and "what Kite remembers"
-8. Full skills map and "how she learns"
-9. Stage page
+7. Brand-new games through the hosted agent (M11). The brain lane builds it tonight, and the template game has to work first.
+8. Forget and "what Kite remembers"
+9. Full skills map and "how she learns"
+10. Stage page
 
 ### For the humans to confirm
 
@@ -714,6 +738,7 @@ The night shift always starts from a **fresh database**, so if it crashes, it's 
 4. **Phone:** which Android version?
 5. **Organizers:** may we change code after the 3:30 PM submission?
 6. **Answers model:** Sonnet 5.5 or Opus 5.5?
+7. **Hosted agents:** is the Foundry project in a hosted-agent region? Is there an Azure Container Registry for the studio image? Does the agent identity have Azure AI User on the Foundry resource?
 
 ## 15. Left to the builder
 

@@ -178,3 +178,29 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   - Games and movies built from SVG with JS libraries. Movies render to a real MP4 with ElevenLabs audio.
   - Use Playwright or similar.
 - **Teach Kite also fixed the evidence gap the reviewers found.** Claude used the SVG decision to drop the image model entirely. Claude chose Remotion's renderer for video (it drives headless Chrome itself) and Playwright for an end-to-end demo smoke test.
+
+## 2026-10-24 ~16:00 EDT: Session 1, the humans change the process: pstack, no test suite
+
+- The humans switched every work item from the superpowers skills to pstack.
+  - Each lane now runs through `/pstack:poteto-mode`.
+  - Helpers work in their own git worktrees.
+  - A decision trail lives in `.audit/`.
+- The humans dropped the unit-test suite: "since its hackathon project no need of it".
+- Claude agreed, but argued to keep three small checks, because the on-stage claims depend on them:
+  - one safety-check script of plain asserts
+  - the night shift's demo-data check
+  - one Playwright smoke run of the demo
+- That safety-check script now runs 67 checks. It covers who sees what, routing, the write gate, encryption, Teach Kite and the homework guard.
+- Along the way, a helper found that an earlier helper had left two of the spec's conditions out of the "strength topic" rule. The lead fixed it.
+- The pipeline's helper also overruled the spec on one point. The parent had to stop subscribing to kid events, because the kid's own words go out before routing, which would leak an abuse turn to the parent. The spec was updated.
+
+## 2026-10-24 ~18:30 EDT: Session 1, the humans want games built on the fly, all on Azure
+
+- The human asked whether games and videos could be generated on the fly by a real coding agent, like Claude Code, and whether Foundry agents could do it.
+- Their constraint: Azure billing only, no Anthropic API account.
+- Claude researched and found two pieces that make it work:
+  - Foundry's hosted agents (GA June 2026) give each session its own VM-isolated sandbox, with a file system and a custom container.
+  - Claude Code and the Claude Agent SDK can run against Claude on Foundry (`CLAUDE_CODE_USE_FOUNDRY=1`), using the agent's Entra identity.
+- Claude recommended a hybrid, and the human said yes:
+  - **Games** get a "brand-new game" path. A hosted agent runs Claude Code's harness, writes a KAPLAY game, play-tests it with Playwright and fixes it. The template game stays on screen while the new one is built, so the demo never waits on it.
+  - **Movies** stay on templates. Rendering video inside a 2 vCPU sandbox is too slow for the stage.
