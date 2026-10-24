@@ -6,7 +6,8 @@ type Background = components["schemas"]["Scene"]["background"];
 
 export const W = 1280;
 export const H = 720;
-const HORIZON = 520;
+// High enough that actors and their names stay above a three-line caption.
+const HORIZON = 420;
 
 interface Layers {
   far: React.ReactNode;
@@ -58,7 +59,7 @@ function layers(bg: Background, p: Palette): Layers {
       };
     case "ocean":
       return {
-        far: <><rect x={-200} y={-100} width={W + 400} height={HORIZON - 120} fill={p.sky} /><Cloud x={300} y={120} /><Cloud x={900} y={80} s={0.8} /></>,
+        far: <><rect x={-200} y={-100} width={W + 400} height={HORIZON} fill={p.sky} /><Cloud x={300} y={120} /><Cloud x={900} y={80} s={0.8} /></>,
         mid: <rect x={-200} y={HORIZON - 120} width={W + 400} height={400} fill="#1e88e5" opacity={0.85} />,
         near: <><rect x={-200} y={HORIZON + 40} width={W + 400} height={H} fill={p.ground} /><path d={`M-200 ${HORIZON + 40} q80 -30 160 0 t160 0 t160 0 t160 0 t160 0 t160 0 t160 0 t160 0 t160 0`} fill="#fff" opacity={0.6} /></>,
       };

@@ -61,9 +61,10 @@ const ActorView: React.FC<{ actor: Actor; x: number; speaking: boolean; src: str
 const Captions: React.FC<{ scene: TimelineScene; frame: number }> = ({ scene, frame }) => {
   const line = [...scene.lines].reverse().find((l) => frame >= l.from);
   if (!line) return null;
+  const fontSize = line.words.length > 16 ? 38 : 46; // long lines stay at three rows, clear of the actors
   return (
     <div style={{ position: "absolute", left: 60, right: 60, bottom: 36, padding: "18px 28px", borderRadius: 24, background: "#000b",
-      fontFamily: "Arial, sans-serif", fontWeight: 700, fontSize: 46, lineHeight: 1.25, color: "#fff", textAlign: "center" }}>
+      fontFamily: "Arial, sans-serif", fontWeight: 700, fontSize, lineHeight: 1.25, color: "#fff", textAlign: "center" }}>
       {line.words.map((w, i) => {
         const on = frame >= w.fromFrame && frame < w.toFrame;
         return (
