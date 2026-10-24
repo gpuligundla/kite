@@ -150,7 +150,7 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
 - **Claude made the first requirement structural, not just a prompt rule.** Claude never receives levels or scores, only teaching guidance. "Tell me about me" turns see only the kid's interests, characters and learning moments.
 - **Claude added a third homework state the human hadn't named:** a quiz that's live right now gets a kind pause and no help at all. It also added disclosure and homework attacks to the red team.
 
-## 2026-10-24 ~15:15 EDT: Session 1, a four-model adversarial review rewrites the design
+## 2026-10-24 ~14:45 EDT: Session 1, a four-model adversarial review rewrites the design
 
 - **The human asked Claude to review the design and plan with pstack's `interrogate`.** Four reviewers on different models (Opus, Fable, Sonnet, Haiku) read the documents independently.
 - **All four found the same top problem.** The kid's device and the parent dashboard shared one live stream and one kind of token. That made two headline claims false at the API:
