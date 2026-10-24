@@ -1,4 +1,4 @@
-"""Safety and privacy claims, as plain asserts. Run: uv run python scripts/check_safety.py"""
+"""Safety and privacy claims, as plain asserts. Run from brain/: uv run python -m scripts.check_safety"""
 
 from datetime import datetime, timezone
 
@@ -8,6 +8,7 @@ from pydantic import TypeAdapter, ValidationError
 from kite_brain.crypto import FamilyKeys, aad, new_key, open_sealed, seal
 from kite_brain.contract import KiteEvent, LearningPayload
 from kite_brain.db import connect, init_db
+from scripts.checks import audiences, decide, ledger, voice
 
 
 def check_encryption() -> None:
@@ -68,4 +69,6 @@ if __name__ == "__main__":
     check_encryption()
     check_shred()
     check_contract()
+    for area in (audiences, decide, ledger, voice):
+        area.run()
     print("ok")
