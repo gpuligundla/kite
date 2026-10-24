@@ -55,6 +55,13 @@ async def post_turn(
         raise HTTPException(403, "this device belongs to another kid")
     if text is None and audio is None:
         raise HTTPException(422, "send text or audio")
+    if concept_id is not None:
+        try:
+            request.app.state.deps.catalog.get(concept_id)
+        except KeyError:
+            raise HTTPException(422, "unknown concept_id") from None
+    if mode == "teach" and concept_id is None:
+        raise HTTPException(422, "teach turns need a concept_id")
     inp = TurnInput(
         kid_id=kid_id, device=device, mode=mode, text=text, audio=await _bytes(audio),
         audio_mime=audio.content_type if audio else None, image=await _bytes(image),

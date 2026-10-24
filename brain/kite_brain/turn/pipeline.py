@@ -17,8 +17,9 @@ from kite_brain.config import (
     DECIDE_TOTAL_TIMEOUT_S, RECALL_TIMEOUT_S, SAFETY_TIMEOUT_S,
 )
 from kite_brain.contract import (
-    AlertEvent, AnswerDoneEvent, AnswerSentenceEvent, CardEvent, DecidedEvent, DeviceKind, HeardEvent,
-    MemorySavedEvent, Mode, PolicyAction, RecalledEvent, RoutedEvent, SensitiveTopic,
+    AlertEvent, AnswerDoneEvent, AnswerSentenceEvent, CardEvent, ConceptEvidence, DecidedEvent, DeviceKind,
+    HeardEvent, MemorySavedEvent, Mode, PayloadKind, PolicyAction, RecalledEvent, RoutedEvent, SensitiveTopic,
+    TaughtEvent,
 )
 from kite_brain.crypto import aad, seal
 from kite_brain.decide import Decisions, top
@@ -29,9 +30,10 @@ from kite_brain.memory.embed import top_k
 from kite_brain.memory.recall import Recall, recall
 from kite_brain.memory.writer import FinishedTurn, write_memory
 from kite_brain.policy import HOMEWORK_LINES, about_me_context, band_for, fk_grade, system_prompt, turn_context
-from kite_brain.questions import ABOUT_ME, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question
-from kite_brain.turn.route import FALLBACK, HomeworkSignal, RoutePlan, route
-from kite_brain.turn.speak import END, SentenceSplitter, drain, speak_sentences
+from kite_brain.questions import ABOUT_ME, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions
+from kite_brain.turn.route import FALLBACK, TEACH_START, HomeworkSignal, RoutePlan, route
+from kite_brain.turn.speak import END, SentenceSplitter, audio_b64, drain, speak_sentences
+from kite_brain.turn.teach import TeachGrade, earlier_attempts, grade_teach, merge_attempts, teach_feedback_context
 from kite_brain.voice import Situation, VoiceSpec, voice_for
 
 log = logging.getLogger(__name__)
@@ -40,7 +42,7 @@ CONCEPT_CANDIDATES = 6
 EXCERPT_ROWS = 4  # the 2 turns (kid and kite) before the flagged message
 T = TypeVar("T")
 
-# Tasks 11 and 12 replace these with the real Teach Kite and homework signals.
+# Task 12 replaces this with the real homework signal.
 NO_HOMEWORK = HomeworkSignal(status=None, title=None, near_live_quiz=False)
 
 
@@ -67,6 +69,7 @@ class _Turn:
         self.now = inp.now or deps.clock()
         self.read_only = False
         self.plan: RoutePlan | None = None
+        self.teach: TeachGrade | None = None
 
     def load_kid(self) -> None:
         row = self.deps.conn.execute(
@@ -127,6 +130,8 @@ async def _decide(turn: _Turn, text: str, candidates: list[str]) -> Decisions | 
     questions = [SAFETY, SENSITIVE_TOPIC, INITIATIVE, ABOUT_ME]
     if candidates:
         questions.append(concept_question(candidates, {c: turn.deps.catalog.get(c).name for c in candidates}))
+    if turn.inp.mode == "teach" and turn.inp.concept_id:
+        questions += teach_point_questions(turn.deps.catalog.get(turn.inp.concept_id))
     return await _timed(turn, "decide", turn.deps.decide(text, questions), DECIDE_TOTAL_TIMEOUT_S)
 
 
@@ -158,6 +163,11 @@ async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | No
     plan, deps = turn.plan, turn.deps
     if plan.route == "about_me":
         context = about_me_context(turn.kid_name, turn.grade, recalled.kid_view)
+    elif turn.teach:
+        context = teach_feedback_context(
+            turn.kid_name, turn.grade, deps.catalog.get(turn.inp.concept_id), turn.teach, text
+        )
+        text = "Please respond to what I just taught you."
     else:
         context = turn_context(
             turn.kid_name, turn.grade, recalled.kid_view, " ".join(recalled.guidance) or None,
@@ -165,7 +175,7 @@ async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | No
         )
     request = LlmRequest(
         system=system_prompt(turn.band, values=""), context=context,
-        messages=[{"role": "user", "content": text}], image=turn.inp.image, tools=True,
+        messages=[{"role": "user", "content": text}], image=turn.inp.image, tools=not turn.teach,
     )
     queue: asyncio.Queue = asyncio.Queue()
     speaker = asyncio.create_task(speak_sentences(drain(queue), deps, spec, publish))
@@ -208,6 +218,29 @@ def _write_session_turns(turn: _Turn, session_id: str, kid_text: str, kite_text:
              seal(key, text.encode(), aad("session_turn", turn.inp.kid_id, row_id))),
         )
     turn.deps.conn.commit()
+
+
+def _grade_teach(turn: _Turn, decisions: Decisions, concept_id: str) -> TeachGrade:
+    """This attempt's verdicts merged with the session's earlier attempts at the concept."""
+    deps = turn.deps
+    session_id = ledger.session_for(deps.conn, turn.inp.kid_id, turn.now)
+    earlier = earlier_attempts(
+        ledger.events(deps.conn, deps.keys, turn.inp.kid_id, turn.grade), concept_id, session_id
+    )
+    return merge_attempts(earlier, grade_teach(decisions, deps.catalog.get(concept_id)))
+
+
+def _record_teach(turn: _Turn, session_id: str, concept_id: str) -> PayloadKind:
+    """The teach-back evidence, and the grown-up's `taught` event. The moment comes from write_memory."""
+    grade = turn.teach
+    deps = turn.deps
+    evidence = ConceptEvidence(outcome=grade.outcome, source="teach_back", points=grade.verdicts)
+    ledger.append(
+        deps.conn, deps.keys, deps.catalog, kid_id=turn.inp.kid_id, grade=turn.grade, at=turn.now,
+        session_id=session_id, payload=evidence, source_turn_id=turn.turn_id, concept_id=concept_id,
+    )
+    turn.emit(TaughtEvent, "parent", concept_id=concept_id, points=grade.verdicts, outcome=grade.outcome)
+    return evidence.kind
 
 
 def _write_card(turn: _Turn, answer: str) -> str:
@@ -268,6 +301,9 @@ async def _run(turn: _Turn) -> None:
         decisions, safety, turn.policy(), NO_HOMEWORK, inp.mode, not text, recall_ok=recalled is not None
     )
 
+    if plan.route == "teach":
+        turn.teach = _grade_teach(turn, decisions, concept_id)
+
     # 5. Grown-up events, to the audience the plan chose
     turn.emit(HeardEvent, plan.audience, text=text)
     if decisions:
@@ -288,7 +324,10 @@ async def _run(turn: _Turn) -> None:
         turn.emit(AlertEvent, plan.alert_to, alert_id=alert_id, kinds=plan.alert_kinds, routed_to=plan.alert_to)
 
     # 6. Answer
-    spec = _voice(turn.band, plan.situation)
+    situation = plan.situation
+    if turn.teach:
+        situation = "celebrate" if turn.teach.all_covered else "answer"
+    spec = _voice(turn.band, situation)
     publish = lambda i, t, audio: turn.emit_kid(AnswerSentenceEvent, index=i, text=t, audio_b64=audio)  # noqa: E731
     if plan.reply:
         answer = await speak_sentences(_one(plan.reply), deps, spec, publish, moderate=False)
@@ -307,10 +346,24 @@ async def _run(turn: _Turn) -> None:
         return
     session_id = ledger.session_for(deps.conn, inp.kid_id, turn.now)
     _write_session_turns(turn, session_id, text, answer)
+    saved: list[PayloadKind] = []
+    if turn.teach:
+        saved.append(_record_teach(turn, session_id, concept_id))
     finished = FinishedTurn(
         kid_id=inp.kid_id, grade=turn.grade, at=turn.now, session_id=session_id, turn_id=turn.turn_id,
         kid_text=text, kite_text=answer, initiative=top(decisions.answers["initiative"]),
         concept_id=concept_id, route=plan.route,
     )
-    kinds = await write_memory(finished, deps)
+    kinds = saved + await write_memory(finished, deps)
     turn.emit(MemorySavedEvent, plan.audience, count=len(kinds), kinds=kinds)
+
+
+async def start_teach(deps: Deps, kid_id: str, concept_id: str) -> None:
+    """Kite's fixed opening for Teach Kite, spoken in the listen voice to the kid, with the grown-up's copy."""
+    grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (kid_id,)).fetchone()["grade"]
+    text = TEACH_START.format(concept=deps.catalog.get(concept_id).kid_name)
+    audio = await audio_b64(deps, text, _voice(band_for(grade), "listen"))
+    for audience in ("kid", "parent"):
+        deps.bus.publish(AnswerSentenceEvent(
+            kid_id=kid_id, turn_id=None, at=deps.clock(), audience=audience, index=0, text=text, audio_b64=audio
+        ))

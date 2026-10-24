@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from kite_brain.auth import require
 from kite_brain.contract import AlertEvent
 from kite_brain.memory import ledger
+from kite_brain.turn.pipeline import start_teach
 
 router = APIRouter()
 
@@ -25,3 +26,34 @@ async def sos(kid_id: str, body: Sos, request: Request) -> dict[str, str]:
         kinds=["sos"], routed_to="parent", lat=body.lat, lng=body.lng,
     ))
     return {"alert_id": alert_id}
+
+
+class TeachStart(BaseModel):
+    concept_id: str
+
+
+class Teachable(BaseModel):
+    concept_id: str
+    kid_name: str
+
+
+@router.post("/kids/{kid_id}/teach/start", dependencies=[require("os", "handheld")])
+async def teach_start(kid_id: str, body: TeachStart, request: Request) -> dict[str, bool]:
+    deps = request.app.state.deps
+    try:
+        deps.catalog.get(body.concept_id)
+    except KeyError:
+        raise HTTPException(422, "unknown concept_id") from None
+    await start_teach(deps, kid_id, body.concept_id)
+    return {"ok": True}
+
+
+@router.get("/kids/{kid_id}/teachable", dependencies=[require("os", "handheld")])
+def teachable(kid_id: str, request: Request) -> list[Teachable]:
+    """Concepts she has met, most recent first, in kid words. Never levels."""
+    deps = request.app.state.deps
+    grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (kid_id,)).fetchone()["grade"]
+    met = dict.fromkeys(
+        e.concept_id for e in reversed(ledger.events(deps.conn, deps.keys, kid_id, grade)) if e.concept_id
+    )
+    return [Teachable(concept_id=c, kid_name=deps.catalog.get(c).kid_name) for c in met]

@@ -81,7 +81,8 @@ def deps_for(stand: StandIns) -> tuple[Deps, EventBus]:
 
 
 def turn(deps, bus, stand, turn_id="t1", **fields):
-    inp = TurnInput(kid_id=KID_ID, device="os", mode="talk", audio=b"\0", audio_mime="audio/webm", **fields)
+    base = dict(kid_id=KID_ID, device="os", mode="talk", audio=b"\0", audio_mime="audio/webm")
+    inp = TurnInput(**base | fields)
     asyncio.run(run_turn(inp, deps, turn_id))
     seen = {kind: asyncio.run(drain(bus, kind)) for kind in ("os", "parent", "counselor")}
     for e in seen["os"]:
