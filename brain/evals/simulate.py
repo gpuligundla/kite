@@ -83,7 +83,7 @@ class SimReport:
     teach_turns: int = 0
 
 
-class _NoTts:
+class NoTts:
     async def speak(self, text, spec) -> bytes:
         return b""
 
@@ -177,7 +177,7 @@ async def _play_grade(
 ) -> None:
     times = turn_times(grade, start_year, turns, until)
     clock, tap = _GradeClock(times[0]), TapBus()
-    deps = replace(base, clock=clock, bus=tap, tts=_NoTts())
+    deps = replace(base, clock=clock, bus=tap, tts=NoTts())
     history: list[tuple[str, str]] = []
     for i, at in enumerate(times):
         clock.now = at

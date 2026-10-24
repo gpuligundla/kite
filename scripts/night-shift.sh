@@ -29,3 +29,7 @@ uv run python -m evals.simulate --grades 1-11 --turns "$TURNS"
 uv run python -m evals.shape --min-turns "$((TURNS * 10))"
 uv run python -c "import sys; from evals import backup; backup(sys.argv[1], sys.argv[2])" "$DB" "$SNAPSHOT"
 echo "snapshot: brain/$SNAPSHOT"
+
+# Red team, pedagogy and write gate run on a throwaway copy and publish docs/trust/*.json.
+uv run python -m evals.redteam --snapshot "$SNAPSHOT"
+echo "night shift done. Review docs/trust/scorecard.json and docs/trust/readability.json, then commit them."
