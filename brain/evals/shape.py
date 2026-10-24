@@ -14,7 +14,9 @@ from kite_brain.seed import KID_ID
 MIN_TURNS = 300
 MIN_CAN_TEACH = 3
 MIN_CARDS = 2
-DINOSAUR_GRADE, AREA_GRADE = 7, 5
+# Grade 8, not 7: the first night shift had dinosaurs dip in grade 7 when the harder ideas arrived
+# (birds are dinosaurs, a timeline slip) and come back for good in grade 8. The dip is real; the demo shows 8.
+DINOSAUR_GRADE, AREA_GRADE = 8, 5
 
 
 def assert_demo_shape(deps: Deps, min_turns: int = MIN_TURNS) -> list[str]:

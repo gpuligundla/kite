@@ -570,7 +570,7 @@ In `voice.py`:
 - `async simulate(make_deps, grades, turns_per_grade, start_year) -> SimReport(turns, by_grade, teach_turns)`. Each grade gets its own `Deps` copy, created with `dataclasses.replace` and a clock set inside that grade's school year. Grades run under `Semaphore(4)`. `tts` is a no-op. Tool calls only record `chose_creation`.
 - `assert_demo_shape(deps) -> list[str]`, which returns the failures:
   - fewer than 300 turns
-  - dinosaurs is not a strength topic at grade 7
+  - dinosaurs is not a strength topic at grade 8
   - `area_perimeter` is not growing at grade 5
   - fewer than 3 concepts at `can_teach`
   - fewer than 2 cards

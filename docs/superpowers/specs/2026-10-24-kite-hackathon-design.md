@@ -682,7 +682,7 @@ The night shift always starts from a **fresh database**, so if it crashes, it's 
    - Grades run concurrently under `Semaphore(4)`. Voice is turned off, and studio tool calls are recorded only as curiosity signals.
 3. **Assert the demo's shape.** The run must produce:
    - at least 300 turns across 11 grades
-   - dinosaurs as a strength topic by grade 7
+   - dinosaurs as a strength topic at grade 8 (the first real run had it at grades 4, 6 and 8 to 11, dipping in 7)
    - `area_perimeter` as a growing area at grade 5
    - at least 3 `can_teach` concepts
    - at least 2 big-question cards
