@@ -380,3 +380,4 @@ class Creation(BaseModel):
     audio: dict[str, str] = {}
     timings: dict[str, list[Word]] = {}
     video_url: str | None = None
+    html_url: str | None = None  # M11: a brand-new game built by the studio agent
