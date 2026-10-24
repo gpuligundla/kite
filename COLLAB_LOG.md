@@ -223,3 +223,17 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   - Two sittings in three are now a mini-lesson: ask, react, teach it back.
   - A 3-turn real smoke graded area-and-perimeter "not yet".
   - A 6-turn real smoke graded it "partly", and graded a dinosaur concept "got it" with every point covered.
+
+## 2026-10-24 ~18:00 EDT: Session 1, Claude Code builds a kid's game inside Azure
+
+- **The first live call to the `kite-studio` hosted agent crashed.**
+  - The gateway only said "Failed to forward request".
+  - Claude read the agent's Application Insights traces instead of guessing. The real error was `PermissionError` on `/home/session/game`.
+  - Foundry sets `HOME` to its own session folder, and the image's non-root user can't write there.
+- **The fix: one writable work folder for the game, Claude Code's config and npm's cache.** A crash now also returns a clean `failed` result instead of a dropped connection.
+- **On version 3, Claude Code running inside the Foundry sandbox built a game, billed only through Azure.** In 4 turns it:
+  1. read the kit
+  2. planned "Rexy catches blue light bits (scatter) and lets red pass"
+  3. wrote the game
+  4. ran the play-test until it passed
+- **Claude checked the result independently.** It re-ran the play-test on the returned file and took screenshots in headless Chromium. Rexy moves, blue and red stars fall, and catching a blue one shows "Yes! Blue light scatters a lot!"
