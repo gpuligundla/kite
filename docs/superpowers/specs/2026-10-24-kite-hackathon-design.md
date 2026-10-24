@@ -292,6 +292,7 @@ The turn runs in seven steps.
 |---|---|---|
 | Each alert label | ≥ 0.20 | Labels are counted independently, so one turn can raise several alert kinds. |
 | `about_me` route | ≥ 0.20 | This also drops the teaching guidance. |
+| `forget` route | ≥ 0.5 | Checked after alerts and the fallback, before everything else. |
 | `is_learning_fact` | ≥ 0.80 | |
 | `assigned_work` | ≥ 0.5 | |
 
@@ -456,6 +457,8 @@ Guidance covers only this turn's concept, written as teaching instructions with 
 ### Forget (Tier 2)
 
 Forgetting a turn deletes its learning events, its `moment_vector` rows, its `session_turn` row and its card. Alerts stay as the safety record.
+
+A turn routed `forget` forgets the kid's previous stored turn and replies "Okay, I forgot that." with no model call. It stores nothing itself, so saying it again reaches the turn before. A time-travel turn forgets nothing.
 
 ### Expiry
 

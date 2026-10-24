@@ -89,8 +89,7 @@ def route(
         return plan("fallback", reply=FALLBACK)
 
     if decisions.answers.get("forget_request", {}).get("yes", 0.0) >= FORGET_THRESHOLD:
-        # ponytail: reuses about_me because RouteName is frozen for the UI; a "forget" name once it thaws.
-        return plan("about_me", reply=FORGOT, forget=True)
+        return plan("forget", reply=FORGOT, forget=True)
 
     if homework.near_live_quiz or homework.status == "exam_live":
         return plan("pause", reply=PAUSE_REPLY, homework_mode="pause", assignment_title=homework.title)

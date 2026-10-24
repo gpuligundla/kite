@@ -872,7 +872,7 @@ export interface components {
              * Route
              * @enum {string}
              */
-            route: "alert" | "pause" | "ask_parent" | "teach" | "homework" | "about_me" | "answer" | "unheard" | "fallback";
+            route: "alert" | "pause" | "ask_parent" | "teach" | "homework" | "about_me" | "forget" | "answer" | "unheard" | "fallback";
         };
         /** AnswerSentenceEvent */
         AnswerSentenceEvent: {
@@ -1219,7 +1219,7 @@ export interface components {
              * Route
              * @enum {string}
              */
-            route: "alert" | "pause" | "ask_parent" | "teach" | "homework" | "about_me" | "answer" | "unheard" | "fallback";
+            route: "alert" | "pause" | "ask_parent" | "teach" | "homework" | "about_me" | "forget" | "answer" | "unheard" | "fallback";
             /**
              * Alert Kinds
              * @default []

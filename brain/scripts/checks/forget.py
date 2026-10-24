@@ -62,7 +62,7 @@ def check_forget_request_removes_previous_turn() -> None:
     seen = say("forget what I just said", decisions(forget=0.9))
     assert "forget_request" in stand.asked[-1], f"the turn asks the forget question: {stand.asked[-1]}"
     assert seen["answer.done"].text == FORGOT and stand.llm_calls == calls, "the fixed reply, no model call"
-    assert seen["routed"].route == "about_me", "forget reuses the about_me route name while RouteName is frozen"
+    assert seen["routed"].route == "forget", "a forget turn says so to the grown-ups"
     assert moments() == [DINO], f"the sky moment is forgotten, the dinosaur one stays: {moments()}"
     assert rows(deps, "SELECT COUNT(*) FROM session_turn") == 2, "only the earlier turn's kid and kite rows are left"
     assert rows(deps, "SELECT COUNT(*) FROM learning_event") < events, "the previous turn's events are gone"

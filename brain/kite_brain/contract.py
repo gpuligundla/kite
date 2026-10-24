@@ -17,7 +17,7 @@ PolicyAction = Literal["answer", "answer_and_tell", "ask_parent"]
 SensitiveTopic = Literal["death", "religion", "bodies", "war", "divorce", "none"]
 Mode = Literal["talk", "teach"]
 RouteName = Literal[
-    "alert", "pause", "ask_parent", "teach", "homework", "about_me", "answer", "unheard", "fallback"
+    "alert", "pause", "ask_parent", "teach", "homework", "about_me", "forget", "answer", "unheard", "fallback"
 ]
 HomeworkMode = Literal["help", "pause", "explain"]
 Initiative = Literal["own_question", "follow_up_why", "assigned_work"]
