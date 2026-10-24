@@ -1,6 +1,6 @@
 // Sprites are inert SVG images behind data: URLs, so any script inside one never runs.
-// ponytail: no vendored art set exists yet, so unknown slugs get a flat shape plus an initial.
-// To use real art, pass `sprites: { slug: dataUrl }` to KiteMovie.
+// Real art comes from the brain: pass GET /creations/{id}'s `sprites` map to KiteMovie as it is.
+// Slugs it doesn't list get a flat shape plus an initial.
 
 const SHAPES: Record<string, string> = {
   circle: '<circle cx="32" cy="32" r="28"/>',
@@ -18,9 +18,10 @@ export function svgDataUrl(svg: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-/** The sprite for a slug: the caller's own art first, then a flat generated badge. */
+/** The sprite for a slug: the caller's art (a URL or raw <svg> markup) first, then a flat generated badge. */
 export function resolveSprite(slug: string, sprites: Record<string, string> = {}): string {
-  if (sprites[slug]) return sprites[slug];
+  const art = sprites[slug];
+  if (art) return art.trimStart().startsWith("<svg") ? svgDataUrl(art) : art;
   let hash = 0;
   for (const ch of slug) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const color = COLORS[hash % COLORS.length];

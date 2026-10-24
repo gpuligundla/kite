@@ -1,6 +1,6 @@
 // Sprites are inert SVG images behind data: URLs, so any script inside one never runs.
-// ponytail: no vendored art set exists yet, so unknown slugs get a flat shape plus an initial.
-// To use real art, pass `sprites: { slug: dataUrl }` to mountGame.
+// Real art comes from the brain: pass GET /creations/{id}'s `sprites` map to mountGame as it is.
+// Slugs it doesn't list get a flat shape plus an initial.
 
 const SHAPES: Record<string, string> = {
   circle: '<circle cx="32" cy="32" r="28"/>',
@@ -14,9 +14,14 @@ const SHAPES: Record<string, string> = {
 };
 const COLORS = ["#ef5350", "#ffa726", "#66bb6a", "#42a5f5", "#ab47bc", "#26a69a"];
 
-/** The sprite for a slug: the caller's own art first, then a flat generated badge. */
+const dataUrl = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+
+/** The sprite for a slug: the caller's art (a URL or raw <svg> markup) first, then a flat generated badge. */
 export function resolveSprite(slug: string, sprites: Record<string, string> = {}): string {
-  if (sprites[slug]) return sprites[slug];
+  const art = sprites[slug];
+  // KAPLAY rasterizes an SVG at its own width and height, and the brain's art is 32 px, so draw it at 128.
+  if (art?.trimStart().startsWith("<svg")) return dataUrl(art.replace(/<svg([^>]*?)\swidth="\d+"\s+height="\d+"/, '<svg$1 width="128" height="128"'));
+  if (art) return art;
   let hash = 0;
   for (const ch of slug) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const color = COLORS[hash % COLORS.length];
@@ -25,5 +30,5 @@ export function resolveSprite(slug: string, sprites: Record<string, string> = {}
     ? ""
     : `<text x="32" y="43" font-size="30" font-family="Arial" font-weight="700" text-anchor="middle" fill="#fff">${slug[0]?.toUpperCase() ?? ""}</text>`;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="128" height="128"><g fill="${color}">${shape}</g>${initial}</svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  return dataUrl(svg);
 }

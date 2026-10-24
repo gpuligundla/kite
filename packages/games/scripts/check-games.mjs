@@ -40,16 +40,20 @@ const specs = {
 const browser = await chromium.launch();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function open(spec) {
+// The brain's own art, as raw <svg> markup the way GET /creations/{id} sends it.
+const art = (slug) => fs.readFileSync(path.join(here, "../../../brain/kite_brain/studio/sprites", `${slug}.svg`), "utf8");
+const brainSprites = { drop: art("raindrop"), heart: art("fire") };
+
+async function open(spec, sprites = {}) {
   const page = await browser.newPage({ viewport: { width: 960, height: 600 } });
   const errors = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto(`file://${path.join(out, "index.html")}`);
-  await page.evaluate((s) => {
+  await page.evaluate(([s, art]) => {
     window.finished = [];
-    window.stop = window.kite.mountGame(document.getElementById("c"), s, (r) => window.finished.push(r));
-  }, spec);
+    window.stop = window.kite.mountGame(document.getElementById("c"), s, (r) => window.finished.push(r), art);
+  }, [spec, sprites]);
   await sleep(1000);
   const box = await page.locator("#c").boundingBox();
   const at = (x, y) => [box.x + (x * box.width) / 960, box.y + (y * box.height) / 600];
@@ -60,7 +64,7 @@ const snap = (page, clip) => page.screenshot({ clip });
 
 // ---- catch
 {
-  const { page, errors, box, at } = await open(specs.catch);
+  const { page, errors, box, at } = await open(specs.catch, brainSprites);
   await page.screenshot({ path: path.join(shots, "catch-start.png") });
   await page.mouse.click(...at(480, 460));
   await sleep(300);
