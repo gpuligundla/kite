@@ -2,6 +2,15 @@
 
 > **For agentic workers:** run this plan with pstack. Start `/pstack:poteto-mode`, which routes a lane this size to the figure-it-out playbook with Feature-style delegation. Each lane keeps its own decision trail under `.audit/`. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Hackathon mode: no test suite** (operator's call, Sat 4 PM).
+>
+> - **Skip every unit-test step.** That means pytest, vitest, `FakeDeps` and `conftest`. `Deps` is a plain dataclass of the concrete clients.
+> - **Verify each task by running the real thing.** Use the live checks, manual checks and `curl` smoke steps that each task names. A test name in a task now describes what to check by hand.
+> - **Three automated checks stay**, because the stage claims depend on them:
+>   - `brain/scripts/check_safety.py`: plain asserts for encryption, who sees what, routing, and the write gate. Each brain task adds its rule there.
+>   - the night shift's demo-shape check
+>   - the Playwright demo smoke (Task 31)
+
 **Goal:** Build Kite. One Python brain serves the Next.js Kite OS shell, the Expo Android launcher, the parent dashboard and the counselor view. The demo shows time travel across grades, Teach Kite, a live and rendered movie, the homework guard, camera and SOS, and ten simulated years of Maya.
 
 **Architecture:**
