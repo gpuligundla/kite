@@ -32,7 +32,7 @@ from kite_brain.memory.recall import Recall, recall
 from kite_brain.memory.writer import FinishedTurn, write_memory
 from kite_brain.policy import HOMEWORK_LINES, about_me_context, band_for, fk_grade, system_prompt, turn_context
 from kite_brain.questions import ABOUT_ME, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions
-from kite_brain.turn.route import FALLBACK, TEACH_START, RoutePlan, route
+from kite_brain.turn.route import FALLBACK, RoutePlan, route, teach_start_line
 from kite_brain.turn.speak import END, SentenceSplitter, audio_b64, drain, speak_sentences
 from kite_brain.turn.teach import TeachGrade, earlier_attempts, grade_teach, merge_attempts, teach_feedback_context
 from kite_brain.voice import Situation, VoiceSpec, voice_for
@@ -365,7 +365,7 @@ async def _run(turn: _Turn) -> None:
 async def start_teach(deps: Deps, kid_id: str, concept_id: str) -> None:
     """Kite's fixed opening for Teach Kite, spoken in the listen voice to the kid, with the grown-up's copy."""
     grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (kid_id,)).fetchone()["grade"]
-    text = TEACH_START.format(concept=deps.catalog.get(concept_id).kid_name)
+    text = teach_start_line(deps.catalog.get(concept_id).kid_name)
     audio = await audio_b64(deps, text, _voice(band_for(grade), "listen"))
     for audience in ("kid", "parent"):
         deps.bus.publish(AnswerSentenceEvent(

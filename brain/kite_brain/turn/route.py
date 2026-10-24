@@ -15,6 +15,10 @@ ASK_PARENT = "That's a big question, and a grown-up who loves you is the best pe
 PAUSE_REPLY = "That looks like it could be for your quiz right now, so I can't help with it. You've got this! Ask me again once it's over."
 TEACH_START = "I'm all ears! Teach me everything you know about {concept}."
 
+
+def teach_start_line(concept_name: str) -> str:
+    return TEACH_START.format(concept=concept_name[:1].lower() + concept_name[1:])
+
 _CRISIS = "You can call or text 988 any time, or call Childhelp at 1-800-422-4453. Both are free, and a grown-up will listen."
 ALERT_REPLY: dict[str, str] = {
     "self_harm": f"I'm really glad you told me. Your feelings matter, and you deserve help from a real person right now. {_CRISIS}",

@@ -13,7 +13,7 @@ from kite_brain.deps import Deps
 from kite_brain.memory import ledger, maps
 from kite_brain.policy import band_for
 from kite_brain.seed import KID_ID, seed
-from kite_brain.turn.route import PAUSE_REPLY, TEACH_START
+from kite_brain.turn.route import PAUSE_REPLY, teach_start_line
 from kite_brain.turn.teach import TRY_AGAIN
 from kite_brain.voice import voice_for
 from scripts.checks.audiences import drain
@@ -186,7 +186,7 @@ def check_api() -> None:
     assert client.post(start, json={"concept_id": "nope"}, headers=bearer("os")).status_code == 422
     use_sample_voices()
     assert client.post(start, json={"concept_id": "light_see"}, headers=bearer("os")).status_code == 200
-    line = TEACH_START.format(concept=names["light_see"])
+    line = teach_start_line(names["light_see"])
     kid = [e for e in asyncio.run(drain(app.state.bus, "os")) if e.type == "answer.sentence"]
     parent = [e for e in asyncio.run(drain(app.state.bus, "parent")) if e.type == "answer.sentence"]
     assert [e.text for e in kid] == [line] == [e.text for e in parent], "kid and parent hear the fixed line"
