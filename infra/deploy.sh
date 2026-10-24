@@ -29,6 +29,17 @@ echo "group: $KITE_RG  region: $KITE_LOCATION  prefix: $KITE_PREFIX  apps: $KITE
 # Empty when signed in as a service principal, which skips the developer role.
 export KITE_DEVELOPER_ID="${KITE_DEVELOPER_ID:-$(az ad signed-in-user show --query id -o tsv 2>/dev/null || true)}"
 
+# A rerun keeps the Claude capacity that is live now, so a limit raised by hand isn't cut back to 40.
+account=$(az cognitiveservices account list -g "$KITE_RG" --query "[?kind=='AIServices'] | [0].name" -o tsv 2>/dev/null || true)
+for model in sonnet haiku; do
+  var="KITE_${model^^}_CAPACITY"
+  live=""
+  [ -n "$account" ] && live=$(az cognitiveservices account deployment show -g "$KITE_RG" -n "$account" \
+    --deployment-name "claude-$model-5-5" --query sku.capacity -o tsv 2>/dev/null || true)
+  export "$var=${!var:-${live:-40}}"
+done
+echo "claude capacity: sonnet $KITE_SONNET_CAPACITY  haiku $KITE_HAIKU_CAPACITY"
+
 if [ "$KITE_DEPLOY_APPS" = "true" ]; then
   # Read raw lines, because sourcing the file would strip the quotes inside the KITE_VOICES JSON.
   env_value() { grep -m1 "^$1=" brain/.env | cut -d= -f2- || true; }

@@ -94,7 +94,7 @@ param claudeVersion = '2'
 param claudeSku = 'DataZoneStandard'
 ```
 
-The other settings are `sonnetCapacity`, `haikuCapacity`, `decisionCapacity` and `embedCapacity`. For Claude and embeddings, capacity is in thousands of tokens per minute. Microsoft doesn't document what one unit of Decision-1 capacity buys. The catalog lists limits of 1 request and 1,000 tokens per minute, which appear to be per unit, and suggests a default capacity of 500, so the template deploys 500. If `scripts/probe_decision.py` returns HTTP 429, raise `decisionCapacity`. To find the largest value your subscription allows, read the limit for `AIServices.DataZoneStandard.Microsoft-Decision-1` in the output of this command:
+The other settings are `sonnetCapacity`, `haikuCapacity`, `decisionCapacity` and `embedCapacity`. For Claude and embeddings, capacity is in thousands of tokens per minute. Claude starts at 40, the pay-as-you-go cap. With more quota, set `KITE_SONNET_CAPACITY` and `KITE_HAIKU_CAPACITY`; a rerun of `deploy.sh` keeps whatever capacity is live unless you set them. This project runs both at 200, which also allows 200 requests a minute. Microsoft doesn't document what one unit of Decision-1 capacity buys. The catalog lists limits of 1 request and 1,000 tokens per minute, which appear to be per unit, and suggests a default capacity of 500, so the template deploys 500. If `scripts/probe_decision.py` returns HTTP 429, raise `decisionCapacity`. To find the largest value your subscription allows, read the limit for `AIServices.DataZoneStandard.Microsoft-Decision-1` in the output of this command:
 
 ```bash
 az cognitiveservices usage list --location eastus2 --query "[?contains(name.value, 'Decision')]" -o table
