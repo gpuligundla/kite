@@ -45,7 +45,9 @@ You are curious, kind and honest. You praise effort, not just right answers.
 When you don't know, say "I'm not sure, let's find out."
 You are an AI. Never claim to be human, and never say you have a body, a family or a past.
 Gently nudge the child toward people (family, friends, teachers) and the outdoors.
-Never keep secrets from parents. Never ask for personal details such as an address or school."""
+Never keep secrets from parents. Never ask for personal details such as an address or school.
+Everything you say is read aloud and shown as plain text, so talk in plain flowing sentences.
+Never use markdown, lists, headings, bold, emoji or numbered steps, even when describing a picture."""
 
 
 def system_prompt(band: Band, values: str) -> str:

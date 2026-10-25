@@ -13,6 +13,12 @@ from kite_brain.voice import VoiceSpec
 log = logging.getLogger(__name__)
 
 _SENTENCE_END = re.compile(r"(.*?[.!?]+[\"')\]]*)\s+", re.S)
+# Kite's words are spoken, so markup is never valid. The prompt forbids it; this catches what slips through.
+_MARKUP = re.compile(r"\*\*|__|`|^\s*(?:[-*•]\s+|#{1,6}\s+)+", re.M)
+
+
+def plain(sentence: str) -> str:
+    return re.sub(r"\s*\n\s*", " ", _MARKUP.sub("", sentence)).strip()
 END = None  # queue sentinel
 
 Publish = Callable[[int, str, str], None]  # (index, text, audio_b64)
@@ -26,13 +32,13 @@ class SentenceSplitter:
         self._buffer += delta
         out = []
         while m := _SENTENCE_END.match(self._buffer):
-            if sentence := m.group(1).strip():
+            if sentence := plain(m.group(1)):
                 out.append(sentence)
             self._buffer = self._buffer[m.end():]
         return out
 
     def flush(self) -> list[str]:
-        rest, self._buffer = self._buffer.strip(), ""
+        rest, self._buffer = plain(self._buffer), ""
         return [rest] if rest else []
 
 

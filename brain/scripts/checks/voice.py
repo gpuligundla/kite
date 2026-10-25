@@ -86,6 +86,15 @@ def check_alignment() -> None:
     assert [w.text for w in tagged] == ["Hi"], "audio tags are not words"
 
 
+def check_spoken_text_is_plain() -> None:
+    from kite_brain.turn.speak import SentenceSplitter
+
+    split = SentenceSplitter()
+    out = split.feed("- **Six vertical bars:** red, green and blue.\n- ## The `sky` is blue! ") + split.flush()
+    assert out == ["Six vertical bars: red, green and blue.", "The sky is blue!"], out
+    assert SentenceSplitter().feed("Bees are 2 inches long. ") == ["Bees are 2 inches long."], "plain text is untouched"
+
+
 def run() -> None:
     check_bands()
     check_depth_and_privacy()
@@ -93,6 +102,7 @@ def run() -> None:
     check_voice_allowlist()
     check_alert_delivery()
     check_alignment()
+    check_spoken_text_is_plain()
 
 
 if __name__ == "__main__":
