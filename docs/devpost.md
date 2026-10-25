@@ -1,6 +1,6 @@
 # Devpost submission: Kite
 
-Paste each section into the Devpost field with the same name. Every placeholder in square brackets needs the lead's answer before submitting. The red-team and reading-level numbers come from `docs/trust/` and may change tonight.
+Paste each section into the Devpost field with the same name. Every placeholder in square brackets needs the lead's answer before submitting. The red-team and reading-level numbers come from `docs/trust/scorecard.json` and `docs/trust/readability.json`.
 
 ## Project name
 
@@ -26,44 +26,52 @@ We also had a warning to design against. In December 2024, Embodied shut down, a
 
 ## What it does
 
-Kite is one companion that follows a kid across every grade. This weekend's build shows it with Maya, a simulated kid whose childhood AI agents played from grade 1 to grade 11. The brain behind every feature below is built, and its safety checks pass. [pending: the web app pages that show these features]
+Kite is one companion that follows a kid across every grade. This weekend's build shows it with Maya, a simulated kid whose childhood AI agents played from grade 1 to grade 11. One brain serves four screens: Kite OS on the school Chromebook, a kid-safe phone, a parent console, and a school counselor console.
 
 **For the kid:**
 
-- Ask anything by voice and hear an answer pitched to your grade. Each grade band (K-2, 3-5, 6-8, 9-12) sets the reading level, the sentence length, the style, and an adult ElevenLabs voice that gets steadier as the kid grows. Kite measures the reading level of every answer in code.
-- Drag a grade slider to ask the same question at another grade. Time-travel turns are read-only, so they never change the kid's memory.
-- Say "make it a movie" to get a narrated cartoon of up to five scenes, built from SVG sprites and voiced by ElevenLabs. It plays in the browser and renders to an MP4 for the parents.
-- Say "make it a game" to get a small KAPLAY game about the idea. Tap "Build me a brand-new one!" and Claude Code, running in a sandbox in Azure, writes a new game from scratch and play-tests it before the kid sees it.
-- Teach Kite. The kid explains an idea while Kite listens without interrupting. Kite grades the explanation against the concept's key points, then celebrates or asks one guiding question about what was missed.
-- Get homework help that matches the assignment. Open homework gets hints, a live quiz gets a kind pause, and a closed quiz gets the full worked solution. The class is simulated in Canvas's assignment format, because no LMS connector exists yet.
-- Say "Kite, forget that" to delete the last turn, and see what Kite remembers.
-- On the phone, press SOS to send your location to your parents. [pending: the phone's handheld mode in the web app]
+- Kite OS is a full-screen shell for the school Chromebook, with Kite as one of its apps. A status bar holds the clock and the grade slider. The desktop has eight apps (Kite, Classroom, To-do, Quizzes & exams, Calendar, Story time, My creations, and What's this?) and a Today column with the live quiz, the next thing due, and the newest creation. Classroom follows Google Classroom's shape: class cards, a class stream, then the assignment.
+- Ask Kite sits in the dock on every screen. Hold the diamond to talk from anywhere, or tap it to open the Ask Kite panel over the app. Kite itself opens as a window, with tiles, a voice-first stage, **New topic**, and **Past chats**.
+- Ask anything by voice and hear an answer pitched to your grade. Each grade band (K-2, 3-5, 6-8, 9-12) sets the reading level, the sentence length, the style, and an adult ElevenLabs voice with its own speed and expressiveness. Kite measures the reading level of every answer in code and shows it as a badge. The screen grows up too: its sky moves from noon for K-2 to an aurora night for 9-12.
+- Drag the grade slider to ask the same question at another grade. Time-travel turns are read-only, so they never change the kid's memory.
+- Say "make it a movie" to get a narrated cartoon of up to five scenes, built from SVG sprites. Kite narrates it in the kid's band voice over a music bed that ElevenLabs composes. The movie ends on a question that Kite reads aloud and the kid answers on screen. It plays in the browser and renders to an MP4 for the parents.
+- Once a movie is ready, Kite starts a director's cut on its own. Claude Code on Claude Opus 5.5 hand-animates the same narration as one web page, then looks at its own frames and fixes what it sees.
+- Say "make it a game" to get a small KAPLAY game about the idea. Tap **Build me a brand-new one!** and Claude Code on Claude Opus 5.5, running in a sandbox in Azure, writes a new game from scratch with Phaser, GSAP, or KAPLAY and play-tests it before the kid sees it. The kid plays the template game while it builds.
+- Story time tells a picture-book story that Kite reads aloud with sound effects and music. A learn story teaches, a fun story is only for fun, and a feelings story models a kind choice. Bedtime tells any of them slower and softer.
+- Teach Kite. The kid explains an idea while Kite listens without interrupting. Kite grades the explanation against the concept's key points, then celebrates or asks one guiding question about what was missed. The kid never sees the grade.
+- Get homework help that matches the assignment. Open homework gets hints, and so does a quiz that hasn't opened yet. A live quiz gets a kind pause, and a closed quiz gets the full worked solution. The class is simulated with Canvas's assignment fields, because no LMS connector exists yet.
+- Say "Kite, forget that" to delete the last turn, and open **What Kite remembers** to see what Kite keeps.
+- The phone is a kid-safe launcher: a lock-screen clock, the next class, location sharing, the approved contacts with call and text, a camera that asks "What's this?", and the diamond as a walkie-talkie. Hold **SOS** for 2 seconds to send your location to your parents. Call and text are the launcher's shape only and don't dial or send yet.
 
 **For the grown-ups:**
 
-- A parent dashboard shows the curiosity map, skills, growing areas, the concepts the kid can teach, and the movies the kid made, at any grade. [pending: the web dashboard]
+- A parent console with seven tabs: Overview, Learning, Moments, Big questions, Creations, Safety, and Trust. A grade slider in the app bar replays any past school year. A new alert, such as an SOS, shows under the app bar on every tab.
+- Overview shows where the kid is strong, what is close, and what is still growing. Learning has the skills map and the curiosity map, Moments has what the kid figured out and taught, year by year, and Creations plays the MP4s of the kid's movies.
 - Big-question cards tell parents when the kid asked about something like death, what Kite said, and how to continue the talk at home.
 - Family values settings decide, for death, religion, bodies, war, and divorce, whether Kite answers, answers and tells the parents, or says to ask a parent.
-- Safety alerts for bullying, strangers, and self-harm go to the parent. Abuse disclosures go only to the school counselor, because the parent could be the abuser. [pending: the counselor page]
+- Safety alerts for bullying, strangers, and self-harm go to the parent, with the SOS map on the Safety tab. Abuse disclosures go only to the school counselor, because the parent could be the abuser.
+- A counselor console with four tabs: Reports, Student, Protocol, and Access log. Each report shows what the kid said just before, in the same chat. The counselor moves a case from new through reviewing, met with student, and reported, to closed. Case notes are sealed under the family's key, and every grown-up read leaves an access receipt.
 - A Trust tab publishes Kite's red-team and reading-level scores, including the bad ones.
 
-**What Kite keeps.** Kite remembers what the kid learned, not what they said. It stores learning data only, and interests count as learning data. Chat text expires after 30 days. Alerts are kept for 1 year on a restricted path. The kid never sees levels or scores. When the kid asks about themselves, the model doesn't even receive them.
+**What Kite keeps.** Kite remembers what the kid learned, not what they said. It stores learning data only, and interests count as learning data. Chat text expires after 30 days, and no route serves it to a parent. Alerts are kept for 1 year, for the adult they went to. The kid never sees levels or scores. When the kid asks about themselves, the model doesn't even receive them.
 
 ## How we built it
 
-**The brain** is a Python 3.12 FastAPI service. Each turn runs three calls in parallel. Microsoft-Decision-1 on Azure AI Foundry answers all of the turn's classification questions in one call, with a calibrated probability for each answer. Azure AI Content Safety and Prompt Shields check the input. Recall loads the kid's view, the teaching guidance, and recent turns. A pure function, `route()`, then picks one route in a fixed order: alert, live-quiz pause, ask a parent, Teach Kite, homework, about me, or answer. Claude Sonnet 5.5 on Foundry streams the answer sentence by sentence. Each sentence passes Content Safety again before ElevenLabs Flash speaks it. Our rule is that a decision model decides and Claude talks.
+**The brain** is a Python 3.12 FastAPI service. Each turn embeds the kid's words once. Then two calls run in parallel. Microsoft-Decision-1 on Azure AI Foundry answers all of the turn's classification questions in one call, with a calibrated probability for each answer. Azure AI Content Safety and Prompt Shields check the input. Recall then loads the kid's view, the teaching guidance, and recent turns. A pure function, `route()`, picks one route in a fixed order: alert, live-quiz pause, ask a parent, Teach Kite, homework, about me, or answer. Claude Sonnet 5.5 on Foundry streams the answer sentence by sentence. Each sentence passes Content Safety again before ElevenLabs Flash speaks it. Our rule is that a decision model decides and Claude talks.
 
 **Memory** is an append-only, grade-stamped learning ledger in SQLite. Every sensitive column is sealed with AES-256-GCM under a per-family key. The payloads are enums and templates, so the only free text the ledger can hold is a favorite character's name. Claude Haiku 5.5 proposes facts with typed output, and a Decision-1 gate drops anything that isn't learning data. If the classifier falls back to another backend, the gate stores nothing.
 
-**Movies** are one Remotion composition. Claude writes the storyboard, and ElevenLabs v3 voices it. `@remotion/player` plays it in the browser, and the same composition renders to an MP4 in the background.
+**Template movies** are one Remotion composition. Claude writes the storyboard. ElevenLabs v3 narrates it in Kite's band voice with at most one guest voice, and ElevenLabs Music composes the bed while Claude writes. `@remotion/player` plays it in the browser, and the same composition renders to an MP4 in the background.
 
-**Brand-new games** run on a Foundry hosted agent called `kite-studio`. Its Python handler starts the Claude Agent SDK, which runs Claude Code against Claude Sonnet 5.5 on Foundry with the agent's own Entra identity. In a fresh VM sandbox, Claude Code writes a single-file KAPLAY game and runs a Playwright play-test until it passes. The brain then checks every string in the game with Content Safety and serves it in a sandboxed iframe with no network access. Everything except ElevenLabs bills through one Azure subscription.
+**Director's cuts and brand-new games** run on a Foundry hosted agent called `kite-studio`. Its Python handler starts the Claude Agent SDK, which runs Claude Code against Claude Opus 5.5 on Foundry with the agent's own Entra identity. In a VM-isolated sandbox, Claude Code writes one self-contained page with the studio's movie kit or game kit, runs the kit's Playwright play-test, looks at its own screenshots, and fixes what it sees. A run is capped at 18 turns and 15 minutes, and the brain waits up to 20. The brain then checks every string in the page with Content Safety and serves it in a sandboxed iframe with no network access. Everything except ElevenLabs bills through one Azure subscription.
 
-**The web app** is Next.js, and the browser talks to the brain through a same-origin proxy. A shared TypeScript client gets its types from the brain's Pydantic models through OpenAPI. Each device has a kind (`os`, `handheld`, `parent`, or `counselor`), and every event carries an audience, so a kid's device can't subscribe to grown-up events. [pending: the web app's pages]
+**Stories** are picture books that Claude Sonnet 5.5 writes for a purpose: learn, fun, or feelings. Kite reads each page aloud, with ElevenLabs sound effects on cue and music underneath.
 
-**The night shift** is how a kid with no real data gets eleven years of history. Claude Haiku 5.5 persona agents played Maya at each grade through the same `run_turn` function the API calls. The run produced 330 turns in 106 sessions across grades 1 to 11, and a demo-shape check confirmed the data the demo depends on. A red team of 70 synthetic prompts, a reading-level judge, and a live write-gate check then ran against a throwaway copy. They publish `docs/trust/scorecard.json` and `docs/trust/readability.json`.
+**The web app** is Next.js 15, and the browser talks to the brain through a same-origin proxy. A shared TypeScript client gets its types from the brain's Pydantic models through OpenAPI. Kite OS (`/os`) is the Chromebook shell, `/os?device=handheld` is the phone, and `/parent` and `/counselor` are the two consoles. Each device has a kind (`os`, `handheld`, `parent`, or `counselor`), and every event carries an audience, so a kid's device can't subscribe to grown-up events. The design rules in `apps/web/DESIGN.md` put the kid screens on liquid-glass panels over a sky that follows the grade band, and the grown-up pages on a twilight console.
 
-**Infrastructure** is Bicep. `infra/deploy.sh` creates the Foundry account, the four model deployments, Content Safety, the project for the hosted agent, the container registry, and Application Insights. [pending: brain and web on Azure Container Apps]
+**The night shift** is how a kid with no real data gets eleven years of history. Claude Haiku 5.5 persona agents played Maya at each grade through the same `run_turn` function the API calls. The run produced 330 kid turns in 110 sessions across grades 1 to 11, and a demo-shape check confirmed the data the demo depends on. A second script then sent four scripted safety scenarios through the real `/turns` route, so Decision-1 classified them and the counselor has real reports. The demo snapshot holds 334 kid turns in 112 sessions, 568 learning events, and 18 big-question cards. A red team of 70 synthetic prompts, a reading-level judge, and a live write-gate check ran against a throwaway copy. They publish `docs/trust/scorecard.json` and `docs/trust/readability.json`.
+
+**Infrastructure** is Bicep. `infra/deploy.sh` creates the Foundry account, five model deployments (Claude Sonnet 5.5, Claude Haiku 5.5, Claude Opus 5.5, Microsoft-Decision-1, and text-embedding-3-small), Content Safety, the project for the hosted agent, the container registry, and Application Insights. `KITE_DEPLOY_APPS=true infra/deploy.sh` also runs the brain and the web app on Azure Container Apps.
 
 **The team** was two humans and several AI agents. [team: names and roles of the two humans] Claude Code on Opus 5.5 was the lead engineer. It ran each work item through pstack's poteto-mode playbooks, with helper agents in separate git worktrees. The Non-Human Collaboration Story below has the details, and `COLLAB_LOG.md` has the timestamped record.
 
@@ -71,17 +79,19 @@ Kite is one companion that follows a kid across every grade. This weekend's buil
 
 - **Privacy claims that were only true in the prompt.** Our first design gave the kid's device and the parent dashboard one shared event stream and one kind of token. That made "abuse never reaches the parent" false at the API. A four-model review caught it. The fix was structural. Every event now has an audience, every device has a kind, and one dependency checks every endpoint.
 - **A simulated kid who wouldn't show what she knew.** Mastery evidence comes only from what the kid shows, through Teach Kite, movie check questions, and games. Halfway through the first night shift, Claude read the half-built database and found 3 skill-evidence events after six grades. The Haiku persona almost never chose to teach back. Claude scheduled a short lesson into two of every three sittings and proved the fix on real services before the rerun.
-- **A rule that read the data wrong.** A rehearsal failed because one dinosaur concept sat at "learning" while the others were mastered, and the rule required every concept to be mastered. We changed it to at least 2 mastered concepts making up at least 75% of the topic. Then the real run showed dinosaurs dipping in grade 7, at 3 of 6 concepts mastered. We kept the data and moved the demo to grade 8, where the claim is true.
+- **A rule that read the data wrong.** A rehearsal failed because one dinosaur concept sat at "learning" while the others were mastered, and the rule required every concept to be mastered. We changed it to at least 2 mastered concepts making up at least 75% of the topic. Then the real run showed dinosaurs dipping below 75% in grade 7, when a harder idea arrived, that birds are living dinosaurs. We kept the data and moved the demo to grade 8, where the claim is true.
 - **A coding agent that crashed before writing a line.** The first call to the hosted agent returned only "Failed to forward request." Claude read the agent's Application Insights traces and found a `PermissionError`. Foundry sets `HOME` to a session folder the image's user can't write to. One writable work folder fixed it.
+- **A cloud sandbox slower than the laptop.** The sandbox has 2 vCPUs. A director's cut that took 5.7 minutes on the laptop ran out of time there, and a brand-new game with its critic pass took about 12.5 minutes. We raised the agent's budget to 15 minutes. A build that long doesn't fit a live demo, so the demo opens a game Claude Code built earlier and says so.
 - **Deploy surprises.** Azure rejects deployment names that contain "Microsoft", and Decision-1 is offered only as `DataZoneStandard`. Our own deploy found both, and the docs now say so.
 
 ## Accomplishments that we're proud of
 
 - Claude Code built a playable kids' game inside an Azure sandbox, billed through Azure. It read the kit, planned the game, wrote it, and ran the play-test until it passed. We re-ran the play-test on the returned file and checked screenshots independently.
-- The safety checks are code. `brain/scripts/check_safety.py` prints `ok` for 63 named checks, including that an abuse turn is invisible to the parent and that the kid-view endpoint returns no skills.
-- On the held-out red-team prompts, every safety alert fired, 16 of 16, for an alert recall of 1.0. The live write-gate check stored 0 of 3 personal statements. [pending: final scorecard numbers]
+- The safety checks are code. `brain/scripts/check_safety.py` prints `ok` for 91 named checks, including that an abuse turn is invisible to the parent and that the kid-view endpoint returns no skills. To count them, run `cd brain && uv run python -m scripts.check_safety | grep -c '^ok check_'`.
+- On the held-out red-team prompts, Kite handled 31 of 34 correctly. Every safety alert fired, 16 of 16, and alert recall is 1.0 on both halves at the live 0.20 threshold. The live write-gate check stored 0 of 3 personal statements.
 - An AI-simulated childhood of 330 turns over eleven grades, run through the same code path a real kid's turn takes.
-- A narrated movie that goes from a kid's request to a storyboard, ElevenLabs voices, a browser player, and an MP4.
+- A narrated movie that goes from a kid's request to a storyboard, Kite's own voice, a music bed, a browser player, a spoken question, and an MP4.
+- A kid's Chromebook shell and phone launcher in one weekend, with eight apps on the desktop and Kite in the dock on every screen.
 
 ## What we learned
 
@@ -90,34 +100,36 @@ Kite is one companion that follows a kid across every grade. This weekend's buil
 - **Read the run while it's running.** Waiting for the night shift to finish would have cost 45 minutes and a failed check.
 - **Different models catch different things, and agreement is the strongest signal.** All four reviewers independently found the same top problem.
 - **Look at the output, not the exit code.** A movie render exited cleanly with captions that ran words together ("on asunnyday"). We found it by looking at the frames.
-- **Our own scores show what to fix.** From grade 6 up, Kite's answers read below the band's target range, and the homework guard stopped 1 of 4 held-out cheating attempts.
+- **Our own scores show what to fix.** From grade 6 up, Kite's answers read below the band's target range. The homework guard, jailbreaks, and disclosure of grown-up data each let one held-out prompt through.
 
 ## What's next for Kite
 
-- Fix the weak spots the Trust tab shows: the homework guard, jailbreaks, and answers that read too simply for older kids.
+- Fix the weak spots the Trust tab shows: the homework guard, jailbreaks, disclosure of grown-up data, and answers that read too simply for older kids.
 - A pilot with one classroom and one group of families, with consent flows, standards mapping, and a teacher view.
-- Real Canvas and Google Classroom connectors. The simulated class already uses Canvas's assignment format, so a connector replaces one function.
-- A native handheld, starting from the Expo launcher that is only a scaffold today, and later dedicated hardware.
+- Real Canvas and Google Classroom connectors. The simulated class already uses Canvas's assignment fields and Google Classroom's shape, so a connector replaces one function.
+- A native handheld that really calls and texts, starting from the Expo app that is only a scaffold today, and later dedicated hardware.
 - Smaller per-grade-band models distilled for on-device use on Chromebook Plus NPUs.
 - Family-held keys, so the cloud keeps only a backup it can't read. Until then, we don't claim "even we can't read it."
 
 ## Built with
 
-Python, FastAPI, Pydantic, uv, SQLite, cryptography (AES-256-GCM), textstat, TypeScript, Next.js, React, Node.js, Remotion, KAPLAY, Playwright, openapi-typescript, Azure AI Foundry, Claude Sonnet 5.5, Claude Haiku 5.5, Microsoft-Decision-1, Azure AI Content Safety, Prompt Shields, text-embedding-3-small, Foundry hosted agents, Claude Agent SDK, Claude Code, ElevenLabs Scribe, ElevenLabs Flash, ElevenLabs v3, Azure Container Registry, Application Insights, Bicep, Microsoft Fluent Emoji. [pending: add Azure Container Apps once deployed]
+Python, FastAPI, Pydantic, uv, SQLite, cryptography (AES-256-GCM), textstat, TypeScript, Next.js, React, Motion, Node.js, Remotion, KAPLAY, Phaser, GSAP, Playwright, openapi-typescript, Azure AI Foundry, Claude Opus 5.5, Claude Sonnet 5.5, Claude Haiku 5.5, Microsoft-Decision-1, Azure AI Content Safety, Prompt Shields, text-embedding-3-small, Foundry hosted agents, Claude Agent SDK, Claude Code, ElevenLabs Scribe, ElevenLabs Flash, ElevenLabs v3, ElevenLabs Music, ElevenLabs sound effects, Azure Container Registry, Application Insights, Bicep, Microsoft Fluent Emoji. [pending: add Azure Container Apps if the live app runs there]
 
 ## Non-Human Collaboration Story
 
 ### Which AIs took part
 
 - **Claude Code on Opus 5.5, the lead engineer.** It turned a rough idea into a design and a plan, wrote and integrated code, coordinated the helpers, and ran the real systems.
-- **Claude helper agents.** Each worked in its own git worktree. On Saturday evening, three helpers built the parent dashboard view, the movie and game packages, and the studio backend in parallel. Commits co-authored by Claude Fable 5.1 include the turn pipeline and the `kite-studio` hosted agent. Commits co-authored by Claude Sonnet 5.5 include the movie and game backend and, on the teammate's branch, the shared TypeScript client.
-- **Every commit was a collaboration.** All 66 commits through `eb6229d` carry a Claude co-author trailer: 57 from Opus 5.5, 6 from Fable 5.1, and 3 from Sonnet 5.5. [pending: recount at the submission tag with `git log --format='%(trailers:key=Co-Authored-By,valueonly)' | sort | uniq -c`]
-- **A review panel.** A fresh reviewer agent read the design cold, the way a builder would. Then four reviewers on Opus, Fable, Sonnet, and Haiku attacked it independently. Claude also consulted an advisor model on the chat-retention decision.
-- **AI teammates inside the product.** Claude Haiku 5.5 persona agents played Maya's childhood. Claude Code inside the `kite-studio` hosted agent writes brand-new games. Kite itself answers "how were you built?" from our collaboration log.
+- **Claude helper agents.** Each worked in its own git worktree. On Saturday evening, three helpers built the parent dashboard view, the movie and game packages, and the studio backend in parallel. Overnight, helpers rebuilt the kid screen as Kite OS, built the phone launcher, and turned the parent and counselor pages into tabbed consoles. Commits co-authored by Claude Fable 5.1 include the turn pipeline and the `kite-studio` hosted agent. Commits co-authored by Claude Sonnet 5.5 include the movie and game backend and, on the teammate's branch, the shared TypeScript client.
+- **Every commit was a collaboration.** All 169 commits on the `brain` branch through `fd6cc8c` carry a Claude co-author trailer: 160 from Opus 5.5, 6 from Fable 5.1, and 3 from Sonnet 5.5. To recount at any commit, run `git log --format='%(trailers:key=Co-Authored-By,valueonly)' | sort | uniq -c`.
+- **A review panel.** A fresh reviewer agent read the design cold, the way a builder would. Then four reviewers on Opus, Fable, Sonnet, and Haiku attacked it independently. Claude also consulted an advisor model on the chat-retention decision, and a reviewer model checked its overnight plan.
+- **AI teammates inside the product.** Claude Haiku 5.5 persona agents played Maya's childhood. Claude Code on Opus 5.5 inside the `kite-studio` hosted agent writes brand-new games and director's cuts. Kite itself answers "how were you built?" from our collaboration log.
 
 ### How responsibilities changed
 
 In the first hours, Claude was a planner and a design partner. It read the HarborHack rules and found that one third of the score is collaboration and that the submission deadline comes before the demo. Within the first hour it was arguing with the humans about safety and memory, and by mid-afternoon it had written the locked design and put it through review. After the humans moved the work onto pstack, Claude became the lead. It sent helpers into separate worktrees and kept a decision trail. By evening it was operating real systems. It read a half-built database, an agent's Application Insights traces, and rendered movie frames. It also merged three helpers' work on a separate branch, so the night shift running in the human's checkout was never disturbed.
+
+Late on Saturday the human acted as the product owner. They tested the app and sent feedback one message at a time. Claude turned each message into a brief for the helper that owned those files, so four or five helpers ran at once without colliding, and it checked each helper's screenshots before merging. When the laptop ran out of memory and the session died twice, every helper's work survived in its own worktree.
 
 The in-product agents took on jobs no human could do in a weekend. They lived eleven years of a childhood overnight and write new games on demand.
 
@@ -126,8 +138,9 @@ The in-product agents took on jobs no human could do in a weekend. They lived el
 - Claude pushed back three times on the first idea. Per-grade fine-tuning became grade-conditioned prompting with a measured reading level. A new Chromebook OS became a full-screen app that schools can deploy. A native Android app became one web app on two devices. The humans later reversed that last call, and the build ended up using the web app on the phone anyway.
 - Claude saw that an abuse alert sent to a parent can endanger a kid when the parent is the abuser. Abuse disclosures now go to the school counselor.
 - The human proposed keeping chats until the end of each grade. Claude and an advisor model chose a rolling 30-day window instead. Per-grade retention would keep a September chat for 10 months, and the 2025 COPPA amendments require a retention period tied to a purpose.
+- A reviewer model stopped a privacy leak before it was built. Claude's overnight plan had a 30-day chat review for parents. The reviewer pointed out that stored chat text has no audience, so a parent transcript could show a disclosure that went only to the counselor. Claude dropped the feature, and the counselor's context now comes from the session of the turn that raised the report.
 - Claude made "the kid never sees their own analytics" structural. Claude never receives levels or scores, only teaching guidance.
-- Claude added a third homework state the human hadn't named. A quiz that is live right now gets a kind pause and no help.
+- Claude added a third homework state the human hadn't named. A quiz that is live right now gets a kind pause and no help. Overnight, the Kite OS helper found that a quiz scheduled for next week counted as closed and would get worked answers. A quiz that hasn't opened now gets hints.
 - Claude recommended against mem0 and Supermemory, because they store free-text facts about the user, which Kite deliberately doesn't keep.
 
 ### Where the humans shaped it
@@ -135,7 +148,9 @@ The in-product agents took on jobs no human could do in a weekend. They lived el
 - The humans rejected Claude's plain Node and HTML stack because "judges read the codebase," and chose a TypeScript monorepo with a Python brain.
 - They moved animated movies from the roadmap into scope, required every model to run on Azure and every voice on ElevenLabs, and added Teach Kite.
 - They proposed the education-only cloud profile, which Claude endorsed as simpler than its own three-tier memory design.
-- They asked whether a real coding agent could build games on the fly, with Azure billing only. That question led to the hosted agent.
+- They asked whether a real coding agent could build games on the fly, with Azure billing only. That question led to the hosted agent. When the first template movie looked plain, they pointed Claude at a post about Opus 5.5's visual design, which led to the director's cut.
+- Their product feedback reshaped the kid screen. "It's still chat mode" became a voice-first stage. "How do I start a new chat?" became **New topic** and **Past chats**. They asked for Story time, Kite's own narration, and music.
+- Before going to sleep, they told Claude it had missed the point. Kite OS is meant to be an operating system, with Kite as one app and Ask Kite everywhere. They also said the screens were dull and pale. That led to the OS shell, the phone launcher, and the second design.
 - They dropped the unit-test suite for the hackathon. Claude argued to keep three small checks, because the claims we make on stage depend on them.
 
 ### What surprised us
@@ -143,6 +158,7 @@ The in-product agents took on jobs no human could do in a weekend. They lived el
 - All four reviewers, on four different models, found the same top problem, and it was in Claude's own design. Claude reversed itself on six points.
 - Claude changed its mind twice about decision models, for different reasons. It rejected one model because a parallel safety check made its speed advantage disappear. It accepted Decision-1 because a calibrated probability gives a threshold to tune.
 - A helper agent overruled the spec and was right. The parent had to stop subscribing to kid events, because the kid's own words go out before routing and would leak an abuse turn to the parent.
+- Claude decided its own first design rule, "the kite is the only ornament," was why the pages looked pale.
 - The dip in Maya's grade 7 dinosaur skills came from the simulation itself. Nobody scripted it.
 
 ### What didn't work
@@ -151,5 +167,6 @@ The in-product agents took on jobs no human could do in a weekend. They lived el
 - The first strength rule failed a rehearsal, and the first demo-shape check asked for grade 7 and failed after an hour of simulation.
 - An earlier helper left two of the spec's conditions out of the strength rule. A later helper found it, and the lead fixed it.
 - The first call to the game-building agent crashed on a folder it couldn't write to.
-- The native Android launcher didn't land. The phone runs the web app's handheld mode in its browser. [pending: confirm for the final build]
-- The red team still beats the homework guard 3 times in 4 and jailbreaks 2 times in 3, and answers for older kids read too simply. [pending: final scorecard numbers]
+- The cloud build of the showcase game ran past the agent's 11-minute budget. Claude Code on Opus 5.5 rebuilt it on the laptop with the same kit and play-test, and the budget went up to 15 minutes.
+- The native Android launcher didn't land. The phone runs the web app's handheld mode in its browser.
+- The red team still beats the homework guard once in 4 held-out prompts, jailbreaks once in 3, and grown-up data disclosure once in 4. Answers for older kids read too simply.
