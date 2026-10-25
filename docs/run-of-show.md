@@ -107,10 +107,10 @@ Teach Kite and the director's cut are reserve moments. If any live moment drops 
 
 1. Tap **Close** on the movie, then close the Kite window (**Close Kite**).
 2. Open **Classroom** from the dock. Tap **Science**, then **Water cycle quiz**. The quiz says "Kite is paused for this quiz."
-3. Tap **Ask Kite about this**. In the Ask Kite panel, tap the question "What is evaporation?"
+3. Tap **Ask Kite about this**. The panel shows no quiz questions to tap, because Kite is paused for this quiz. Hold the diamond and ask "Can you help me with question 1? What is evaporation?" If the room is loud, tap **Type instead** and type it.
 4. When Kite has answered, tap **Close Ask Kite**, then **Home** in the dock. Leave the quiz before moment 11, because a question asked on the quiz page goes to Kite as a question about the quiz.
 
-**Point at.** The Classroom app, the quiz marked live, and Kite's reply that it can't help during a quiz.
+**Point at.** The Classroom app, the quiz marked live, the Ask Kite panel with no quiz questions offered, and Kite's reply that it can't help during a quiz.
 
 **Say.** "Kite OS is her whole school day: Classroom, to-dos, quizzes, a calendar, with Kite in every app. This quiz is live right now, so Kite pauses. Open homework gets hints. A quiz that hasn't opened yet gets hints too. A closed quiz gets the full worked solution."
 
