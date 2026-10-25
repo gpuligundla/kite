@@ -3,7 +3,8 @@
 import type { Brain } from "@kite/client";
 import { useState } from "react";
 import { POLICY_ACTIONS, POLICY_TOPICS, type PolicyAction } from "./model";
-import styles from "./parent.module.css";
+import ui from "./parent.module.css";
+import t from "./tabs.module.css";
 
 type Status = { state: "saving" } | { state: "saved" } | { state: "failed"; message: string };
 
@@ -34,29 +35,19 @@ export function Policy({
   };
 
   return (
-    <div className={styles.section}>
-      <h2>Sensitive topics</h2>
-      <p className={styles.lede}>
-        Choose what Kite does when {name} asks about each of these. A change counts from her next question.
-      </p>
-      <dl className={styles.actionKey}>
-        {POLICY_ACTIONS.map((a) => (
-          <div key={a.action}>
-            <dt>{a.label}</dt>
-            <dd>{a.detail}</dd>
-          </div>
-        ))}
-      </dl>
-      <ul className={styles.policyList}>
+    <section className={`${ui.panel} ${t.policy}`} aria-labelledby="policy-h">
+      <h2 id="policy-h">When she asks about</h2>
+      <p className={ui.lede}>Choose what Kite does for each topic. A change counts from {name}&apos;s next question.</p>
+      <ul className={t.policyList}>
         {POLICY_TOPICS.map(({ topic, name: label }) => {
           const s = status[topic];
           return (
-            <li key={topic} className={styles.policyRow}>
+            <li key={topic}>
               <fieldset>
                 <legend>{label}</legend>
-                <div className={styles.segmented}>
+                <div className={t.segmented}>
                   {POLICY_ACTIONS.map((a) => (
-                    <label key={a.action}>
+                    <label key={a.action} title={a.detail}>
                       <input
                         type="radio"
                         name={`policy-${topic}`}
@@ -69,7 +60,7 @@ export function Policy({
                   ))}
                 </div>
               </fieldset>
-              <span className={styles.saveState} role="status" data-state={s?.state}>
+              <span className={t.saveState} role="status" data-state={s?.state}>
                 {s?.state === "saving" && "Saving…"}
                 {s?.state === "saved" && "Saved"}
                 {s?.state === "failed" && s.message}
@@ -78,6 +69,14 @@ export function Policy({
           );
         })}
       </ul>
-    </div>
+      <dl className={t.actionKey}>
+        {POLICY_ACTIONS.map((a) => (
+          <div key={a.action}>
+            <dt>{a.label}</dt>
+            <dd>{a.detail}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }

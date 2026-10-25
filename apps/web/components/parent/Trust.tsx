@@ -1,7 +1,9 @@
 "use client";
 
 import type { Brain } from "@kite/client";
-import styles from "./parent.module.css";
+import { KID } from "./model";
+import ui from "./parent.module.css";
+import t from "./tabs.module.css";
 import { useRead } from "./useRead";
 
 /** `GET /trust` serves docs/trust/scorecard.json and readability.json as the night shift wrote them. */
@@ -25,59 +27,41 @@ const CATEGORIES: Record<string, { name: string; meaning: string }> = {
 
 export function Trust({ brain }: { brain: Brain }) {
   const { data, error } = useRead<TrustReport>(brain, "/trust");
-  if (error) return <p className={styles.error}>The trust report didn&apos;t load: {error}. It appears after the night shift has run.</p>;
-  if (!data) return <p className={styles.quiet}>Loading the trust report…</p>;
+  if (error) return <p className={ui.error}>The trust report didn&apos;t load: {error}. It appears after the night shift has run.</p>;
+  if (!data) return <p className={ui.loading}>Loading the trust report…</p>;
   const { calibration, holdout, write_gate } = data.scorecard;
-  const rows = Object.entries(holdout.by_category);
-  const over = data.readability.filter((r) => r.fk_mean > r.fk_max).length;
+  const rows = Object.entries(holdout.by_category).sort((a, b) => b[1].total - a[1].total);
+
   return (
-    <div>
-      <section className={styles.trustHead} aria-labelledby="trust-h">
-        <h2 id="trust-h">How we test Kite</h2>
-        <p className={styles.lede}>We tried to trip Kite up on purpose, scored what it did, and show the results here.</p>
-        <dl className={styles.trustFigures}>
+    <div className={t.trust}>
+      <section className={`${ui.hero} ${t.tHero}`} aria-labelledby="red-h">
+        <div className={t.tHead}>
+          <p className={t.bigScore}>
+            <span className={ui.figure}>{holdout.correct}</span>
+            <span className={t.bigOf}>of {holdout.total}</span>
+          </p>
           <div>
-            <dt>Red team</dt>
-            <dd className={styles.factBig}>
-              {holdout.correct} <span className={styles.factOf}>of {holdout.total}</span>
-            </dd>
-            <dd className={styles.factNote}>
-              tricky messages handled correctly{holdout.alert_recall === 1 ? ", and every one that needed a grown-up raised an alert." : "."}
-            </dd>
+            <h2 id="red-h" className={t.heroTitle}>
+              Tricky messages handled correctly
+            </h2>
+            <p className={ui.lede}>
+              We wrote {calibration.prompts + holdout.total} messages meant to trip Kite up. {calibration.prompts} of them set
+              when Kite raises an alert; the other {holdout.total} scored it.
+              {holdout.alert_recall === 1 && " Every message that needed a grown-up raised an alert."}
+            </p>
           </div>
-          <div>
-            <dt>Reading level</dt>
-            <dd className={styles.factBig}>{over === 0 ? "On level" : `${over} over`}</dd>
-            <dd className={styles.factNote}>
-              {over === 0 ? "Every grade's answers stayed under its band's limit." : "Some grades read above their band's limit."}
-            </dd>
-          </div>
-          <div>
-            <dt>Private things kept</dt>
-            <dd className={styles.factBig}>{write_gate.stored === 0 ? "None" : write_gate.stored}</dd>
-            <dd className={styles.factNote}>Kite&apos;s memory keeps what she learned and likes, not family details.</dd>
-          </div>
-        </dl>
-      </section>
-      <section className={styles.section} aria-labelledby="red-h">
-        <h2 id="red-h">Red team</h2>
-        <p className={styles.lede}>
-          We wrote {calibration.prompts + holdout.total} messages meant to trip Kite up. {calibration.prompts} of them set
-          when Kite raises an alert; the other {holdout.total} scored it, and Kite handled {holdout.correct} of{" "}
-          {holdout.total} correctly.
-          {holdout.alert_recall === 1 && " Every message that needed a grown-up raised an alert."}
-        </p>
-        <ul className={styles.plainList}>
+        </div>
+        <ul className={t.scores}>
           {rows.map(([key, r]) => (
-            <li key={key} className={styles.scoreRow}>
+            <li key={key} data-full={r.correct === r.total}>
               <strong>{CATEGORIES[key]?.name ?? key}</strong>
-              <span className={styles.meter} aria-hidden data-tone={r.correct === r.total ? "full" : "short"}>
+              <span className={t.scoreTrack} aria-hidden>
                 <span style={{ transform: `scaleX(${r.total ? r.correct / r.total : 0})` }} />
               </span>
-              <span className={styles.scoreValue}>
+              <span className={t.scoreValue}>
                 {r.correct} of {r.total} handled correctly
               </span>
-              <span className={styles.quiet}>{CATEGORIES[key]?.meaning}</span>
+              <span className={t.scoreMeaning}>{CATEGORIES[key]?.meaning}</span>
             </li>
           ))}
         </ul>
@@ -85,24 +69,35 @@ export function Trust({ brain }: { brain: Brain }) {
 
       <Readability rows={data.readability} />
 
-      <section className={styles.section} aria-labelledby="gate-h">
+      <section className={`${ui.panel} ${t.gate}`} aria-labelledby="gate-h">
         <h2 id="gate-h">Memory write gate</h2>
-        <p className={styles.gateFigure}>{write_gate.stored === 0 ? "Nothing stored" : `${write_gate.stored} stored`}</p>
-        <p className={styles.lede}>
+        <p className={t.gateFigure}>{write_gate.stored === 0 ? "Nothing stored" : `${write_gate.stored} stored`}</p>
+        <p className={ui.lede}>
           We told Kite&apos;s memory private things, like &ldquo;my parents are getting divorced&rdquo; and a friend&apos;s
-          street. {write_gate.stored === 0
+          street.{" "}
+          {write_gate.stored === 0
             ? "It kept none of them. Kite only remembers what she learned and what she likes."
             : `It kept ${write_gate.stored} of them, and it should keep none.`}
         </p>
+      </section>
+
+      <section className={`${ui.panel} ${t.privacy}`} aria-labelledby="privacy-h">
+        <h2 id="privacy-h">What this page can see</h2>
+        <ul>
+          <li>What {KID.name} learns, asks about and makes, as of the end of any grade.</li>
+          <li>That an alert happened, when, and where her phone was. Never her words.</li>
+          <li>The start of Kite&apos;s answer when she asks about a topic you chose to hear about.</li>
+          <li>Every read this page makes leaves an access receipt with the time and what was read.</li>
+        </ul>
       </section>
     </div>
   );
 }
 
 const BANDS: Record<string, [number, number]> = { "K-2": [0, 2], "3-5": [3, 5], "6-8": [6, 8], "9-12": [9, 12] };
-const W = 560;
-const H = 230;
-const M = { left: 36, right: 12, top: 30, bottom: 30 };
+const W = 600;
+const H = 240;
+const M = { left: 36, right: 12, top: 28, bottom: 30 };
 const X0 = 0.5;
 const X1 = 12.5;
 const Y1 = 12;
@@ -114,19 +109,19 @@ function Readability({ rows }: { rows: TrustReport["readability"] }) {
   const ceilings = [...new Map(rows.map((r) => [r.band, r.fk_max])).entries()];
   const over = rows.filter((r) => r.fk_mean > r.fk_max);
   return (
-    <section className={styles.section} aria-labelledby="read-h">
+    <section className={`${ui.panel} ${t.read}`} aria-labelledby="read-h">
       <h2 id="read-h">Reading level</h2>
-      <p className={styles.lede}>
+      <p className={ui.lede}>
         Each dot is the average reading level of Kite&apos;s answers at one grade. The line above it is the most that grade
         band allows.{" "}
         {over.length === 0 ? "Every grade stayed under its line." : `Grades ${over.map((r) => r.grade).join(", ")} went over.`}
       </p>
-      <div className={styles.chart}>
+      <div className={t.readScroll}>
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Reading level of Kite's answers by grade, against each band's ceiling. The table below has the numbers.">
           {[0, 4, 8, 12].map((v) => (
             <g key={v}>
-              <line x1={M.left} x2={W - M.right} y1={y(v)} y2={y(v)} className={styles.grid} />
-              <text x={M.left - 8} y={y(v)} className={styles.axis} textAnchor="end" dominantBaseline="middle">
+              <line x1={M.left} x2={W - M.right} y1={y(v)} y2={y(v)} className={t.grid} />
+              <text x={M.left - 8} y={y(v)} className={t.axis} textAnchor="end" dominantBaseline="middle">
                 {v}
               </text>
             </g>
@@ -136,51 +131,51 @@ function Readability({ rows }: { rows: TrustReport["readability"] }) {
             const from = Math.max(a - 0.5, X0);
             return (
               <g key={band}>
-                <line x1={x(from)} x2={x(b + 0.5)} y1={y(max)} y2={y(max)} className={styles.ceiling} />
-                <text x={x(from) + 4} y={y(max) - 6} className={styles.axis}>
+                <line x1={x(from)} x2={x(b + 0.5)} y1={y(max)} y2={y(max)} className={t.ceiling} />
+                <text x={x(from) + 4} y={y(max) - 7} className={t.axis}>
                   {band} limit
                 </text>
               </g>
             );
           })}
           {rows.map((r) => (
-            <g key={r.grade} className={styles.dot}>
+            <g key={r.grade} className={t.readDot}>
               <circle cx={x(r.grade)} cy={y(r.fk_mean)} r={6} />
-              <circle cx={x(r.grade)} cy={y(r.fk_mean)} r={12} fill="transparent">
+              <circle cx={x(r.grade)} cy={y(r.fk_mean)} r={14} fill="transparent">
                 <title>{`Grade ${r.grade}: reading level ${r.fk_mean.toFixed(1)}, limit ${r.fk_max} (${r.n} answers)`}</title>
               </circle>
             </g>
           ))}
           {Array.from({ length: 12 }, (_, i) => i + 1).map((g) => (
-            <text key={g} x={x(g)} y={H - 8} textAnchor="middle" className={styles.axis}>
+            <text key={g} x={x(g)} y={H - 8} textAnchor="middle" className={t.axis}>
               {g}
             </text>
           ))}
         </svg>
-        <details className={styles.more}>
-          <summary>Show as a table</summary>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col">Grade</th>
-                <th scope="col">Average reading level</th>
-                <th scope="col">Band limit</th>
-                <th scope="col">Answers</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.grade}>
-                  <th scope="row">{r.grade}</th>
-                  <td>{r.fk_mean.toFixed(1)}</td>
-                  <td>{r.fk_max}</td>
-                  <td>{r.n}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </details>
       </div>
+      <details className={ui.more}>
+        <summary>Show as a table</summary>
+        <table className={ui.table}>
+          <thead>
+            <tr>
+              <th scope="col">Grade</th>
+              <th scope="col">Average reading level</th>
+              <th scope="col">Band limit</th>
+              <th scope="col">Answers</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.grade}>
+                <th scope="row">{r.grade}</th>
+                <td>{r.fk_mean.toFixed(1)}</td>
+                <td>{r.fk_max}</td>
+                <td>{r.n}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
     </section>
   );
 }

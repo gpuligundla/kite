@@ -1,144 +1,68 @@
 "use client";
 
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { CuriosityChart } from "./CuriosityChart";
-import { SkillsMap } from "./SkillsMap";
+import { MiniComb } from "./SkillsMap";
 import {
-  HOW_SHE_LEARNS, KID, formatMonth, growing, lately, momentForParent, percent, plainSummary, portrait, standings, topicName,
+  HOW_SHE_LEARNS, KID, STYLE_WORDS, curiosityYears, growing, knowledgeMap, lately, percent, portrait, standings, topicName,
   type Alert, type DashboardView, type Grade, type Standing,
 } from "./model";
-import styles from "./parent.module.css";
+import ui from "./parent.module.css";
+import t from "./tabs.module.css";
 
-/** Everything here is as of the end of `grade`. `stale` holds the last render dimmed while the next grade loads. */
-export function Overview({ view, grade, stale, alerts }: { view: DashboardView; grade: Grade; stale: boolean; alerts: Alert[] }) {
-  return (
-    <div className={styles.overview} data-stale={stale}>
-      <Summary view={view} grade={grade} alerts={alerts} />
-      <Standings view={view} grade={grade} />
-      <div className={styles.mapPanel}>
-        <SkillsMap view={view} />
-        <hr className={styles.mapRule} />
-        <CuriosityChart view={view} grade={grade} />
-      </div>
-      <div className={styles.lower}>
-        <div className={styles.lowerSide}>
-          <HowSheLearns shares={view.how_she_learns} />
-          <Moments moments={view.moments_by_grade} />
-        </div>
-        <Cards cards={view.cards} />
-      </div>
-    </div>
-  );
-}
-
-function Summary({ view, grade, alerts }: { view: DashboardView; grade: Grade; alerts: Alert[] }) {
+/** Everything here is as of the end of `grade`. */
+export function Overview({ view, grade, alerts }: { view: DashboardView; grade: Grade; alerts: Alert[] }) {
   const p = portrait(view);
-  const news = lately(view, grade, grade === KID.grade, alerts, Date.now());
   return (
-    <section className={styles.summary} aria-labelledby="summary-h">
-      <h2 id="summary-h" className={styles.srOnly}>
-        {KID.name} at a glance
-      </h2>
-      <dl className={styles.facts}>
-        <div>
-          <dt>Strong in</dt>
-          <dd className={styles.factBig}>
-            {p.strengths.length > 0 ? (
-              p.strengths.map((s) => (
-                <span key={s} className={styles.strongIn}>
-                  <Hex filled /> {s}
-                </span>
-              ))
-            ) : (
-              <span className={styles.factNone}>Nothing yet</span>
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt>Asks most about</dt>
-          <dd className={styles.factBig}>{p.curious ?? <span className={styles.factNone}>Not enough yet</span>}</dd>
-        </div>
-        <div>
-          <dt>Ideas that are solid</dt>
-          <dd className={styles.factBig}>
-            {p.solid} <span className={styles.factOf}>of {p.shown}</span>
-          </dd>
-          <dd className={styles.factNote}>She could teach {p.canTeach} of them back.</dd>
-        </div>
-        <div>
-          <dt>Learns best by</dt>
-          {p.best ? (
-            <>
-              <dd className={styles.factBig}>{p.best.way.charAt(0).toUpperCase() + p.best.way.slice(1)}</dd>
-              <dd className={styles.factNote}>{percent(p.best.share)} of the ideas she met that way are solid.</dd>
-            </>
-          ) : (
-            <dd className={styles.factBig}>
-              <span className={styles.factNone}>Not enough yet</span>
+    <div className={t.overview}>
+      <div className={`${ui.hero} ${t.ovHero}`}>
+        <Standings view={view} grade={grade} />
+        <dl className={t.figures}>
+          <div>
+            <dt>Ideas that are solid</dt>
+            <dd className={ui.figure}>
+              {p.solid}
+              <small> of {p.shown}</small>
             </dd>
-          )}
-        </div>
-      </dl>
-      <div className={styles.news}>
-        <h3>{news.title}</h3>
-        {news.items.length === 0 ? (
-          <p className={styles.quiet}>Nothing new.</p>
-        ) : (
-          <ul>
-            {news.items.map((h) => (
-              <li key={h.key} data-kind={h.kind}>
-                <span>{h.text}</span>
-                {h.at && <time dateTime={h.at}>{dayTime(h.at)}</time>}
-              </li>
-            ))}
-          </ul>
-        )}
+          </div>
+          <div>
+            <dt>She could teach back</dt>
+            <dd className={ui.figure}>{p.canTeach}</dd>
+          </div>
+          <div>
+            <dt>Asks most about</dt>
+            <dd className={ui.figure}>{p.curious ?? <small>Not enough yet</small>}</dd>
+          </div>
+        </dl>
       </div>
-    </section>
-  );
-}
-
-const dayFmt = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
-const dayTime = (iso: string) => dayFmt.format(new Date(iso));
-
-function Hexes({ solid, total }: { solid: number; total: number }) {
-  return (
-    <span className={styles.hexes} aria-hidden>
-      {Array.from({ length: total }, (_, i) => (
-        <Hex key={i} filled={i < solid} />
-      ))}
-    </span>
-  );
-}
-
-function Hex({ filled }: { filled: boolean }) {
-  return (
-    <svg viewBox="-7 -8 14 16" className={styles.miniHex} data-filled={filled}>
-      <path d="M0,-7L6.06,-3.5L6.06,3.5L0,7L-6.06,3.5L-6.06,-3.5Z" />
-    </svg>
+      <News view={view} grade={grade} alerts={alerts} />
+      <HowSheLearns shares={view.how_she_learns} />
+      <Asks view={view} grade={grade} />
+      <World view={view} />
+    </div>
   );
 }
 
 function Standings({ view, grade }: { view: DashboardView; grade: Grade }) {
   const reduce = useReducedMotion();
+  const combs = new Map(knowledgeMap(view).map((c) => [c.topic, c]));
   const all = standings(view, grade);
+  const still = growing(view);
   const groups = [
     { title: "Strengths", items: all.filter((s) => s.strength), empty: "None yet at this grade." },
     { title: "Getting there", items: all.filter((s) => !s.strength), empty: "Nothing close right now." },
   ];
-  const still = growing(view);
   return (
-    <section className={styles.section} aria-labelledby="standing-h">
-      <h2 id="standing-h">Where {KID.name} is strong</h2>
-      <p className={styles.lede}>
-        A strength is a topic she asks about often where at least 3 in 4 of the ideas she&apos;s shown Kite are solid.
-      </p>
+    <section className={t.standings} aria-labelledby="standing-h">
+      <h2 id="standing-h" className={t.heroTitle}>
+        Where {KID.name} is strong
+      </h2>
+      <p className={ui.lede}>A strength is a topic she asks about often where at least 3 in 4 of the ideas she&apos;s shown Kite are solid.</p>
       <LayoutGroup>
-        <div className={styles.standings}>
+        <div className={t.standCols}>
           {groups.map((g, gi) => (
-            <div key={g.title} className={gi === 0 ? styles.strengthCol : styles.nearCol}>
+            <div key={g.title} className={gi === 0 ? t.strongCol : t.nearCol}>
               <h3>{g.title}</h3>
-              <ul className={styles.plainList}>
+              <ul>
                 {g.items.map((s) => (
                   <motion.li
                     key={s.topic}
@@ -146,32 +70,34 @@ function Standings({ view, grade }: { view: DashboardView; grade: Grade }) {
                     layout={reduce ? false : "position"}
                     layoutDependency={grade}
                     transition={{ duration: 0.26, ease: [0.77, 0, 0.175, 1] }}
-                    className={styles.standing}
+                    className={t.standing}
                     data-strength={s.strength}
                   >
-                    <strong>{s.name}</strong>
-                    <Hexes solid={s.solid} total={s.total} />
-                    <span>{standingLine(s)}</span>
+                    {/* A topic she only asks about, with no idea shown yet, has no comb. */}
+                    {combs.has(s.topic) && <MiniComb comb={combs.get(s.topic)!} size={s.strength ? 84 : 56} />}
+                    <div>
+                      <strong>{s.name}</strong>
+                      <span>{standingLine(s)}</span>
+                    </div>
                   </motion.li>
                 ))}
-                {g.items.length === 0 && <li className={styles.emptyNote}>{g.empty}</li>}
+                {g.items.length === 0 && <li className={ui.empty}>{g.empty}</li>}
               </ul>
             </div>
           ))}
-          <div className={styles.growCol}>
+          <div className={t.nearCol}>
             <h3>Still growing</h3>
-            <ul className={styles.plainList}>
-              {still.map((t) => (
-                <li key={t.name} className={styles.growing}>
+            <ul>
+              {still.map((s) => (
+                <li key={s.name} className={t.growing}>
                   {/* Named by idea, not topic: a topic can be a strength while one of its ideas is still growing. */}
-                  <strong>{list(t.concepts)}</strong>
+                  <strong>{list(s.concepts)}</strong>
                   <span>
-                    Part of {t.name.toLowerCase()}. She has worked on {t.concepts.length > 1 ? "these" : "it"} across
-                    several sessions, and {t.concepts.length > 1 ? "they aren't" : "it isn't"} solid yet.
+                    Part of {s.name.toLowerCase()}. Worked on across several sessions, not solid yet.
                   </span>
                 </li>
               ))}
-              {still.length === 0 && <li className={styles.emptyNote}>Nothing stuck right now.</li>}
+              {still.length === 0 && <li className={ui.empty}>Nothing stuck right now.</li>}
             </ul>
           </div>
         </div>
@@ -183,34 +109,88 @@ function Standings({ view, grade }: { view: DashboardView; grade: Grade }) {
 function standingLine(s: Standing): string {
   const solid = `${s.solid} of ${s.total} ideas solid`;
   if (s.strength) return `${solid}, and one of the things she asks about most.`;
-  const settling = s.unsettled.length ? ` Still settling: ${list(s.unsettled.map(quote))}.` : "";
+  const settling = s.unsettled.length ? ` Still settling: ${list(s.unsettled)}.` : "";
   return `She asks about it a lot. ${solid}; a strength needs 3 in 4.${settling}`;
 }
 
 const list = (xs: string[]) => new Intl.ListFormat("en-US").format(xs);
-const quote = (s: string) => `“${s}”`;
+const dayFmt = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
+
+function News({ view, grade, alerts }: { view: DashboardView; grade: Grade; alerts: Alert[] }) {
+  const news = lately(view, grade, grade === KID.grade, alerts, Date.now());
+  return (
+    <section className={`${ui.panel} ${t.news}`} aria-labelledby="news-h">
+      <h2 id="news-h">{news.title}</h2>
+      {news.items.length === 0 ? (
+        <p className={ui.empty}>Nothing new. Alerts, big questions and new ideas land here as they happen.</p>
+      ) : (
+        <ul className={t.newsList}>
+          {news.items.map((h) => (
+            <li key={h.key} data-kind={h.kind}>
+              <span>{h.text}</span>
+              {h.at && <time dateTime={h.at}>{dayFmt.format(new Date(h.at))}</time>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 function HowSheLearns({ shares }: { shares: DashboardView["how_she_learns"] }) {
   const rows = Object.entries(shares ?? {}).sort((a, b) => b[1] - a[1]);
   const way = (mode: string) => HOW_SHE_LEARNS[mode] ?? mode.replaceAll("_", " ");
+  const [best, ...rest] = rows;
   return (
-    <section className={styles.section} aria-labelledby="learns-h">
-      <h2 id="learns-h">How she learns</h2>
-      {rows.length === 0 && <p className={styles.lede}>Not enough to tell yet.</p>}
-      {rows.slice(0, 1).map(([mode, share]) => (
-        <p key={mode} className={styles.bigStat}>
-          <span className={styles.bigFigure}>{percent(share)}</span>
-          <span>of the ideas she first met by {way(mode)} are solid now.</span>
+    <section className={`${ui.panel} ${t.learns}`} aria-labelledby="learns-h">
+      <h2 id="learns-h">How she learns best</h2>
+      {!best && <p className={ui.empty}>Not enough to tell yet. It fills in as she teaches Kite, answers check questions and plays games.</p>}
+      {best && (
+        <div className={t.ring}>
+          <svg viewBox="0 0 120 120" aria-hidden>
+            <circle cx="60" cy="60" r="50" className={t.ringTrack} />
+            <circle cx="60" cy="60" r="50" className={t.ringFill} pathLength={100} strokeDasharray={`${best[1] * 100} 100`} />
+          </svg>
+          <span className={ui.figure}>{percent(best[1])}</span>
+        </div>
+      )}
+      {best && (
+        <p className={t.learnsText}>
+          of the ideas she first met by <strong>{way(best[0])}</strong> are solid now.
+        </p>
+      )}
+      {rest.map(([mode, share]) => (
+        <p key={mode} className={ui.quiet}>
+          {percent(share)} by {way(mode)}.
         </p>
       ))}
-      <ul className={styles.plainList}>
-        {rows.slice(1).map(([mode, share]) => (
-          <li key={mode} className={styles.meterRow}>
-            <span className={styles.meterValue}>{percent(share)}</span>
-            <span className={styles.meter} aria-hidden>
-              <span style={{ transform: `scaleX(${share})` }} />
+    </section>
+  );
+}
+
+function Asks({ view, grade }: { view: DashboardView; grade: Grade }) {
+  const { topics, years } = curiosityYears(view, grade);
+  const year = years.find((y) => y.grade === grade);
+  const rows = year ? [...topics.map((tp, i) => ({ name: tp.name, share: year.shares[i] })), { name: "Everything else", share: year.shares.at(-1)! }].filter((r) => r.share >= 0.005) : [];
+  const top = [...rows].sort((a, b) => b.share - a.share)[0];
+  return (
+    <section className={`${ui.panel} ${t.asks}`} aria-labelledby="asks-h">
+      <h2 id="asks-h">What she asks about</h2>
+      {top ? (
+        <p className={ui.lede}>
+          In grade {grade}, {percent(top.share)} of her questions were about {top.name.toLowerCase()}.
+        </p>
+      ) : (
+        <p className={ui.empty}>No questions yet in grade {grade}. Her questions, follow-ups and return visits show here by topic.</p>
+      )}
+      <ul className={t.bars}>
+        {rows.map((r) => (
+          <li key={r.name}>
+            <span className={t.barName}>{r.name}</span>
+            <span className={t.barValue}>{percent(r.share)}</span>
+            <span className={t.barTrack} aria-hidden>
+              <span style={{ transform: `scaleX(${r.share})` }} />
             </span>
-            <span className={styles.meterText}>of the ideas she first met by {way(mode)} are solid now.</span>
           </li>
         ))}
       </ul>
@@ -218,68 +198,44 @@ function HowSheLearns({ shares }: { shares: DashboardView["how_she_learns"] }) {
   );
 }
 
-const SHOWN_CARDS = 3;
-
-function Cards({ cards }: { cards: DashboardView["cards"] }) {
-  const card = (c: (typeof cards)[number]) => (
-    <li key={c.card_id} className={styles.card}>
-      <div className={styles.cardHead}>
-        <h3>{topicName(c.topic)}</h3>
-        <span className={styles.quiet}>
-          Grade {c.grade}, {formatMonth(c.at)}
-        </span>
+function World({ view }: { view: DashboardView }) {
+  const { interests, characters, styles } = view.profile;
+  const strong = new Set(view.strengths ?? []);
+  return (
+    <section className={`${ui.panel} ${t.world}`} aria-labelledby="world-h">
+      <h2 id="world-h">Her world</h2>
+      <div className={t.worldCols}>
+        <div>
+          <h3>Topics she&apos;s explored</h3>
+          {interests.length === 0 && <p className={ui.empty}>Topics appear as she asks Kite about them.</p>}
+          <ul className={ui.chips}>
+            {interests.map((i) => (
+              <li key={i} data-strong={strong.has(i)}>
+                {topicName(i)}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3>Her characters</h3>
+          {characters.length === 0 ? (
+            <p className={ui.empty}>Characters she invents for her stories and movies show up here.</p>
+          ) : (
+            <ul className={t.cast}>
+              {characters.map((c) => (
+                <li key={c}>
+                  <span className={t.castMark} aria-hidden>
+                    {c.charAt(0)}
+                  </span>
+                  {c}
+                </li>
+              ))}
+            </ul>
+          )}
+          <h3>Likes to learn with</h3>
+          <p className={t.styles}>{styles.length ? list(styles.map((s) => STYLE_WORDS[s] ?? s)) : "Not enough to tell yet."}</p>
+        </div>
       </div>
-      <p className={styles.clamp}>{plainSummary(c.summary)}</p>
-      <p className={styles.starter}>
-        <strong>Start a conversation</strong>
-        {c.starter}
-      </p>
-    </li>
-  );
-  return (
-    <section className={styles.section} aria-labelledby="cards-h">
-      <h2 id="cards-h">Big questions</h2>
-      <p className={styles.lede}>Times she asked about something you wanted to hear about, newest first.</p>
-      {cards.length === 0 && <p className={styles.quiet}>No big questions yet.</p>}
-      <ul className={styles.cardList}>{cards.slice(0, SHOWN_CARDS).map(card)}</ul>
-      {cards.length > SHOWN_CARDS && (
-        <details className={styles.more}>
-          <summary>{cards.length - SHOWN_CARDS} earlier big questions</summary>
-          <ul className={styles.cardList}>{cards.slice(SHOWN_CARDS).map(card)}</ul>
-        </details>
-      )}
-    </section>
-  );
-}
-
-const OPEN_YEARS = 2;
-
-function Moments({ moments }: { moments: DashboardView["moments_by_grade"] }) {
-  const years = Object.entries(moments).sort((a, b) => Number(b[0]) - Number(a[0]));
-  const year = ([g, items]: (typeof years)[number]) => (
-    <li key={g} className={styles.year}>
-      <h3>Grade {g}</h3>
-      <ul>
-        {items.map((m, i) => (
-          <li key={i}>{momentForParent(m)}</li>
-        ))}
-      </ul>
-    </li>
-  );
-  return (
-    <section className={styles.section} aria-labelledby="moments-h">
-      <h2 id="moments-h">Moments by grade</h2>
-      <p className={styles.lede}>Ideas she figured out and things she taught Kite.</p>
-      {years.length === 0 && <p className={styles.quiet}>No moments yet.</p>}
-      <ol className={styles.timeline}>{years.slice(0, OPEN_YEARS).map(year)}</ol>
-      {years.length > OPEN_YEARS && (
-        <details className={styles.more}>
-          <summary>
-            Grades {years.at(-1)![0]} to {years[OPEN_YEARS][0]}
-          </summary>
-          <ol className={styles.timeline}>{years.slice(OPEN_YEARS).map(year)}</ol>
-        </details>
-      )}
     </section>
   );
 }

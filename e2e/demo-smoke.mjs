@@ -157,16 +157,13 @@ try {
     await panel.getByRole("button", { name: "Close Ask Kite" }).click();
   });
 
-  await step("SOS reaches the grown-up view live within 2 s", async () => {
-    const sos = () => parent.getByText("Maya pressed SOS on her phone.");
-    const before = await sos().count();
+  await step("SOS reaches the grown-up view live within 2 s, whatever tab is open", async () => {
+    // The newest unseen alert sits under the app bar on every tab, so watch from a tab with no alerts of its own.
+    await parent.getByRole("tab", { name: "Moments" }).click();
     const r = await kid.request.post(`${base}/brain/kids/maya/sos`, { data: { lat: 42.3601, lng: -71.0589 } });
     assert.equal(r.status(), 200);
-    await parent.waitForFunction(
-      (n) => document.body.innerText.split("Maya pressed SOS on her phone.").length - 1 > n,
-      before,
-      { timeout: 2000 },
-    );
+    const { alert_id } = await r.json();
+    await parent.locator(`[data-latest-alert="${alert_id}"]`).getByText("Maya pressed SOS on her phone.").waitFor({ timeout: 2000 });
   });
 
   await step("the Trust tab shows the red-team results", async () => {

@@ -1,4 +1,4 @@
-import type { DashboardView, Grade, KiteEvent } from "@kite/client";
+import type { DashboardView, Grade } from "@kite/client";
 import type { components } from "../../../../packages/client/src/contract";
 // ponytail: the dashboard sends concept ids without their topic or grade, so the catalog is read here.
 // Drop this import once ConceptLevel carries `topic` and `grade` (or DashboardView carries strength_topics).
@@ -11,10 +11,8 @@ export type Card = DashboardView["cards"][number];
 export type Concept = DashboardView["skills"]["concepts"][number];
 export type Level = Concept["level"];
 export type PolicyAction = DashboardView["policy"][string];
-export type CounselorAlert = components["schemas"]["CounselorAlertView"];
 export type Contact = components["schemas"]["ContactView"];
 export type Creation = components["schemas"]["Creation"];
-export type AlertEvent = Extract<KiteEvent, { type: "alert" }>;
 
 /** From brain/kite_brain/seed.py. The dashboard has no name, current grade or family id yet. */
 export const KID = { name: "Maya", grade: 11 as Grade, family: "rivera", firstGrade: 1 as Grade };
@@ -37,32 +35,6 @@ export const LEVEL_WORDS: Record<Level, string> = {
   can_teach: "Can teach it",
 };
 const solid = (level: Level) => level === "got_it" || level === "can_teach";
-
-export interface Topic {
-  topic: string;
-  name: string;
-  /** Oldest catalog grade first. */
-  concepts: Concept[];
-  solid: number;
-}
-
-/** Every evidenced concept, grouped by its catalog topic, biggest topic first. */
-export function skillsByTopic(view: DashboardView): Topic[] {
-  const groups = new Map<string, Concept[]>();
-  for (const c of view.skills.concepts) {
-    const topic = CONCEPTS.get(c.concept_id)?.topic ?? "other";
-    groups.set(topic, [...(groups.get(topic) ?? []), c]);
-  }
-  const gradeOf = (c: Concept) => CONCEPTS.get(c.concept_id)?.grade ?? 99;
-  return [...groups]
-    .map(([topic, concepts]) => ({
-      topic,
-      name: topicName(topic),
-      concepts: concepts.sort((a, b) => gradeOf(a) - gradeOf(b)),
-      solid: concepts.filter((c) => solid(c.level)).length,
-    }))
-    .sort((a, b) => b.concepts.length - a.concepts.length || a.name.localeCompare(b.name));
-}
 
 /** One idea in the knowledge map. `level` is null for an idea in the topic she hasn't shown Kite yet. */
 export interface Cell {
@@ -171,62 +143,74 @@ export function growing(view: DashboardView): { name: string; concepts: string[]
   return [...groups].map(([name, concepts]) => ({ name, concepts }));
 }
 
-export interface Radar {
-  /** Earlier grades she can be compared with, oldest first. */
-  earlier: number[];
-  compare: number | null;
-  /** Clockwise from the top, biggest first, so her two main interests sit side by side. */
-  axes: { topic: string; name: string; now: number; then: number | null }[];
-  max: number;
+export interface CuriosityYears {
+  /** The biggest topics across the years shown, biggest first. The rest fold into "Other". */
+  topics: { topic: string; name: string }[];
+  /** One row per grade up to the viewed one: each topic's share of that year's curiosity, then Other's. */
+  years: { grade: number; shares: number[] }[];
 }
 
-const MAX_AXES = 6;
-const MIN_AXES = 3;
-const AXIS_SHARE = 0.03;
+const YEAR_TOPICS = 4;
 
 /**
- * Each topic's share of her curiosity in one school year. The brain's by_grade values are decayed from the viewed
- * grade's year end; within one grade every topic decays alike, so the per-grade share undoes it. Unless a grade is
- * picked, the comparison is the earlier year whose shape differs most from this one.
+ * Each topic's share of her curiosity, year by year. The brain's by_grade values are decayed from the viewed grade's
+ * year end; within one grade every topic decays alike, so the per-grade share undoes it.
  */
-export function curiosityRadar(view: DashboardView, grade: number, pick: number | null): Radar {
-  const topics = view.curiosity.topics;
-  const shares = (g: number) => {
-    const total = topics.reduce((s, t) => s + (t.by_grade[g] ?? 0), 0);
-    return new Map(topics.map((t) => [t.topic, total ? (t.by_grade[g] ?? 0) / total : 0]));
+export function curiosityYears(view: DashboardView, grade: number): CuriosityYears {
+  const all = view.curiosity.topics;
+  const years = Array.from({ length: grade }, (_, i) => i + 1).map((g) => {
+    const total = all.reduce((s, t) => s + (t.by_grade[g] ?? 0), 0);
+    return { grade: g, total, share: (topic: string) => (total ? (all.find((t) => t.topic === topic)?.by_grade[g] ?? 0) / total : 0) };
+  });
+  const weight = (topic: string) => years.reduce((s, y) => s + y.share(topic), 0);
+  const top = all.map((t) => t.topic).filter((t) => weight(t) > 0).sort((a, b) => weight(b) - weight(a)).slice(0, YEAR_TOPICS);
+  return {
+    topics: top.map((topic) => ({ topic, name: topicName(topic) })),
+    years: years
+      .filter((y) => y.total > 0)
+      .map((y) => {
+        const shares = top.map(y.share);
+        return { grade: y.grade, shares: [...shares, Math.max(0, 1 - shares.reduce((a, b) => a + b, 0))] };
+      }),
   };
-  const now = shares(grade);
-  const earlier = [...new Set(topics.flatMap((t) => Object.keys(t.by_grade).map(Number)))].filter((g) => g < grade).sort((a, b) => a - b);
-  const distance = (g: number) => {
-    const m = shares(g);
-    return topics.reduce((s, t) => s + Math.abs((m.get(t.topic) ?? 0) - (now.get(t.topic) ?? 0)), 0);
-  };
-  const compare =
-    pick !== null && earlier.includes(pick) ? pick : earlier.length ? earlier.reduce((a, b) => (distance(b) > distance(a) ? b : a)) : null;
-  const then = compare === null ? null : shares(compare);
-  const weight = (t: string) => (now.get(t) ?? 0) + (then?.get(t) ?? 0);
-  const ranked = topics.map((t) => t.topic).sort((a, b) => weight(b) - weight(a));
-  const big = ranked.filter((t) => weight(t) >= AXIS_SHARE).slice(0, MAX_AXES);
-  const axes = (big.length >= MIN_AXES ? big : ranked.slice(0, MIN_AXES)).map((topic) => ({
-    topic,
-    name: topicName(topic),
-    now: now.get(topic) ?? 0,
-    then: then ? (then.get(topic) ?? 0) : null,
-  }));
-  return { earlier, compare, axes, max: Math.max(0.1, ...axes.flatMap((a) => [a.now, a.then ?? 0])) };
 }
+
+export interface Year {
+  grade: number;
+  figured: string[];
+  taught: string[];
+}
+
+const FIGURED = "Figured out ";
+const TAUGHT = "You taught Kite about ";
+
+/** Moments by school year, newest first, split into ideas she figured out and ideas she taught Kite. */
+export function momentYears(view: DashboardView): Year[] {
+  return Object.entries(view.moments_by_grade)
+    .map(([g, items]) => ({
+      grade: Number(g),
+      figured: items.filter((m) => m.startsWith(FIGURED)).map((m) => m.slice(FIGURED.length)),
+      taught: items.filter((m) => m.startsWith(TAUGHT)).map((m) => m.slice(TAUGHT.length)),
+    }))
+    .sort((a, b) => b.grade - a.grade);
+}
+
+export const STYLE_WORDS: Record<string, string> = {
+  explain: "Explanations",
+  hands_on: "Hands-on",
+  picture: "Pictures",
+  game: "Games",
+  story: "Stories",
+};
 
 /** The hero's facts, all as of the end of the viewed grade. */
 export function portrait(view: DashboardView) {
   const concepts = view.skills.concepts;
-  const best = Object.entries(view.how_she_learns ?? {}).sort((a, b) => b[1] - a[1])[0];
   return {
-    strengths: (view.strengths ?? []).map(topicName),
     curious: view.curiosity.topics[0] ? topicName(view.curiosity.topics[0].topic) : null,
     solid: concepts.filter((c) => solid(c.level)).length,
     shown: concepts.length,
     canTeach: view.skills.can_teach.length,
-    best: best ? { way: HOW_SHE_LEARNS[best[0]] ?? best[0].replaceAll("_", " "), share: best[1] } : null,
   };
 }
 
@@ -342,18 +326,19 @@ export const POLICY_ACTIONS: { action: PolicyAction; label: string; detail: stri
 ];
 
 const when = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-const month = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
 export const formatWhen = (iso: string) => when.format(new Date(iso));
-export const formatMonth = (iso: string) => month.format(new Date(iso));
 
-/** Card summaries are the start of Kite's answer, markdown and all, cut at 300 characters. */
+/**
+ * Card summaries are the start of Kite's answer, cut at 300 characters, and older cards still carry markdown. The cut
+ * can land mid-word after the brain strips the markdown, so any summary that doesn't end a sentence was cut.
+ */
 export const plainSummary = (s: string) => {
   const text = s.replace(/\*\*|__|^#+\s*/gm, "").replace(/\s+/g, " ").trim();
-  return s.length >= 300 ? `${text.replace(/\s+\S*$/, "")}…` : text;
+  return /[.!?…"”')\]\p{Extended_Pictographic}]$/u.test(text) ? text : `${text.replace(/[\s,;:]+\S*$/, "")}…`;
 };
 
 /** Moments are written to the kid ("You taught Kite about…"); the parent reads them about her. */
-export const momentForParent = (m: string) => m.replace(/^You taught Kite about/, "Taught Kite about");
+const momentForParent = (m: string) => m.replace(/^You taught Kite about/, "Taught Kite about");
 
 export const mapUrl = (lat: number, lng: number) => `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
 export const formatPlace = (lat: number, lng: number) =>
