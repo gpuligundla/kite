@@ -5,7 +5,7 @@ export type CreationStatus = "making" | "ready" | "fallback";
 
 export interface CreationEntry {
   readonly id: string;
-  readonly kind: CreationKind;
+  readonly kind: CreationKind | "story"; // CreationKind is what the kid can ask to make from a turn
   readonly status: CreationStatus;
   readonly progress?: { readonly step: number; readonly total: number };
   readonly videoUrl?: string;
