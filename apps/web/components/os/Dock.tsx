@@ -2,7 +2,7 @@
 
 import type { DeviceKind } from "@kite/client";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { SPRING, type Band } from "@/lib/band";
 import { playSound } from "@/lib/sound";
 import { Glyph } from "./Glyph";
@@ -15,6 +15,35 @@ const TEACH_MAX_MS = 120_000;
 const MIN_HOLD_MS = 400;
 
 type Mic = { phase: "idle" } | { phase: "opening" } | { phase: "on"; since: number };
+
+// The type-or-talk choice per device, kept here and mirrored to localStorage. A dock remounts on every stage change,
+// so it reads the choice while rendering: reading it in an effect showed talking for a frame first, and a tap in
+// that frame landed on a toggle that had just flipped. The server can't see it, so hydration starts from talking.
+const chosen = new Map<string, boolean>();
+const choiceListeners = new Set<() => void>();
+function typingChoice(key: string): boolean {
+  if (!chosen.has(key)) {
+    try {
+      chosen.set(key, localStorage.getItem(key) === "type");
+    } catch {
+      chosen.set(key, false); // Storage blocked: talking is the default, and a choice lasts until reload.
+    }
+  }
+  return chosen.get(key)!;
+}
+function chooseTypingFor(key: string, next: boolean) {
+  chosen.set(key, next);
+  try {
+    localStorage.setItem(key, next ? "type" : "talk");
+  } catch {
+    // Storage blocked: the choice lasts until reload.
+  }
+  choiceListeners.forEach((listen) => listen());
+}
+const onChoice = (listen: () => void) => {
+  choiceListeners.add(listen);
+  return () => void choiceListeners.delete(listen);
+};
 /** What the diamond shows. Listening wins over thinking: the kid can always talk over Kite. */
 type Look = "ready" | "listening" | "thinking";
 
@@ -54,33 +83,20 @@ export function Dock(props: DockProps) {
   const [text, setText] = useState("");
   const [mic, setMic] = useState<Mic>({ phase: "idle" });
   const [now, setNow] = useState(0);
-  const [typing, setTyping] = useState(false);
   const take = useRef<Recording | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const diamondRef = useRef<HTMLButtonElement>(null);
   const focusBox = useRef(false);
   const remembered = `kite.dock.${device}`;
+  const typing = useSyncExternalStore(onChoice, () => typingChoice(remembered), () => false);
 
-  // Read after mount: the server render can't see this browser's choice.
-  useEffect(() => {
-    try {
-      setTyping(localStorage.getItem(remembered) === "type");
-    } catch {
-      // Storage blocked: talking stays the default.
-    }
-  }, [remembered]);
   useEffect(() => {
     if (typing && focusBox.current) box.current?.focus();
     focusBox.current = false;
   }, [typing]);
   const chooseTyping = (next: boolean) => {
     focusBox.current = next;
-    setTyping(next);
-    try {
-      localStorage.setItem(remembered, next ? "type" : "talk");
-    } catch {
-      // Storage blocked: the choice lasts until reload.
-    }
+    chooseTypingFor(remembered, next);
   };
 
   const micOn = mic.phase !== "idle";
