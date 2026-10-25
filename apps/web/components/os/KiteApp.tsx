@@ -338,6 +338,12 @@ export function KiteApp({ brain, device, name, grade, muted, surface, about, req
     if (request.text) void ask({ text: request.text });
   }, [request?.n]);
 
+  // A Kite that has just opened shows none of the turns before it, so the brain leans on none of them either: the
+  // stage and Kite's context are the same chat. What Kite remembers about her stays.
+  useEffect(() => {
+    void brain.post(`/kids/${KID_ID}/fresh-start`).catch(() => undefined);
+  }, [brain]);
+
   // Every turn on screen so far goes, and the brain stops leaning on them. What Kite remembers stays.
   const newTopic = async () => {
     hush();
@@ -450,7 +456,16 @@ export function KiteApp({ brain, device, name, grade, muted, surface, about, req
   );
   const teachButton =
     stage.kind === "teach" ? (
-      <button type="button" className={s.teachButton} data-on="true" onClick={() => go({ kind: "talk" })}>
+      <button
+        type="button"
+        className={s.teachButton}
+        data-on="true"
+        onClick={() => {
+          // The lesson is over: she comes back to a clean stage, not to whatever she asked before it.
+          void newTopic();
+          go({ kind: "talk" });
+        }}
+      >
         <Glyph name="close" size={20} />
         Stop teaching
       </button>
