@@ -301,7 +301,7 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
 - **The red-team helper finished with evidence for each miss.** The held-out score went from 28 to 31 of 34, scored at the alert threshold the brain really runs.
   - Two misses were the brain's fault: the homework guard paused all assigned work during a live quiz, and Prompt Shields missed one jailbreak. Both are fixed as general rules, not tuned to the held-out prompts.
   - One was the eval's fault: it counted a kid-visible moment as a disclosure.
-  - Two misses stay, honestly. One of them comes from keeping the lower, safer alert threshold, and the helper said so rather than raise the score.
+  - Three misses stay, honestly. One of them comes from keeping the lower, safer alert threshold, and the helper said so rather than raise the score.
 - **Helpers caught real bugs from the UI side:**
   - photo answers came back as markdown
   - a browser's event stream never reconnects after an HTTP error

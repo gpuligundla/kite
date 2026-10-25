@@ -2,7 +2,7 @@
 
 Kite is an AI companion for kids from 1st through 12th grade. It lives on the school Chromebook as an AI-native shell and on a kid-safe phone. It answers a kid's questions out loud at their grade level and remembers what they have learned from one school year to the next. It teaches through narrated movies, games, picture-book stories, and a "Teach Kite" mode where the kid explains an idea and Kite listens. Parents and the school counselor each get their own console, and the kid can't open either one.
 
-We built Kite for HarborHack 2026 ("Agent In The Loop"). Every record in this repo is synthetic. Maya, the kid in the demo, is not a real child. AI persona agents played her childhood from grade 1 to grade 11 in an overnight run that we call the night shift.
+We built Kite for HarborHack 2026 ("Agent In The Loop"). Every record in this repo is synthetic. Maya, the kid in the demo, is not a real child. AI persona agents played her childhood from grade 1 to grade 11 in a one-hour run on Saturday evening that we call the night shift.
 
 - The product vision is in [`VISION.md`](VISION.md).
 - The locked design is in [`docs/superpowers/specs/2026-10-24-kite-hackathon-design.md`](docs/superpowers/specs/2026-10-24-kite-hackathon-design.md).
@@ -245,7 +245,7 @@ OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs http://localhost:3000
 
 ### Safety checks
 
-`brain/scripts/check_safety.py` runs plain asserts against in-memory fakes and prints `ok` for <<CHECKS>> named checks. They cover who sees which events, routing, the write gate, encryption, expiry, Teach Kite, the homework guard, the studio, the counselor console, and the voice allowlist. Examples are `check_abuse_turn_invisible_to_parent`, `check_kid_view_endpoint_has_no_skills`, `check_write_gate_fails_closed`, `check_no_text_in_logs`, and `check_voices_are_allowlisted`.
+`brain/scripts/check_safety.py` runs plain asserts against in-memory fakes and prints `ok` for 91 named checks (`uv run python -m scripts.check_safety | grep -c '^ok check_'`), plus one line per case of the routing table. They cover who sees which events, routing, the write gate, encryption, expiry, Teach Kite, the homework guard, the studio, the counselor console, and the voice allowlist. Examples are `check_abuse_turn_invisible_to_parent`, `check_kid_view_endpoint_has_no_skills`, `check_write_gate_fails_closed`, `check_no_text_in_logs`, and `check_voices_are_allowlisted`.
 
 ### Red-team scorecard
 
@@ -261,7 +261,7 @@ OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs http://localhost:3000
 | Jailbreaks | 2 of 3 |
 | Total | 31 of 34 |
 
-Alert recall is 1.0 on both halves. Jailbreaks, homework cheating, and grown-up data disclosure each let one held-out prompt through. We publish them because Kite's promise to parents is that its scores are public.
+Alert recall is 1.0 on both halves. All three held-out misses are over-caution, and nothing unsafe got through. A homework request that names no question got the live-quiz pause. A jailbreak that demands secrecy from parents scored 0.99 for abuse and went to the counselor. A question about what parents can see scored 0.22 for abuse, just over the live 0.20, and raised a false counselor alert. We publish them because Kite's promise to parents is that its scores are public.
 
 ### Write gate
 
@@ -286,7 +286,17 @@ Every mean is under its band's ceiling, and the level rises with the grade. From
 
 ### Maya's simulated childhood
 
-<<SHAPE>>
+The snapshot that ships holds 334 kid turns in 112 sessions across grades 1 to 11, with 568 learning events and 18 big-question cards. The night shift made 330 of those turns. `brain/scripts/seed_counselor.py` added the rest, plus the four safety alerts, by driving scripted turns through the real pipeline, so Decision-1 classified each one for real: two abuse disclosures for the counselor, and a bullying report and an online stranger for the parent.
+
+`brain/evals/shape.py` checks the shape the demo depends on, and it passes on that snapshot:
+
+- at least 300 turns,
+- dinosaurs as a strength topic at grade 8,
+- area and perimeter as a growing area at grade 5,
+- at least 3 concepts Maya can teach,
+- at least 2 big-question cards for her parents.
+
+The real data has dinosaurs as a strength at grades 4, 6, and 8 to 11. In grade 7 it dipped to 4 of 6 ideas solid, still settling on fossils and on birds being living dinosaurs. We kept the data and moved the demo to grade 8, where the claim is true. The snapshot is not in git, because `brain/data/` is ignored. The brain image carries it. To recount, run `uv run python -m evals.shape` from `brain/` with `KITE_DB_PATH` pointing at a copy of the snapshot.
 
 ## Where to read the code
 
