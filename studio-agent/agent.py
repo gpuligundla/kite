@@ -37,9 +37,12 @@ TOOLS = ["Read", "Write", "Edit", "Bash"]
 # The cloud sandbox has 2 vCPUs: a director's cut that took 5.7 min locally ran out at 420 s there, and Opus
 # writes a whole page in one 3-5 minute turn before the critic pass. A game with its critic pass took 755 s in
 # the cloud and 11 min locally, so the budget is 15 min; the kid plays a template game meanwhile.
-MAX_TURNS = 18
-RUN_TIMEOUT_S = 900
+# A build run by hand on a laptop (agent.py --local) can lift both caps: KITE_MAX_TURNS and KITE_RUN_TIMEOUT_S.
+MAX_TURNS = int(os.environ.get("KITE_MAX_TURNS", "18"))
+RUN_TIMEOUT_S = float(os.environ.get("KITE_RUN_TIMEOUT_S", "900"))
 PLAYTEST_TIMEOUT_S = 120
+# The critic reads its own full-page screenshots, and one message can pass the SDK's 1 MB default.
+MESSAGE_BUFFER_BYTES = 16 * 1024 * 1024
 FOUNDRY_SCOPE = "https://ai.azure.com/.default"
 KID_VIEW_FIELDS = ("interests", "characters", "moments", "deep_topics")
 MOVIE_DATA_CAP = 100_000  # bytes of storyboard and timings; a real one is about 15 KB
@@ -226,6 +229,7 @@ async def run_agent(req: dict, cwd: Path) -> AsyncIterator[str]:
         allowed_tools=TOOLS,
         cwd=str(cwd),
         max_turns=MAX_TURNS,
+        max_buffer_size=MESSAGE_BUFFER_BYTES,
         setting_sources=[],
         env=foundry_env(),
         model=os.environ.get("ANTHROPIC_MODEL"),
