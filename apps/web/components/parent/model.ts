@@ -184,13 +184,16 @@ export interface Year {
 const FIGURED = "Figured out ";
 const TAUGHT = "You taught Kite about ";
 
+// A moment names its idea mid-sentence ("the math of the blue sky"); listed on its own, the idea leads with a capital.
+const idea = (m: string, prefix: string) => m.charAt(prefix.length).toUpperCase() + m.slice(prefix.length + 1);
+
 /** Moments by school year, newest first, split into ideas she figured out and ideas she taught Kite. */
 export function momentYears(view: DashboardView): Year[] {
   return Object.entries(view.moments_by_grade)
     .map(([g, items]) => ({
       grade: Number(g),
-      figured: items.filter((m) => m.startsWith(FIGURED)).map((m) => m.slice(FIGURED.length)),
-      taught: items.filter((m) => m.startsWith(TAUGHT)).map((m) => m.slice(TAUGHT.length)),
+      figured: items.filter((m) => m.startsWith(FIGURED)).map((m) => idea(m, FIGURED)),
+      taught: items.filter((m) => m.startsWith(TAUGHT)).map((m) => idea(m, TAUGHT)),
     }))
     .sort((a, b) => b.grade - a.grade);
 }
