@@ -13,6 +13,8 @@ const CASES = {
   unstable: [breakAt("setInterval(() => sun.setAttribute('r', 30 + Math.random() * 60), 16); kite.ready();"), "SEEK_UNSTABLE"],
   long: [breakAt("kite.timeline.to('#sun', { x: 10, duration: 30 }, 0); kite.ready();"), "BAD_DURATION"],
   forged: [good.replace("<body>", '<body><script data-kit="gsap">alert(1)</script>'), "KIT_FORGED"],
+  covered: [good.replace('cx="160" cy="470" r="50"', 'cx="1080" cy="245" r="50"'), "TEXT_COVERED"],
+  "no-guide": [good.replace('<g id="guide">', "<g>"), "NO_GUIDE"],
 };
 
 let ok = true;

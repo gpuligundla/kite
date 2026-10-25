@@ -70,7 +70,7 @@ writeFileSync(out, html);
 setTimeout(() => {
   fail("TIMEOUT");
   done();
-}, 60000);
+}, 90000);
 
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
@@ -103,6 +103,56 @@ const frame = async (seconds) => {
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
   return page.screenshot();
 };
+// Visible text in the stage that the guide (#guide) is drawn over: hit tests on a 10 x 3 grid pick
+// the candidates, and pixels confirm them (the text's box changes when the guide is hidden).
+const covered = async () => {
+  const candidates = await hitTest();
+  if (candidates === null) return null;
+  const setVisibility = (v) => page.evaluate((v) => {
+    const style = document.getElementById("guide").style;
+    const was = style.visibility;
+    style.visibility = v;
+    return was;
+  }, v);
+  const out = [];
+  for (const { text, clip } of candidates) {
+    const withGuide = await page.screenshot({ clip });
+    const was = await setVisibility("hidden");
+    const without = await page.screenshot({ clip });
+    await setVisibility(was);
+    if (!withGuide.equals(without)) out.push(text);
+  }
+  return out;
+};
+const hitTest = () => page.evaluate(() => {
+  const guide = document.getElementById("guide");
+  if (!guide) return null;
+  const shown = (el) => {
+    for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+      const s = getComputedStyle(e);
+      if (s.display === "none" || s.visibility === "hidden" || +s.opacity < 0.05) return false;
+    }
+    return true;
+  };
+  const owns = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+  const under = [...document.querySelectorAll("#stage *")].filter((el) => !guide.contains(el) && owns(el) && shown(el)).map((el) => {
+    const r = el.getBoundingClientRect();
+    const points = [];
+    for (let i = 1; i <= 10; i++) {
+      for (let j = 1; j <= 3; j++) points.push([r.left + (r.width * i) / 11, r.top + (r.height * j) / 4]);
+    }
+    return [el, points.filter(([x, y]) => guide.contains(document.elementFromPoint(x, y)))];
+  });
+  // Only where the text itself would show with the guide gone, so text behind a scenery layer doesn't count.
+  const was = guide.style.visibility;
+  guide.style.visibility = "hidden";
+  const hidden = under.filter(([el, points]) => points.filter(([x, y]) => el.contains(document.elementFromPoint(x, y))).length >= 2);
+  guide.style.visibility = was;
+  return hidden.map(([el]) => {
+    const r = el.getBoundingClientRect();
+    return { text: el.textContent.trim().slice(0, 40), clip: { x: r.left, y: r.top, width: r.width, height: r.height } };
+  });
+});
 const frames = [];
 for (const at of AT) {
   const png = await frame(at * info.narration);
@@ -118,6 +168,26 @@ for (let i = 0; i < frames.length; i++) {
 }
 if (!(await frame(AT[1] * info.narration)).equals(frames[1])) {
   fail("SEEK_UNSTABLE", "seeking to 35% twice drew two different frames; put every animation on kite.timeline, no CSS animations, timers or per-frame randomness");
+}
+await page.addStyleTag({ content: "#stage, #stage * { pointer-events: auto !important }" }); // so hit tests see every layer
+// The guide may walk past a label; it may not stand on one. Covered for a full second fails.
+const streak = new Map();
+const reported = new Set();
+for (let s = 0.5; s < info.narration; s += 0.5) {
+  await page.evaluate((t) => window.kite.seek(t), s);
+  const hidden = await covered();
+  if (hidden === null) {
+    fail("NO_GUIDE", 'give the guide character\'s group id="guide"');
+    break;
+  }
+  for (const text of [...streak.keys()]) if (!hidden.includes(text)) streak.delete(text);
+  for (const text of hidden) {
+    streak.set(text, (streak.get(text) ?? 0) + 1);
+    if (streak.get(text) === 3 && !reported.has(text)) {
+      reported.add(text);
+      fail("TEXT_COVERED", `from ${(s - 1).toFixed(1)} s the guide stands on "${text}"; move one of them`);
+    }
+  }
 }
 
 await page.evaluate((audio) => Object.assign(window.KITE_AUDIO, audio), Object.fromEntries(info.lines.map(([key, s]) => [key, silence(s)])));
