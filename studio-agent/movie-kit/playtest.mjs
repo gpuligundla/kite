@@ -166,7 +166,29 @@ for (let i = 0; i < frames.length; i++) {
     if (frames[i].equals(frames[j])) fail("SAME_FRAMES", `the frames at ${AT[i] * 100}% and ${AT[j] * 100}% are identical`);
   }
 }
-if (!(await frame(AT[1] * info.narration)).equals(frames[1])) {
+// The share of pixels that moved by more than a faint shade: a fade a few percent off is the same frame.
+async function changed(a, b) {
+  const blank = await browser.newPage();
+  const share = await blank.evaluate(async ([x, y]) => {
+    const load = (b64) => new Promise((r) => {
+      const img = new Image();
+      img.onload = () => r(img);
+      img.src = `data:image/png;base64,${b64}`;
+    });
+    const [i, j] = await Promise.all([load(x), load(y)]);
+    const c = new OffscreenCanvas(i.width, i.height).getContext("2d");
+    c.drawImage(i, 0, 0);
+    const p = c.getImageData(0, 0, i.width, i.height).data;
+    c.drawImage(j, 0, 0);
+    const q = c.getImageData(0, 0, i.width, i.height).data;
+    let n = 0;
+    for (let k = 0; k < p.length; k += 4) n += Math.max(Math.abs(p[k] - q[k]), Math.abs(p[k + 1] - q[k + 1]), Math.abs(p[k + 2] - q[k + 2])) > 40 ? 1 : 0;
+    return n / (i.width * i.height);
+  }, [a.toString("base64"), b.toString("base64")]);
+  await blank.close();
+  return share;
+}
+if ((await changed(await frame(AT[1] * info.narration), frames[1])) > 0.002) {
   fail("SEEK_UNSTABLE", "seeking to 35% twice drew two different frames; put every animation on kite.timeline, no CSS animations, timers or per-frame randomness");
 }
 await page.addStyleTag({ content: "#stage, #stage * { pointer-events: auto !important }" }); // so hit tests see every layer

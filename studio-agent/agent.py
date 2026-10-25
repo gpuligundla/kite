@@ -40,6 +40,8 @@ PLAYTEST_TIMEOUT_S = 120
 FOUNDRY_SCOPE = "https://ai.azure.com/.default"
 KID_VIEW_FIELDS = ("interests", "characters", "moments", "deep_topics")
 MOVIE_DATA_CAP = 100_000  # bytes of storyboard and timings; a real one is about 15 KB
+# kite-movie.js's clock, repeated so the brief can show times; the movie's code reads kite.movie.
+CLOCK_INTRO_S, CLOCK_GAP_S, CLOCK_OUTRO_S = 1.2, 0.6, 3.5
 
 
 @dataclass(frozen=True)
@@ -130,12 +132,22 @@ def brief(req: dict) -> str:
     ]
     if req["kind"] == "movie":
         board = req["storyboard"]
-        lines += ["", f"Storyboard: {board['title']} (kite.movie has it, with every time on the clock)"]
+        lines += ["", f"Storyboard: {board['title']}. Times are seconds on the clock; in code, take them from kite.movie."]
+        t = CLOCK_INTRO_S
         for s, scene in enumerate(board["scenes"]):
             actors = ", ".join(a.get("name") or a.get("sprite", "") for a in scene.get("actors", []) if isinstance(a, dict))
-            lines.append(f"Scene {s} ({scene.get('background', '')}, {scene.get('camera', '')} camera; template actors: {actors or 'none'})")
-            lines += [f"  {s}-{n} {line.get('speaker', '')}: {line['text']}" for n, line in enumerate(scene["lines"])]
-        lines += ["", "Your instructions document the kit, so don't read gsap.js, kite-movie.js, movie-data.js or playtest.mjs."]
+            head, start = len(lines), t
+            for n, line in enumerate(scene["lines"]):
+                words = req["timings"].get(f"{s}-{n}") or []
+                length = max((w["end"] for w in words), default=0) or len(line["text"].split()) * 0.35
+                lines.append(f"  {s}-{n} {t:.1f}-{t + length:.1f} {line.get('speaker', '')}: {line['text']}")
+                t += length
+            lines.insert(head, f"Scene {s} {start:.1f}-{t:.1f} s ({scene.get('background', '')}, {scene.get('camera', '')} camera; "
+                               f"template actors: {actors or 'none'})")
+            t += CLOCK_GAP_S
+        t += CLOCK_OUTRO_S - CLOCK_GAP_S
+        lines += [f"Outro card until {t:.1f} s, the end of the movie.", "",
+                  "Your instructions document the kit, so don't read gsap.js, kite-movie.js, movie-data.js or playtest.mjs."]
     lines.append(f"Write {KINDS[req['kind']].page} in this folder, run `npm run playtest`, fix until it passes, "
                  "then Read the shots, critique them, revise at least once, and stop.")
     return "\n".join(lines)

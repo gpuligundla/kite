@@ -20,7 +20,7 @@ from kite_brain.deps import Deps
 from kite_brain.routers import games
 from kite_brain.seed import KID_ID, seed
 from kite_brain.studio import movie
-from kite_brain.studio_pro import GameResult, Playtest, build_custom_game, start_page, text_strings
+from kite_brain.studio_pro import PageResult, Playtest, build_custom_game, start_page, text_strings
 from scripts.checks.audiences import drain
 from scripts.checks.ledger import CATALOG, NOW, fresh
 from scripts.checks.memory import async_embed
@@ -59,8 +59,8 @@ class StandInAgent:
         return self.result
 
 
-def ready(html=GAME) -> GameResult:
-    return GameResult("ready", html, Playtest(True, []))
+def ready(html=GAME) -> PageResult:
+    return PageResult("ready", html, Playtest(True, []))
 
 
 def run_build(stand, agent, timeout_s=studio_pro.STUDIO_AGENT_TIMEOUT_S):
@@ -119,7 +119,7 @@ def check_flagged_text_is_fallback() -> None:
 def check_agent_failure_is_fallback() -> None:
     out = run_build(StandIns(decide=None), StandInAgent(error=RuntimeError("502")))
     expect_fallback(*out, why="an agent error")
-    out = run_build(StandIns(decide=None), StandInAgent(GameResult("failed", None, Playtest(False, ["NO_READY"]))))
+    out = run_build(StandIns(decide=None), StandInAgent(PageResult("failed", None, Playtest(False, ["NO_READY"]))))
     expect_fallback(*out, why="an agent that gave up")
     no_slot = GAME.replace('<script data-kit="KITE_SOUNDS">window.KITE_SOUNDS = {};</script>', "")
     out = run_build(StandIns(decide=None), StandInAgent(ready(no_slot)))
@@ -225,7 +225,7 @@ def check_directors_cut_gets_the_narration_and_no_network() -> None:
 def check_directors_cut_failures_keep_the_template() -> None:
     for why, agent, timeout_s in (
         ("an agent error", StandInAgent(error=RuntimeError("502")), studio_pro.STUDIO_AGENT_TIMEOUT_S),
-        ("an agent that gave up", StandInAgent(GameResult("failed", None, Playtest(False, ["SAME_FRAMES"]))), studio_pro.STUDIO_AGENT_TIMEOUT_S),
+        ("an agent that gave up", StandInAgent(PageResult("failed", None, Playtest(False, ["SAME_FRAMES"]))), studio_pro.STUDIO_AGENT_TIMEOUT_S),
         ("a page with no audio slot", StandInAgent(ready()), studio_pro.STUDIO_AGENT_TIMEOUT_S),
         ("a timeout", StandInAgent(ready(MOVIE), delay_s=0.5), 0.05),
     ):

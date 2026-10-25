@@ -43,17 +43,17 @@ class Playtest:
 
 
 @dataclass
-class GameResult:
+class PageResult:
     status: Literal["ready", "failed"]
     html: str | None
     playtest: Playtest
 
 
 class StudioAgent(Protocol):
-    async def build(self, request: dict, progress: Callable[[str], None]) -> GameResult: ...
+    async def build(self, request: dict, progress: Callable[[str], None]) -> PageResult: ...
 
 
-def parse_result(msg: object) -> GameResult:
+def parse_result(msg: object) -> PageResult:
     """The agent's final line, or ValueError. Nothing it sends is trusted before this."""
     if not isinstance(msg, dict) or msg.get("status") not in ("ready", "failed"):
         raise ValueError("the studio agent sent no result")
@@ -61,7 +61,7 @@ def parse_result(msg: object) -> GameResult:
     if html is not None and not isinstance(html, str):
         raise ValueError("html must be a string")
     playtest = msg.get("playtest") or {}
-    return GameResult(msg["status"], html, Playtest(bool(playtest.get("passed")), [str(e) for e in playtest.get("errors", [])]))
+    return PageResult(msg["status"], html, Playtest(bool(playtest.get("passed")), [str(e) for e in playtest.get("errors", [])]))
 
 
 class FoundryStudioAgent:
@@ -72,7 +72,7 @@ class FoundryStudioAgent:
         self.endpoint = endpoint
         self.credential = DefaultAzureCredential()
 
-    async def build(self, request: dict, progress: Callable[[str], None]) -> GameResult:
+    async def build(self, request: dict, progress: Callable[[str], None]) -> PageResult:
         token = (await asyncio.to_thread(self.credential.get_token, INVOCATIONS_SCOPE)).token
         last = None
         async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=STUDIO_AGENT_TIMEOUT_S)) as http, http.stream(
