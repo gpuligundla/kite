@@ -1,0 +1,210 @@
+{
+  "id": "db0b1185a40a586d0874410ec6a7e692",
+  "kind": "movie",
+  "status": "ready",
+  "storyboard": {
+    "title": "Rexy and the Sun's Big Family",
+    "scenes": [
+      {
+        "background": "space",
+        "palette": {
+          "sky": "#0b1033",
+          "ground": "#1c1f4a",
+          "time_of_day": "night"
+        },
+        "actors": [
+          {
+            "sprite": "sun",
+            "name": "Sun",
+            "entrance": "pop",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "[excited] Hi, friend! Today we visit the solar system, a big family around a star."
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "The star in the middle is our Sun. You already know its light!"
+          }
+        ],
+        "camera": "zoom"
+      },
+      {
+        "background": "space",
+        "palette": {
+          "sky": "#101547",
+          "ground": "#2a2f6b",
+          "time_of_day": "night"
+        },
+        "actors": [
+          {
+            "sprite": "sun",
+            "name": "Sun",
+            "entrance": "left",
+            "motion": "float"
+          },
+          {
+            "sprite": "earth",
+            "name": "Earth",
+            "entrance": "right",
+            "motion": "float"
+          },
+          {
+            "sprite": "planet",
+            "name": "Planet",
+            "entrance": "right",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "Planets are big round worlds that travel around the Sun, like kids running around a playground."
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "Earth is one of them. Our home is a traveler!"
+          }
+        ],
+        "camera": "pan"
+      },
+      {
+        "background": "space",
+        "palette": {
+          "sky": "#0d1240",
+          "ground": "#252a5e",
+          "time_of_day": "night"
+        },
+        "actors": [
+          {
+            "sprite": "earth",
+            "name": "Earth",
+            "entrance": "pop",
+            "motion": "float"
+          },
+          {
+            "sprite": "moon",
+            "name": "Moon",
+            "entrance": "left",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "Some planets have moons. A moon circles its planet, like a puppy following its human."
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "Earth has one moon. It goes around us while we go around the Sun."
+          }
+        ],
+        "camera": "still"
+      },
+      {
+        "background": "space",
+        "palette": {
+          "sky": "#0b1033",
+          "ground": "#1c1f4a",
+          "time_of_day": "night"
+        },
+        "actors": [
+          {
+            "sprite": "trex",
+            "name": "Rexy",
+            "entrance": "pop",
+            "motion": "bounce"
+          },
+          {
+            "sprite": "sun",
+            "name": "Sun",
+            "entrance": "left",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Rexy",
+            "voice": "explorer",
+            "text": "[excited] Roar! Why don't they fly away? The Sun pulls them close with gravity!"
+          },
+          {
+            "speaker": "Rexy",
+            "voice": "explorer",
+            "text": "Gravity is a pull, like an invisible hug."
+          }
+        ],
+        "camera": "zoom"
+      },
+      {
+        "background": "space",
+        "palette": {
+          "sky": "#14194f",
+          "ground": "#30357a",
+          "time_of_day": "night"
+        },
+        "actors": [
+          {
+            "sprite": "sun",
+            "name": "Sun",
+            "entrance": "pop",
+            "motion": "float"
+          },
+          {
+            "sprite": "planet",
+            "name": "Planet",
+            "entrance": "right",
+            "motion": "walk"
+          },
+          {
+            "sprite": "moon",
+            "name": "Moon",
+            "entrance": "left",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "So the solar system is the Sun, with planets and moons traveling around it."
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "Wasn't that a bright family? Can you spot who goes around the Sun?"
+          }
+        ],
+        "camera": "pan"
+      }
+    ],
+    "check": {
+      "question": "What is the solar system?",
+      "choices": [
+        "The Sun with planets and moons traveling around it",
+        "Only the planets with no Sun",
+        "A big cloud on Earth",
+        "Just the Moon and stars"
+      ],
+      "correct_index": 0,
+      "concept_id": "none"
+    }
+  },
+  "game": null,
+  "storybook": null,
+  "audio": {
+    "check": "check.mp3"
+  },
+  "timings": {},
+  "video_url": null,
+  "html_url": "/creations/db0b1185a40a586d0874410ec6a7e692/movie.html"
+}
