@@ -19,7 +19,12 @@ export type DashboardView = components["schemas"]["DashboardView"];
 export interface SseSource {
   addEventListener(type: string, listener: (e: { data?: string | null; xhrStatus?: number }) => void): void;
   close(): void;
+  /** 2 is CLOSED. Browsers set it; react-native-sse may not, and retries on its own. */
+  readonly readyState?: number;
 }
+
+const RETRY_MIN_MS = 1000;
+const RETRY_MAX_MS = 10000;
 export type SseCtor = new (url: string, init?: { headers?: Record<string, string>; withCredentials?: boolean }) => SseSource;
 
 type Common = {
@@ -219,15 +224,37 @@ const EVENT_TYPES: Record<KiteEvent["type"], true> = {
 function openStream(config: BrainConfig, path: string, deliver: (e: KiteEvent) => void): () => void {
   const Source: SseCtor | undefined = config.EventSourceImpl ?? globalThis.EventSource;
   if (!Source) throw new Error("No EventSource here: pass EventSourceImpl (Node, React Native) or run in a browser");
-  const es = new Source(endpoint(config, path), config.auth.kind === "bearer" ? { headers: authHeaders(config) } : undefined);
-  for (const name of Object.keys(EVENT_TYPES)) {
-    es.addEventListener(name, (m) => {
-      const e = parseFrame(name, m.data);
-      if (e) deliver(e);
+  let es: SseSource | undefined;
+  let stopped = false;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  let delay = RETRY_MIN_MS;
+  const connect = () => {
+    const source = new Source(endpoint(config, path), config.auth.kind === "bearer" ? { headers: authHeaders(config) } : undefined);
+    es = source;
+    for (const name of Object.keys(EVENT_TYPES)) {
+      source.addEventListener(name, (m) => {
+        delay = RETRY_MIN_MS;
+        const e = parseFrame(name, m.data);
+        if (e) deliver(e);
+      });
+    }
+    source.addEventListener("error", (m) => {
+      config.onStreamError?.({ status: m.xhrStatus });
+      // A browser EventSource retries a dropped connection itself but gives up for good on an HTTP error status,
+      // which a brain restart behind the proxy produces. Open a fresh one, backing off up to 10 s.
+      if (source.readyState === 2 && !stopped) {
+        source.close();
+        retry = setTimeout(connect, delay);
+        delay = Math.min(delay * 2, RETRY_MAX_MS);
+      }
     });
-  }
-  es.addEventListener("error", (m) => config.onStreamError?.({ status: m.xhrStatus }));
-  return () => es.close();
+  };
+  connect();
+  return () => {
+    stopped = true;
+    clearTimeout(retry);
+    es?.close();
+  };
 }
 
 /** The boundary where wire JSON becomes a KiteEvent. A malformed frame is dropped, not thrown. */
