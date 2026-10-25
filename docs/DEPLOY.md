@@ -201,6 +201,13 @@ claude
 az deployment group show --resource-group rg-kite --name kite --query properties.outputs -o json
 ```
 
+Then run it. Claude Code in the agent builds the director's-cut movies and brand-new games with Opus 5.5 (`directorDeployment`) and keeps Haiku for its own small internal calls:
+
+```bash
+ACR_NAME=<acrName> FOUNDRY_PROJECT_ENDPOINT=<projectEndpoint> ANTHROPIC_FOUNDRY_RESOURCE=<foundryAccountName> \
+	OPUS_DEPLOYMENT=claude-opus-5-5 HAIKU_DEPLOYMENT=claude-haiku-5-5 scripts/deploy-studio-agent.sh
+```
+
 The template already gives the project's managed identity **AcrPull** on the registry, which lets the platform pull the agent image. It also connects Application Insights to the project for agent traces. Your Azure AI User role lets you create the agent. Owner and Contributor alone can't, because creating an agent is a data-plane operation.
 
 The agent's own identity exists only after the agent does, so the template can't grant it anything. Claude Code inside the agent calls the account's `/anthropic` endpoint, which the agent's default project access may not cover. If the agent gets HTTP 401 or 403 from Claude, grant its identity Azure AI User on the Foundry account. The role ID below is Azure AI User, which Microsoft is renaming to Foundry User.
