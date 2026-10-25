@@ -113,13 +113,13 @@ Python, FastAPI, Pydantic, uv, SQLite, cryptography (AES-256-GCM), textstat, Typ
 - **Claude helper agents on other models.** Each worked in its own git worktree. Claude Fable 5.1 built the turn pipeline and the `kite-studio` hosted agent. Claude Sonnet 5.5 built the movie and game backend and, on the teammate's branch, the shared TypeScript client. On Saturday evening, three helpers built the parent dashboard view, the movie and game packages, and the studio backend in parallel.
 - **Every commit was a collaboration.** All 66 commits through `eb6229d` carry a Claude co-author trailer: 57 from Opus 5.5, 6 from Fable 5.1, and 3 from Sonnet 5.5. [pending: recount at the submission tag with `git log --format='%(trailers:key=Co-Authored-By,valueonly)' | sort | uniq -c`]
 - **A review panel.** A fresh reviewer agent read the design cold, the way a builder would. Then four reviewers on Opus, Fable, Sonnet, and Haiku attacked it independently. Claude also consulted an advisor model on the chat-retention decision.
-- **AI teammates inside the product.** Claude Haiku 5.5 persona agents played Maya's childhood. A red team of 70 synthetic prompts attacked Kite. Claude Code inside the `kite-studio` hosted agent writes brand-new games. Kite itself answers "how were you built?" from our collaboration log.
+- **AI teammates inside the product.** Claude Haiku 5.5 persona agents played Maya's childhood. Claude Code inside the `kite-studio` hosted agent writes brand-new games. Kite itself answers "how were you built?" from our collaboration log.
 
 ### How responsibilities changed
 
 In the morning, Claude was a planner. It read the HarborHack rules and found that one third of the score is collaboration and that the submission deadline comes before the demo. By early afternoon it was a design partner, arguing about safety and memory with the humans. After the humans moved the work onto pstack, Claude became the lead. It sent helpers into separate worktrees and kept a decision trail. By evening it was operating real systems. It read a half-built database, an agent's Application Insights traces, and rendered movie frames. It also merged three helpers' work on a separate branch, so the night shift running in the human's checkout was never disturbed.
 
-The in-product agents took on jobs no human could do in a weekend. They lived eleven years of a childhood overnight, attacked Kite with unsafe prompts, and wrote new games on demand.
+The in-product agents took on jobs no human could do in a weekend. They lived eleven years of a childhood overnight and write new games on demand.
 
 ### Where the AI shaped the design
 

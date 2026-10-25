@@ -112,7 +112,7 @@ Ten slides. The live demo in [`run-of-show.md`](run-of-show.md) carries the pitc
 - Claude Code on Opus 5.5 as lead engineer, with helpers on Fable 5.1 and Sonnet 5.5
 - All 66 commits carry a Claude co-author trailer [pending: recount at the submission tag]
 - Four models reviewed the design and found a privacy hole in Claude's own draft
-- Agents inside the product: Maya's persona, the red team, the game builder
+- AI inside the product: Haiku agents played Maya, and Claude Code builds her games
 - Every decision, timestamped: `COLLAB_LOG.md`
 
 **Speaker notes.** Backup for moment 10. Claude pushed back on the first idea three times and added features like family values settings and Teach-it-back. The humans overruled Claude too. They chose a real monorepo over a plain Node stack, and they moved movies into scope. The best moment was the review. Four reviewers on four models all found that the kid's device and the parent dashboard shared one event stream, so an abuse turn could reach the parent. Claude wrote that design, and Claude rewrote it.

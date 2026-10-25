@@ -30,7 +30,7 @@ We built Kite for HarborHack 2026 ("Agent In The Loop"). Every record in this re
 Kite remembers what a kid learned, not what they said.
 
 - **Learning data only.** The memory ledger stores concept evidence, curiosity signals, interests, favorite characters, and learning moments. Kite never stores feelings, family, friends, or health. The payload types in `brain/kite_brain/contract.py` are enums and templates, so the only free text is a favorite character's name of up to 40 characters. The memory writer in `memory/writer.py` can emit only those types. Each candidate fact also needs a Microsoft-Decision-1 `is_learning_fact` score of at least 0.80. If the classifier fell back to another backend, the writer stores nothing.
-- **Chat text expires after 30 days.** `SESSION_TURN_TTL` in `brain/kite_brain/memory/ledger.py` sets the window, and a background task deletes expired rows every hour. Parents can read chats inside the window.
+- **Chat text expires after 30 days.** `SESSION_TURN_TTL` in `brain/kite_brain/memory/ledger.py` sets the window, and a background task deletes expired rows every hour. The design lets parents review chats inside that window, but no route serves chat text to a parent yet.
 - **Alerts are kept for 1 year.** An alert stores the flagged message and the two turns before it (`ALERT_TTL`). Only the adult the alert was routed to can read it.
 - **The kid never sees levels or scores.** Kid devices get a `KidView`, which holds interests, characters, moments, and deep topics. When the kid asks about themselves, Claude receives only that view, so it has no levels to reveal. Skill levels, growing areas, alerts, and family policies go only to grown-up devices.
 - **Abuse disclosures go to the school counselor.** The parent gets nothing for that turn, because the parent could be the abuser. Self-harm replies include 988 and Childhelp (1-800-422-4453) and alert the parent.
@@ -122,7 +122,7 @@ Each grade band (K-2, 3-5, 6-8, 9-12) sets a reading-level ceiling, a sentence l
 4. To put the night-shift snapshot back before a rehearsal, run `scripts/restore-demo.sh`, then restart the brain.
 5. [pending: the command that starts `apps/web` against the local brain]
 
-The safety checks need no keys and no network. Run them from `brain/`:
+The safety checks need no keys and make no network calls. Run them from `brain/`:
 
 ```bash
 uv run python -m scripts.check_safety
@@ -202,7 +202,7 @@ The real data has dinosaurs as a strength at grades 4, 6, and 8 to 11. In grade 
 
 ## How it was built
 
-Two humans built Kite with Claude Code (Opus 5.5) as the lead engineer, helper agents on Fable 5.1 and Sonnet 5.5 in separate git worktrees, and a review panel on four models. All 66 commits through `eb6229d` carry a Claude co-author trailer. AI agents also run inside the product. Claude Haiku persona agents played Maya's childhood, a red-team agent attacked Kite, and Claude Code inside an Azure sandbox writes brand-new games.
+Two humans built Kite with Claude Code (Opus 5.5) as the lead engineer, helper agents on Fable 5.1 and Sonnet 5.5 in separate git worktrees, and a review panel on four models. All 66 commits through `eb6229d` carry a Claude co-author trailer. AI agents also run inside the product. Claude Haiku persona agents played Maya's childhood, and Claude Code inside an Azure sandbox writes brand-new games.
 
 The AI changed the design as well as writing the code. Claude saw that an abuse alert sent to a parent can endanger the kid when the parent is the abuser, so those alerts now go to the counselor. Four reviewers on different models found that Claude's own first design let the parent stream see abuse turns, and Claude rewrote it. The humans overruled Claude too. They rejected its plain Node stack for a real monorepo with a Python brain. When they dropped the unit-test suite, Claude argued to keep the safety checks, because the claims made on stage depend on them.
 
