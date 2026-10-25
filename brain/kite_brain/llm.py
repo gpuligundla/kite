@@ -52,6 +52,36 @@ TOOLS = [
     _tool("build_new_game", "Build a brand-new game from scratch, made just for this child. It takes a few minutes. "
           "Use it instead of make_game only when the child asks for a new, custom, different or brand-new game, or "
           f"one built or designed for them. {_ASKING}"),
+    {
+        "name": "tell_story",
+        "description": "Tell the child an illustrated story that Kite reads aloud, with sound effects. Use it whenever the "
+        "child asks for a story or a tale, such as 'tell me a story about X' or 'tell me a bedtime story about X'. "
+        f"{_ASKING}",
+        "strict": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "topic": _TOPIC,
+                "purpose": {
+                    "type": "string", "enum": ["learn", "fun", "feelings"],
+                    "description": "learn when the story should teach how something works or a school idea (how volcanoes "
+                    "work, why the moon has phases); fun for a silly, adventure or make-believe story (a funny dragon); "
+                    "feelings for friendship, sharing, kindness, being brave, big feelings, being left out or saying sorry.",
+                },
+                "bedtime": {
+                    "type": "boolean",
+                    "description": "True when they ask for a bedtime, sleepy, goodnight or calm-down story.",
+                },
+                "learning_goal": {
+                    "type": "string",
+                    "description": "For a learn story, the one idea the child should come away with, as a plain sentence of "
+                    "fact. An empty string for fun and feelings.",
+                },
+            },
+            "required": ["topic", "purpose", "bedtime", "learning_goal"],
+            "additionalProperties": False,
+        },
+    },
     _tool("teach_kite", "Start Teach Kite: the child explains a topic and you listen. Use it only when the child's "
           "latest message says they want to teach you, explain something to you, or show you what they know. Kite opens the lesson with "
           "its own line, so don't ask about the topic or explain it yourself.", goal=False),
@@ -112,7 +142,8 @@ class FoundryLlm:
         for block in final.content:
             if block.type == "tool_use":
                 yield ToolCall(name=block.name, topic=block.input["topic"],
-                               learning_goal=block.input.get("learning_goal", ""))
+                               learning_goal=block.input.get("learning_goal", ""),
+                               purpose=block.input.get("purpose", "learn"), bedtime=block.input.get("bedtime", False))
 
     async def parse(self, req: LlmRequest, model_cls: type[T], *, deep: bool = False) -> T:
         """Haiku with structured output, or with `deep` Sonnet at medium effort (storyboards and

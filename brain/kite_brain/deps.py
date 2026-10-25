@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 
 from kite_brain.catalog import Catalog
-from kite_brain.contract import AlertKind
+from kite_brain.contract import AlertKind, StoryPurpose
 from kite_brain.crypto import FamilyKeys
 
 if TYPE_CHECKING:
@@ -30,9 +30,11 @@ class LlmRequest:
 
 @dataclass
 class ToolCall:
-    name: Literal["make_movie", "make_game", "build_new_game", "teach_kite"]
+    name: Literal["make_movie", "make_game", "build_new_game", "teach_kite", "tell_story"]
     topic: str
-    learning_goal: str  # "" for teach_kite
+    learning_goal: str  # "" for teach_kite, and for a fun or feelings story
+    purpose: StoryPurpose = "learn"  # tell_story only
+    bedtime: bool = False  # tell_story only
 
 
 @dataclass

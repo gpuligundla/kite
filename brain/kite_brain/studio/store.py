@@ -78,6 +78,7 @@ def sprites_for(creation: Creation) -> dict[str, str]:
     """{slug: raw SVG markup} for every sprite the creation uses. Creation itself carries no sprite data."""
     slugs = {a.sprite for s in creation.storyboard.scenes for a in s.actors} if creation.storyboard else set()
     slugs |= {i.sprite for i in creation.game.items} if creation.game else set()
+    slugs |= {a.sprite for p in creation.storybook.pages for a in p.actors} if creation.storybook else set()
     return {slug: sprite_svg(slug) for slug in sorted(slugs)}
 
 

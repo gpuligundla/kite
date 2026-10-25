@@ -24,7 +24,9 @@ Initiative = Literal["own_question", "follow_up_why", "assigned_work"]
 Outcome = Literal["got_it", "partly", "not_yet"]
 Verdict = Literal["covered", "partly", "missing", "wrong"]
 PayloadKind = Literal["concept_evidence", "curiosity_signal", "profile_fact", "moment"]
-CreationKind = Literal["movie", "game"]
+CreationKind = Literal["movie", "game", "story"]
+StoryMode = Literal["story", "bedtime"]
+StoryPurpose = Literal["learn", "fun", "feelings"]
 CharacterVoiceName = Literal["narrator", "professor", "explorer", "storyteller", "robot_buddy"]
 LearningStyle = Literal["story", "game", "picture", "explain", "hands_on"]
 
@@ -355,6 +357,48 @@ class Storyboard(BaseModel):
     check: CheckQuestion
 
 
+class SoundCue(BaseModel):
+    prompt: constr(max_length=120)  # what it sounds like, for ElevenLabs sound effects
+    line: Annotated[int, Field(ge=0)]  # the line on its page it plays with
+    word: str  # the word in that line it lands on; the line's start when no word matches
+    seconds: float  # the brain keeps it between 1 and 3
+
+
+class StoryPage(BaseModel):
+    background: Literal["sky", "space", "ocean", "forest", "town", "classroom"]
+    palette: Palette
+    actors: conlist(Actor, min_length=1, max_length=2)
+    lines: conlist(NarrationLine, min_length=1, max_length=2)
+    sounds: conlist(SoundCue, max_length=2) = []
+
+
+class Reflection(BaseModel):
+    """A feelings story's closing question. Never graded and never recorded."""
+
+    question: str
+    choices: conlist(str, min_length=2, max_length=3)
+
+
+class Storybook(BaseModel):
+    """A read-aloud story. Only a learn story told by day ends on a check question; only a feelings
+    story told by day ends on a reflection. Bedtime ends on goodnight."""
+
+    title: str
+    mode: StoryMode
+    purpose: StoryPurpose
+    pages: conlist(StoryPage, min_length=5, max_length=8)
+    check: CheckQuestion | None = None
+    reflection: Reflection | None = None
+
+    @model_validator(mode="after")
+    def _ending_fits(self):
+        if self.mode == "bedtime" or self.purpose != "learn":
+            self.check = None
+        if self.mode == "bedtime" or self.purpose != "feelings":
+            self.reflection = None
+        return self
+
+
 class GameItem(BaseModel):
     label: str
     sprite: Slug
@@ -387,6 +431,7 @@ class Creation(BaseModel):
     status: Literal["pending", "ready", "fallback"]
     storyboard: Storyboard | None = None
     game: GameSpec | None = None
+    storybook: Storybook | None = None
     audio: dict[str, str] = {}
     timings: dict[str, list[Word]] = {}
     video_url: str | None = None

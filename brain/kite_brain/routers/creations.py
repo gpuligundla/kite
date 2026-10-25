@@ -1,5 +1,5 @@
-"""Movies and template games. A kid device starts one and answers its check question or reports its
-score. Anyone with the unguessable id may read it, because it is a cartoon with no kid data in it
+"""Movies, stories and template games. A kid device starts one and answers its check question or reports
+its score. Anyone with the unguessable id may read it, because it is a cartoon with no kid data in it
 (the rate limiter skips /creations/ for the same reason)."""
 
 import re
@@ -7,15 +7,16 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, Response
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, Field, constr, model_validator
 
 from kite_brain.auth import Device, require
-from kite_brain.contract import ConceptEvidence, Creation, CreationKind, Outcome
+from kite_brain.contract import ConceptEvidence, Creation, CreationKind, Outcome, StoryMode, StoryPurpose
 from kite_brain.memory import ledger
 from kite_brain.studio import store
 from kite_brain.studio.game import start_game
 from kite_brain.studio.movie import start_movie
 from kite_brain.studio.sprites import sprite_svg
+from kite_brain.studio.story import start_story
 
 router = APIRouter()
 CREATION_ID = re.compile(r"[0-9a-f]{32}")
@@ -28,7 +29,15 @@ GOT_IT_SCORE, PARTLY_SCORE = 0.8, 0.5  # share of a game's items the kid got rig
 class NewCreation(BaseModel):
     kind: CreationKind
     topic: constr(strip_whitespace=True, min_length=1, max_length=200)
-    learning_goal: constr(strip_whitespace=True, min_length=1, max_length=300)
+    learning_goal: constr(strip_whitespace=True, max_length=300) = ""
+    mode: StoryMode = "story"  # stories only
+    purpose: StoryPurpose = "learn"  # stories only
+
+    @model_validator(mode="after")
+    def _goal_when_teaching(self):
+        if not self.learning_goal and (self.kind != "story" or self.purpose == "learn"):
+            raise ValueError("learning_goal is required unless it is a fun or feelings story")
+        return self
 
 
 class Answer(BaseModel):
@@ -49,14 +58,14 @@ def _creation(creation_id: str) -> Creation:
         raise HTTPException(404, "no such creation") from None
 
 
-def _own(creation_id: str, kind: CreationKind, device: Device) -> tuple[Creation, store.Meta | None]:
-    """The creation and its meta (none for a brand-new studio game), when it is this kid's and of this kind."""
+def _own(creation_id: str, kinds: set[CreationKind], device: Device) -> tuple[Creation, store.Meta | None]:
+    """The creation and its meta (none for a brand-new studio game), when it is this kid's and of one of `kinds`."""
     creation = _creation(creation_id)
     meta = store.load_meta(creation_id)
     if meta and meta.kid_id != device.kid_id:
         raise HTTPException(404, "no such creation")
-    if creation.kind != kind:
-        raise HTTPException(409, f"this is a {creation.kind}, not a {kind}")
+    if creation.kind not in kinds:
+        raise HTTPException(409, f"this is a {creation.kind}, not a {' or '.join(sorted(kinds))}")
     return creation, meta
 
 
@@ -82,6 +91,11 @@ def _record(
 async def create(body: NewCreation, request: Request, device: Device = require("os", "handheld")) -> dict[str, str]:
     deps = request.app.state.deps
     grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (device.kid_id,)).fetchone()["grade"]
+    if body.kind == "story":
+        creation_id = await start_story(
+            deps, device.kid_id, body.topic, body.learning_goal, grade, mode=body.mode, purpose=body.purpose
+        )
+        return {"creation_id": creation_id}
     start = start_movie if body.kind == "movie" else start_game
     return {"creation_id": await start(deps, device.kid_id, body.topic, body.learning_goal, grade)}
 
@@ -117,10 +131,12 @@ def file(creation_id: str, name: str) -> FileResponse:
 
 @router.post("/creations/{creation_id}/answer")
 async def answer(creation_id: str, body: Answer, request: Request, device: Device = require("os", "handheld")) -> dict:
-    creation, meta = _own(creation_id, "movie", device)
-    if creation.storyboard is None:
-        raise HTTPException(409, "this movie is not ready")
-    check = creation.storyboard.check
+    creation, meta = _own(creation_id, {"movie", "story"}, device)
+    # A story asks a graded question only when it is a learn story told by day.
+    told = creation.storyboard or creation.storybook
+    check = told.check if told else None
+    if check is None:
+        raise HTTPException(409, f"this {creation.kind} has no question to answer")
     if body.choice >= len(check.choices):
         raise HTTPException(422, "no such choice")
     correct = body.choice == check.correct_index
@@ -130,7 +146,7 @@ async def answer(creation_id: str, body: Answer, request: Request, device: Devic
 
 @router.post("/creations/{creation_id}/result")
 async def result(creation_id: str, body: Result, request: Request, device: Device = require("os", "handheld")) -> dict:
-    _, meta = _own(creation_id, "game", device)
+    _, meta = _own(creation_id, {"game"}, device)
     if body.correct > body.total:
         raise HTTPException(422, "correct is more than total")
     share = body.correct / body.total

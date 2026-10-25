@@ -626,7 +626,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "movie" | "game";
+            kind: "movie" | "game" | "story";
             /**
              * Status
              * @enum {string}
@@ -636,6 +636,8 @@ export interface components {
             storyboard: components["schemas"]["Storyboard"] | null;
             /** @default null */
             game: components["schemas"]["GameSpec"] | null;
+            /** @default null */
+            storybook: components["schemas"]["Storybook"] | null;
             /**
              * Audio
              * @default {}
@@ -795,11 +797,26 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "movie" | "game";
+            kind: "movie" | "game" | "story";
             /** Topic */
             topic: string;
-            /** Learning Goal */
+            /**
+             * Learning Goal
+             * @default
+             */
             learning_goal: string;
+            /**
+             * Mode
+             * @default story
+             * @enum {string}
+             */
+            mode: "story" | "bedtime";
+            /**
+             * Purpose
+             * @default learn
+             * @enum {string}
+             */
+            purpose: "learn" | "fun" | "feelings";
         };
         /** Palette */
         Palette: {
@@ -854,6 +871,16 @@ export interface components {
             /** Styles */
             styles: ("story" | "game" | "picture" | "explain" | "hands_on")[];
         };
+        /**
+         * Reflection
+         * @description A feelings story's closing question. Never graded and never recorded.
+         */
+        Reflection: {
+            /** Question */
+            question: string;
+            /** Choices */
+            choices: string[];
+        };
         /** Result */
         Result: {
             /** Correct */
@@ -897,6 +924,17 @@ export interface components {
             /** Lng */
             lng?: number | null;
         };
+        /** SoundCue */
+        SoundCue: {
+            /** Prompt */
+            prompt: string;
+            /** Line */
+            line: number;
+            /** Word */
+            word: string;
+            /** Seconds */
+            seconds: number;
+        };
         /** Spoken */
         Spoken: {
             /** Audio B64 */
@@ -907,6 +945,24 @@ export interface components {
              */
             mime: string;
         };
+        /** StoryPage */
+        StoryPage: {
+            /**
+             * Background
+             * @enum {string}
+             */
+            background: "sky" | "space" | "ocean" | "forest" | "town" | "classroom";
+            palette: components["schemas"]["Palette"];
+            /** Actors */
+            actors: components["schemas"]["Actor"][];
+            /** Lines */
+            lines: components["schemas"]["NarrationLine"][];
+            /**
+             * Sounds
+             * @default []
+             */
+            sounds: components["schemas"]["SoundCue"][];
+        };
         /** Storyboard */
         Storyboard: {
             /** Title */
@@ -914,6 +970,31 @@ export interface components {
             /** Scenes */
             scenes: components["schemas"]["Scene"][];
             check: components["schemas"]["CheckQuestion"];
+        };
+        /**
+         * Storybook
+         * @description A read-aloud story. Only a learn story told by day ends on a check question; only a feelings
+         *     story told by day ends on a reflection. Bedtime ends on goodnight.
+         */
+        Storybook: {
+            /** Title */
+            title: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "story" | "bedtime";
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "learn" | "fun" | "feelings";
+            /** Pages */
+            pages: components["schemas"]["StoryPage"][];
+            /** @default null */
+            check: components["schemas"]["CheckQuestion"] | null;
+            /** @default null */
+            reflection: components["schemas"]["Reflection"] | null;
         };
         /** TeachStart */
         TeachStart: {
@@ -1140,7 +1221,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "movie" | "game";
+            kind: "movie" | "game" | "story";
             /** Step */
             step: number;
             /** Steps Total */
@@ -1178,7 +1259,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "movie" | "game";
+            kind: "movie" | "game" | "story";
             /**
              * Status
              * @enum {string}

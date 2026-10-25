@@ -328,6 +328,7 @@ def check_voice_tools_are_offered() -> None:
     assert schemas == {
         "make_movie": ["topic", "learning_goal"], "make_game": ["topic", "learning_goal"],
         "build_new_game": ["topic", "learning_goal"], "teach_kite": ["topic"],
+        "tell_story": ["topic", "purpose", "bedtime", "learning_goal"],
     }, schemas
     stand = StandIns(decide=make_decisions())
     deps, bus = deps_for(stand)

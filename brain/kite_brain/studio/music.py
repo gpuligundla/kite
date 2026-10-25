@@ -18,19 +18,21 @@ MOODS = {
     "9-12": "Sleek and cinematic, with warm ambient pads and a slow pulse.",
 }
 PROMPT = (
-    "Soft instrumental underscore for a kids' science explainer about {topic}. {mood} "
+    "Soft instrumental underscore for a kids' {what} about {topic}. {mood} "
     "Low, steady and calm under a narrator's voice. No vocals, no big drums, no sudden changes."
 )
 
 
-async def music_bed(topic: str, grade: Grade, seconds: float) -> bytes | None:
-    """An MP3 about `seconds` long, or None."""
+async def music_bed(topic: str, grade: Grade, seconds: float, mood: str | None = None) -> bytes | None:
+    """An MP3 about `seconds` long, or None. A `mood` makes it a story's bed instead of an explainer's."""
     key = get_settings().ELEVENLABS_API_KEY
     if not key:
         return None
     try:
         chunks = AsyncElevenLabs(api_key=key).music.compose(
-            prompt=PROMPT.format(topic=topic, mood=MOODS[band_for(grade).name]),
+            prompt=PROMPT.format(
+                topic=topic, what="story" if mood else "science explainer", mood=mood or MOODS[band_for(grade).name]
+            ),
             music_length_ms=int(min(max(seconds, 10), 120) * 1000), force_instrumental=True, output_format="mp3_44100_64",
         )
         return b"".join([c async for c in chunks])

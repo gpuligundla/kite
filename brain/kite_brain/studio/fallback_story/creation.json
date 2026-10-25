@@ -1,0 +1,217 @@
+{
+  "id": "fallback",
+  "kind": "story",
+  "status": "fallback",
+  "storyboard": null,
+  "game": null,
+  "storybook": {
+    "title": "Pip wants to fly",
+    "mode": "story",
+    "purpose": "fun",
+    "pages": [
+      {
+        "background": "forest",
+        "palette": {
+          "sky": "#8fd3f4",
+          "ground": "#7cc576",
+          "time_of_day": "day"
+        },
+        "actors": [
+          {
+            "sprite": "frog",
+            "name": "Pip",
+            "entrance": "pop",
+            "motion": "bounce"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "[excited] Down by the pond lived a little frog named Pip. Pip could hop higher than anyone."
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "But Pip had one big wish. Pip wanted to fly!"
+          }
+        ],
+        "sounds": [
+          {
+            "prompt": "a cartoon boing for a springy little jump",
+            "line": 0,
+            "word": "hop",
+            "seconds": 1.5
+          }
+        ]
+      },
+      {
+        "background": "forest",
+        "palette": {
+          "sky": "#8fd3f4",
+          "ground": "#7cc576",
+          "time_of_day": "day"
+        },
+        "actors": [
+          {
+            "sprite": "frog",
+            "name": "Pip",
+            "entrance": "left",
+            "motion": "bounce"
+          },
+          {
+            "sprite": "bird",
+            "name": null,
+            "entrance": "right",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "One morning, a bird landed beside Pip. Can you teach me to fly, asked Pip?"
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "[laughs] The bird gave a friendly chirp. Flying takes wings, she said, but let's try something fun."
+          }
+        ],
+        "sounds": [
+          {
+            "prompt": "a small songbird chirping twice",
+            "line": 1,
+            "word": "chirp",
+            "seconds": 1.5
+          }
+        ]
+      },
+      {
+        "background": "sky",
+        "palette": {
+          "sky": "#8fd3f4",
+          "ground": "#7cc576",
+          "time_of_day": "day"
+        },
+        "actors": [
+          {
+            "sprite": "frog",
+            "name": "Pip",
+            "entrance": "pop",
+            "motion": "float"
+          },
+          {
+            "sprite": "butterfly",
+            "name": null,
+            "entrance": "right",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "Pip hopped onto a big leaf, and the wind lifted it up, up, up!"
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "[gasps] Pip floated over the pond like a tiny green kite."
+          }
+        ],
+        "sounds": [
+          {
+            "prompt": "a gentle gust of wind rustling leaves",
+            "line": 0,
+            "word": "wind",
+            "seconds": 2.0
+          }
+        ]
+      },
+      {
+        "background": "sky",
+        "palette": {
+          "sky": "#f6b37f",
+          "ground": "#6aa865",
+          "time_of_day": "evening"
+        },
+        "actors": [
+          {
+            "sprite": "frog",
+            "name": "Pip",
+            "entrance": "left",
+            "motion": "float"
+          },
+          {
+            "sprite": "rainbow",
+            "name": null,
+            "entrance": "pop",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "From up high, Pip saw the trees, the flowers and a rainbow over the hill."
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "[laughs] I'm flying, Pip shouted, and the bird flew right beside him."
+          }
+        ],
+        "sounds": []
+      },
+      {
+        "background": "forest",
+        "palette": {
+          "sky": "#1b2a5a",
+          "ground": "#2e4a3a",
+          "time_of_day": "night"
+        },
+        "actors": [
+          {
+            "sprite": "frog",
+            "name": "Pip",
+            "entrance": "pop",
+            "motion": "bounce"
+          },
+          {
+            "sprite": "moon",
+            "name": null,
+            "entrance": "pop",
+            "motion": "float"
+          }
+        ],
+        "lines": [
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "The leaf drifted down softly, and Pip landed on the pond with a happy splash."
+          },
+          {
+            "speaker": "Kite",
+            "voice": "kite",
+            "text": "[softly] That night, Pip looked up at the moon and smiled. Some wishes come true in surprising ways."
+          }
+        ],
+        "sounds": [
+          {
+            "prompt": "a small soft water splash",
+            "line": 0,
+            "word": "splash",
+            "seconds": 1.5
+          }
+        ]
+      }
+    ],
+    "check": null,
+    "reflection": null
+  },
+  "audio": {},
+  "timings": {},
+  "video_url": null,
+  "html_url": null
+}
