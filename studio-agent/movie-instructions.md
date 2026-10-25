@@ -29,7 +29,7 @@ All times are absolute seconds on the movie's clock. The first line starts at 1.
 3. **One clock.** Every animation goes on `kite.timeline` at an absolute position taken from `kite.movie`, for example `tl.to(el, {...}, scene.start + 0.4)`. No CSS animations or transitions, no `setInterval`, no `requestAnimationFrame` loops, no `repeat: -1`, no `Math.random()` while it plays (random values computed once at build time are fine). Idle motion repeats a finite number of times that fits its scene. This is what makes `kite.seek()` draw the same frame every time.
 4. **Length.** The timeline's own length must land within 10% of `kite.movie.duration`. Animate the outro card until `kite.movie.outro.end`.
 5. **Bridge.** Call `kite.ready()` once, at the end of your script, after every tween is on the timeline. Never call `kite.play()` yourself: the kit shows a play button, and its tap starts the narration and the timeline together.
-6. **Kid-safe for the grade.** Calm, kind and accurate. No violence, weapons, injuries, scary faces, romance, insults, brand names or real people. On-screen text is the narration, the title, the check question, speaker names, and short labels you write (four words at most).
+6. **Kid-safe for the grade.** Calm, kind and accurate. No violence, weapons, injuries, scary faces, romance, insults, brand names or real people. On-screen text is the narration, the title, speaker names, and short labels you write (four words at most).
 
 ## The look
 
@@ -41,7 +41,7 @@ This must look like real motion design, not a slideshow of stickers.
 - **Kinetic captions.** Each line's words appear at their own `word.start`, with the spoken word highlighted, on a readable plate in the bottom safe area. Never more than two caption rows. Captions never cover the science.
 - **A guide.** The kid's favorite character, drawn by you in SVG, appears in most scenes and reacts to the narration: points at the key idea, looks, nods. Give its outermost element `id="guide"`. Show the speaker's name when the speaker changes.
 - **Nothing covered or cut off.** No text is ever covered or clipped by the guide, by any other element, or by the edge of the stage, including while the camera pans or zooms and while things move. Plan where the guide stands in each scene so it never stands on a label, and keep labels that ride on moving art inside the stage. The play-test plays the movie forward and fails `TEXT_COVERED` when the guide sits on visible text for a second, and `TEXT_CLIPPED` when the stage edge cuts visible text for half a second.
-- **Title and outro.** Open on an animated title card. Close on a card that shows `check.question` and its choices, with no answer marked.
+- **Title and outro.** Open on an animated title card. Close on a calm outro: the title again and the one idea in a short line, with the guide waving goodbye. Don't show `check.question` or its choices: when the movie ends, Kite's own card asks the question out loud and the kid answers it there.
 - **Grade band.**
   - K-2: big round shapes, thick outlines, warm saturated colors, bouncy eases (`back.out(2)`, `elastic.out`), captions 52 px, one big idea per scene.
   - 3-5: bright and playful, the analogy drawn out, captions 46 px.
