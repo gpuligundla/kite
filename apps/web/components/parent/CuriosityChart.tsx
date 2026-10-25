@@ -102,6 +102,7 @@ export function CuriosityChart({ view, grade }: { view: DashboardView; grade: Gr
                   aria-label={label}
                   onPointerEnter={(e) => show(e.currentTarget.querySelector("circle")!, <AxisTip a={a} grade={grade} compare={compare} />)}
                   onPointerLeave={hide}
+                  onClick={(e) => show(e.currentTarget.querySelector("circle")!, <AxisTip a={a} grade={grade} compare={compare} />)}
                   onFocus={(e) => show(e.currentTarget.querySelector("circle")!, <AxisTip a={a} grade={grade} compare={compare} />)}
                   onBlur={hide}
                 >

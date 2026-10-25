@@ -39,7 +39,7 @@ export function SkillsMap({ view }: { view: DashboardView }) {
     const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1, Home: -Infinity, End: Infinity }[e.key];
     if (step === undefined) return;
     e.preventDefault();
-    const next = Math.min(Math.max(active + step, 0), cells.length - 1);
+    const next = Math.min(Math.max(Math.min(active, cells.length - 1) + step, 0), cells.length - 1);
     setActive(next);
     refs.current.get(cells[next].cell.id)?.focus();
   };
@@ -64,7 +64,7 @@ export function SkillsMap({ view }: { view: DashboardView }) {
               key={comb.topic}
               comb={comb}
               order={ci}
-              tabbable={(id) => cells[active]?.cell.id === id}
+              tabbable={(id) => cells[Math.min(active, cells.length - 1)]?.cell.id === id}
               register={(id, el) => (el ? refs.current.set(id, el) : refs.current.delete(id))}
               onShow={(el, cell) => {
                 setActive(cells.findIndex((c) => c.cell.id === cell.id));
@@ -156,6 +156,7 @@ function CombView({
             aria-label={`${c.name}, ${comb.name}: ${cellWords(c)}`}
             onPointerEnter={(e) => onShow(e.currentTarget, c)}
             onPointerLeave={onHide}
+            onClick={(e) => onShow(e.currentTarget, c)}
             onFocus={(e) => onShow(e.currentTarget, c)}
             onBlur={onHide}
           >
