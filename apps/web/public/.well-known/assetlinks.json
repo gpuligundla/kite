@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.kite.handheld",
+      "sha256_cert_fingerprints": ["DB:69:50:3E:ED:B0:4B:E5:D2:5F:AE:B7:C6:D4:82:4A:D0:0C:4C:28:DD:F5:B5:C8:68:86:51:F2:DF:64:DC:2C"]
+    }
+  }
+]
