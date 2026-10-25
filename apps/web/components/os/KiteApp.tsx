@@ -611,7 +611,8 @@ export function KiteApp({ brain, device, name, grade, muted, surface, about, req
                 </motion.p>
               )}
             </AnimatePresence>
-            {topic && topic.questions.length > 0 && (
+            {/* During a live quiz its questions aren't offered: Kite is paused for it, and the chip says so. */}
+            {topic && topic.status !== "exam_live" && topic.questions.length > 0 && (
               <div className={s.questions} aria-label={`Questions in ${topic.title}`}>
                 {topic.questions.slice(0, 4).map((q, i) => (
                   <button

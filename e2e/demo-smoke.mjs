@@ -152,7 +152,13 @@ try {
     await kid.getByText("Kite is paused for this quiz").first().waitFor({ timeout: 5000 });
     await kid.getByRole("button", { name: "Ask Kite about this" }).first().click();
     const panel = kid.getByRole("dialog", { name: "Ask Kite" });
-    const turn = await newTurn(() => panel.getByRole("button", { name: /What is evaporation/ }).click());
+    // A live quiz's questions aren't offered as buttons, so she asks one in her own words.
+    assert.equal(await panel.getByRole("button", { name: /What is evaporation/ }).count(), 0, "no quiz questions to tap");
+    if (!(await panel.getByRole("textbox").isVisible())) await panel.getByRole("button", { name: "Type instead" }).click();
+    const turn = await newTurn(async () => {
+      await panel.getByRole("textbox").fill("Can you help me with question 1? What is evaporation?");
+      await kid.keyboard.press("Enter");
+    });
     await turn.getByText(/quiz right now/).waitFor({ timeout: 25_000 });
     await panel.getByRole("button", { name: "Close Ask Kite" }).click();
   });
