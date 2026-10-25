@@ -13,6 +13,8 @@ COPY packages/games/package.json packages/games/
 COPY packages/movie/package.json packages/movie/
 RUN npm ci --ignore-scripts
 COPY packages ./packages
+# The parent console names concepts from the brain's own catalog (components/parent/model.ts imports it).
+COPY brain/kite_brain/concepts.json ./brain/kite_brain/concepts.json
 COPY apps/web ./apps/web
 RUN npm run build -w apps/web
 
