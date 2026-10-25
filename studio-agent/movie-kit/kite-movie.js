@@ -9,6 +9,7 @@
   var GAP = 0.6; // between scenes
   var OUTRO = 3.5; // the closing card after the last line
   var SECONDS_PER_WORD = 0.35; // only when a line has no timings
+  var MUSIC_VOLUME = 0.16;
 
   gsap.registerPlugin(CustomEase, CustomBounce, CustomWiggle, DrawSVGPlugin, MorphSVGPlugin, MotionPathPlugin, Physics2DPlugin);
 
@@ -72,6 +73,17 @@
     playing = null;
   }
 
+  // KITE_AUDIO.music, when the brain added one: a quiet loop under the voices, on the same clock.
+  function bed(on) {
+    var a = sound("music");
+    if (!a) return;
+    a.loop = true;
+    a.volume = MUSIC_VOLUME;
+    if (!on) return a.pause();
+    a.currentTime = a.duration ? timeline.time() % a.duration : 0;
+    a.play().catch(function () {});
+  }
+
   // Start the line under the playhead at the right offset; later lines start from their cues.
   function speakAt(t) {
     hush();
@@ -125,6 +137,7 @@
       if (timeline.duration() < movie.duration) timeline.set({}, {}, movie.duration); // never cut the last line
       timeline.eventCallback("onComplete", function () {
         hush();
+        bed(false);
         showButton("Watch again");
         post({ type: "kite.ended" });
       });
@@ -139,12 +152,14 @@
       if (button) button.style.display = "none";
       if (timeline.progress() >= 1) timeline.seek(0, true);
       speakAt(timeline.time());
+      bed(true);
       timeline.play();
     },
 
     pause: function () {
       timeline.pause();
       hush();
+      bed(false);
       showButton("Play");
     },
 
@@ -152,6 +167,7 @@
     seek: function (seconds) {
       timeline.pause();
       hush();
+      bed(false);
       timeline.seek(seconds, true);
     },
 

@@ -32,6 +32,8 @@ CREATIONS_DIR = Path("data/creations")
 STEPS_TOTAL = 14  # the agent's turn cap; each progress line it streams counts as one step
 INVOCATIONS_SCOPE = "https://ai.azure.com/.default"
 SAFETY_CHUNK = 5000  # Content Safety takes 10k characters a call
+# The kid UI's own sounds (apps/web/public/sounds), for kite.sound() in a brand-new game.
+GAME_SOUNDS = {name: Path(__file__).with_name("studio") / "sounds" / f"{name}.mp3" for name in ("correct", "oops", "cheer", "ready")}
 
 
 @dataclass
@@ -232,4 +234,7 @@ async def request_for(deps: Deps, kid_id: str, creation_id: str, topic: str, lea
 async def build_custom_game(
     deps: Deps, kid_id: str, creation_id: str, topic: str, learning_goal: str, *, agent: StudioAgent | None = None
 ) -> Creation:
-    return await build_page(deps, kid_id, creation_id, "game", request_for(deps, kid_id, creation_id, topic, learning_goal), agent=agent)
+    return await build_page(
+        deps, kid_id, creation_id, "game", request_for(deps, kid_id, creation_id, topic, learning_goal),
+        lambda html: inject(html, "KITE_SOUNDS", GAME_SOUNDS), agent=agent,
+    )

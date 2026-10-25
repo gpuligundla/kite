@@ -31,8 +31,15 @@ from scripts.checks.voice import use_sample_voices
 TOPIC, GOAL = "light", "The sky looks blue because air scatters blue light."
 GAME = """<!doctype html><html><head><title>Catch the blue light</title></head><body>
 <script data-kit="kaplay">var kaplay = function () { "kit strings are ours" };</script>
+<script data-kit="KITE_SOUNDS">window.KITE_SOUNDS = {};</script>
 <script>const title = kite.say("Catch the blue light!"); const label = 'HIDDEN'; const n = "42";</script>
 </body></html>"""
+
+
+def with_sounds(page: str) -> bool:
+    """The game's sound slot holds the kid UI's four MP3s."""
+    sounds = json.loads(re.search(r'<script data-kit="KITE_SOUNDS">window\.KITE_SOUNDS = (\{.*?\});</script>', page).group(1))
+    return sounds == {name: "data:audio/mpeg;base64," + base64.b64encode(path.read_bytes()).decode() for name, path in studio_pro.GAME_SOUNDS.items()}
 
 
 class StandInAgent:
@@ -90,7 +97,8 @@ def check_success_publishes_ready_and_stores_html_url() -> None:
     agent = StandInAgent(ready())
     cid, creation, folder, seen = run_build(StandIns(decide=None), agent)
     assert len(cid) == 32 and creation.status == "ready" and creation.html_url == f"/creations/{cid}/game.html", creation
-    assert (folder / cid / "game.html").read_text() == GAME, "the game is saved under the creation"
+    saved = (folder / cid / "game.html").read_text()
+    assert with_sounds(saved) and saved == studio_pro.inject(GAME, "KITE_SOUNDS", studio_pro.GAME_SOUNDS), "saved with its sounds, otherwise as built"
     assert json.loads((folder / cid / "creation.json").read_text())["html_url"] == creation.html_url
     kid = types(seen["os"])
     assert kid == ["creation.progress"] * 3 + ["creation.ready"], kid
@@ -113,6 +121,9 @@ def check_agent_failure_is_fallback() -> None:
     expect_fallback(*out, why="an agent error")
     out = run_build(StandIns(decide=None), StandInAgent(GameResult("failed", None, Playtest(False, ["NO_READY"]))))
     expect_fallback(*out, why="an agent that gave up")
+    no_slot = GAME.replace('<script data-kit="KITE_SOUNDS">window.KITE_SOUNDS = {};</script>', "")
+    out = run_build(StandIns(decide=None), StandInAgent(ready(no_slot)))
+    expect_fallback(*out, why="a game page with no sound slot")
 
 
 def check_timeout_is_fallback() -> None:
@@ -146,7 +157,7 @@ def check_endpoint_is_for_kid_devices() -> None:
         cid = r.json()["creation_id"]
         assert len(cid) == 32
         page = client.get(f"/creations/{cid}/game.html")  # the test client ran the background build already
-        assert page.status_code == 200 and page.text == GAME, page.status_code
+        assert page.status_code == 200 and with_sounds(page.text), page.status_code
         assert page.headers["content-security-policy"].startswith("default-src 'none'"), "no network from the game"
     kid = asyncio.run(drain(app.state.bus, "os"))
     assert kid[-1].type == "creation.ready" and kid[-1].status == "ready" and kid[-1].creation_id == cid
@@ -157,11 +168,19 @@ MOVIE = """<!doctype html><html><body><div id="stage"><p>Magma rises</p></div>
 <script>kite.ready();</script></body></html>"""
 
 
-def run_cut(agent, timeout_s=studio_pro.STUDIO_AGENT_TIMEOUT_S):
+def run_cut(agent, timeout_s=studio_pro.STUDIO_AGENT_TIMEOUT_S, music=b"music"):
     """The template movie job with its director's cut on and no MP4 render.
     Returns (template id, cut id, folder, the cut's events by device, every event by device)."""
     use_sample_voices()
-    patches = {"start_directors_cut": partial(movie.start_directors_cut, agent=agent), "RENDER_SCRIPT": Path(tempfile.mkdtemp()) / "absent.mjs"}
+
+    async def music_bed(topic, grade, seconds):
+        assert seconds > 10, "the bed covers the whole movie"
+        return music
+
+    patches = {
+        "start_directors_cut": partial(movie.start_directors_cut, agent=agent), "music_bed": music_bed,
+        "RENDER_SCRIPT": Path(tempfile.mkdtemp()) / "absent.mjs",
+    }
     with patch.object(studio_pro, "STUDIO_AGENT_TIMEOUT_S", timeout_s):
         _, template, folder, seen = run_job(Studio(board()), movie.start_movie, movie=patches)
     [cut] = {e.creation_id for e in seen["os"]} - {template}
@@ -177,8 +196,14 @@ def check_directors_cut_gets_the_narration_and_no_network() -> None:
     assert made.kind == "movie" and made.status == "ready" and made.html_url == f"/creations/{cut}/movie.html", made
     page = (folder / cut / "movie.html").read_text()
     audio = json.loads(re.search(r'<script data-kit="KITE_AUDIO">window\.KITE_AUDIO = (\{.*?\});</script>', page).group(1))
-    mp3 = "data:audio/mpeg;base64," + base64.b64encode(b"mp3").decode()
-    assert set(audio) == set(template.audio) and set(audio.values()) == {mp3}, "every narration line, inlined"
+    url = lambda data: "data:audio/mpeg;base64," + base64.b64encode(data).decode()  # noqa: E731
+    music = audio.pop("music")
+    assert set(audio) == set(template.audio) and set(audio.values()) == {url(b"mp3")}, "every narration line, inlined"
+    assert music == url(b"music"), "and the music bed"
+    _, quiet, quiet_folder, _, _ = run_cut(StandInAgent(ready(MOVIE)), music=None)
+    assert "music" not in json.loads(re.search(r"window\.KITE_AUDIO = (\{.*?\});", (quiet_folder / quiet / "movie.html").read_text()).group(1)), (
+        "no music bed still makes a movie"
+    )
     [req] = agent.requests
     assert set(req) == {"kind", "creation_id", "topic", "learning_goal", "grade", "kid_view", "storyboard", "timings"}, req
     assert req["kind"] == "movie" and req["creation_id"] == cut and req["grade"] == 11
@@ -216,7 +241,7 @@ def check_directors_cut_failures_keep_the_template() -> None:
 
 def check_kits_play_test_under_the_served_policy() -> None:
     kits = Path(__file__).resolve().parents[3] / "studio-agent"
-    for kit in ("movie-kit",):
+    for kit in ("game-kit", "movie-kit"):
         assert games.CSP in (kits / kit / "playtest.mjs").read_text(), f"{kit} play-tests under the policy the brain serves"
 
 

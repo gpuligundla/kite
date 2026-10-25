@@ -1,5 +1,5 @@
 # The kite-studio hosted agent: Python handler, Claude Code on Node 24, Playwright Chromium, and two
-# kits: KAPLAY for games, GSAP for director's-cut movies. Both kits share one Playwright browser.
+# kits: Phaser, KAPLAY and GSAP for games, GSAP for director's-cut movies. Both share one browser.
 # Build in ACR with scripts/deploy-studio-agent.sh (no local Docker needed).
 FROM python:3.12-slim
 

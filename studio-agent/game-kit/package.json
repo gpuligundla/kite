@@ -3,12 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "cp node_modules/kaplay/dist/kaplay.js kaplay.js",
+    "postinstall": "cp node_modules/kaplay/dist/kaplay.js kaplay.js && cp node_modules/phaser/dist/phaser.min.js phaser.js && cd node_modules/gsap/dist && cat gsap.min.js CustomEase.min.js CustomBounce.min.js CustomWiggle.min.js DrawSVGPlugin.min.js MorphSVGPlugin.min.js MotionPathPlugin.min.js Physics2DPlugin.min.js > ../../../gsap.js",
     "playtest": "node playtest.mjs",
     "check-samples": "node check-samples.mjs"
   },
   "dependencies": {
+    "gsap": "3.15.0",
     "kaplay": "3001.0.19",
+    "phaser": "3.90.0",
     "playwright": "1.64.1"
   }
 }

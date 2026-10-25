@@ -1,5 +1,8 @@
 game-kit/node_modules
 game-kit/kaplay.js
+game-kit/phaser.js
+game-kit/gsap.js
+game-kit/samples/shots/
 game-kit/samples/dist
 movie-kit/node_modules
 movie-kit/gsap.js

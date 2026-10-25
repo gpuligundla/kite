@@ -1,10 +1,13 @@
 // The bridge between a brand-new game and the Kite OS page that hosts it in an iframe.
-// Load it after kaplay.js and before the game's own script.
+// Load it after the game library (kaplay.js or phaser.js, plus gsap.js if used) and before the
+// game's own script. window.KITE_SOUNDS maps a sound name to a data: URL; the brain fills it in.
 (function () {
   function post(msg) {
     (window.__kite = window.__kite || []).push(msg);
     if (window.parent !== window) window.parent.postMessage(msg, "*");
   }
+
+  var sounds = {};
 
   // Simple flat shapes as inert data: URLs. Any script inside an SVG image never runs.
   var SHAPES = {
@@ -27,15 +30,26 @@
 
   window.kite = {
     ready: function () { post({ type: "kite.ready" }); },
+
+    // One of kite.sounds. Silent where there are none, as in the play-test.
+    sound: function (name) {
+      var url = (window.KITE_SOUNDS || {})[name];
+      if (!url) return;
+      var a = (sounds[name] = sounds[name] || new Audio(url));
+      a.currentTime = 0;
+      a.play().catch(function () {});
+    },
+    sounds: ["correct", "oops", "cheer", "ready"],
     finish: function (score) { post({ type: "kite.finish", correct: score.correct, total: score.total }); },
 
     // Kid-friendly text: short, calm, at most one exclamation mark in a row.
     say: function (text) { return String(text).replace(/!+/g, "!").slice(0, 80); },
 
-    // Inline SVG markup as a data: URL, ready for loadSprite().
+    // SVG as a data: URL for k.loadSprite() or Phaser's this.load.image(). Shapes drawn in a
+    // 64 x 64 box, or a whole <svg ...> element with its own viewBox, width and height.
     svg: function (markup, size) {
       var s = size || 64;
-      var full = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="' + s +
+      var full = /^\s*<svg/.test(markup) ? markup : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="' + s +
         '" height="' + s + '">' + markup + "</svg>";
       return "data:image/svg+xml;utf8," + encodeURIComponent(full);
     },

@@ -1,4 +1,4 @@
-"""The kite-studio hosted agent. One Invocations call builds one brand-new KAPLAY game or one
+"""The kite-studio hosted agent. One Invocations call builds one brand-new game or one
 director's-cut movie with the Claude Agent SDK, play-tests it and returns a single self-contained
 HTML page.
 
@@ -135,14 +135,9 @@ def brief(req: dict) -> str:
             actors = ", ".join(a.get("name") or a.get("sprite", "") for a in scene.get("actors", []) if isinstance(a, dict))
             lines.append(f"Scene {s} ({scene.get('background', '')}, {scene.get('camera', '')} camera; template actors: {actors or 'none'})")
             lines += [f"  {s}-{n} {line.get('speaker', '')}: {line['text']}" for n, line in enumerate(scene["lines"])]
-        lines += [
-            "",
-            "Your instructions document the kit, so don't read gsap.js, kite-movie.js, movie-data.js or playtest.mjs.",
-            "Write movie.html in this folder, run `npm run playtest`, fix until it passes, "
-            "then Read the shots, critique them, revise at least once, and stop.",
-        ]
-    else:
-        lines.append("Write game.html in this folder, run `npm run playtest`, fix until it passes, then stop.")
+        lines += ["", "Your instructions document the kit, so don't read gsap.js, kite-movie.js, movie-data.js or playtest.mjs."]
+    lines.append(f"Write {KINDS[req['kind']].page} in this folder, run `npm run playtest`, fix until it passes, "
+                 "then Read the shots, critique them, revise at least once, and stop.")
     return "\n".join(lines)
 
 

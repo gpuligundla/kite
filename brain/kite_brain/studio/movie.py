@@ -18,6 +18,7 @@ from kite_brain.contract import (
 from kite_brain.deps import Deps
 from kite_brain.memory.recall import recall
 from kite_brain.studio import store
+from kite_brain.studio.music import music_bed
 from kite_brain.studio.storyboard import NO_CONCEPT, narration_lines, readable_text, write_storyboard
 from kite_brain.voice import character_spec
 
@@ -26,6 +27,7 @@ log = logging.getLogger(__name__)
 MOVIE_DEADLINE_S = 45.0
 RENDER_TIMEOUT_S = 300.0
 NARRATION_PARALLEL = 3
+MUSIC_PAD_S = 8.0  # the director's cut adds a title beat, scene gaps and an outro around the narration
 VIDEO_NAME = "movie.mp4"
 FALLBACK_DIR = Path(__file__).with_name("fallback")
 RENDER_SCRIPT = Path(__file__).resolve().parents[3] / "packages" / "movie" / "render.mjs"
@@ -166,15 +168,27 @@ def start_directors_cut(
     deps: Deps, kid_id: str, movie: Creation, topic: str, learning_goal: str, grade: Grade, *, agent: studio_pro.StudioAgent | None = None
 ) -> str | None:
     """A second movie creation: the studio agent hand-animates this movie's narration as one page,
-    and the brain adds the narration's MP3s. The template stays her movie unless the cut is ready.
-    None when no studio agent is configured."""
+    and the brain adds the narration's MP3s and a music bed composed while the agent works. The
+    template stays her movie unless the cut is ready. None when no studio agent is configured."""
     if agent is None and not get_settings().STUDIO_AGENT_ENDPOINT:
         return None
     creation_id = studio_pro.start_page(deps, kid_id, "movie")
     narration = {key: store.folder(movie.id) / name for key, name in movie.audio.items()}
+    seconds = sum(max((w.end for w in words), default=0) for words in movie.timings.values()) + MUSIC_PAD_S
+    music = asyncio.create_task(music_bed(topic, grade, seconds))
+
+    def finish(html: str) -> str:
+        """The narration, and the music if it came in time. A movie without music still plays."""
+        files = dict(narration)
+        if music.done() and (bed := music.result()):
+            (path := store.folder(creation_id) / "music.mp3").write_bytes(bed)
+            files["music"] = path
+        music.cancel()
+        return studio_pro.inject(html, "KITE_AUDIO", files)
+
     store.spawn(studio_pro.build_page(
         deps, kid_id, creation_id, "movie", _directors_cut_request(deps, kid_id, creation_id, movie, topic, learning_goal, grade),
-        lambda html: studio_pro.inject(html, "KITE_AUDIO", narration), agent=agent,
+        finish, agent=agent,
     ))
     return creation_id
 
