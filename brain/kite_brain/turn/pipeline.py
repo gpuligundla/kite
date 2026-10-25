@@ -99,7 +99,9 @@ class _Turn:
             "SELECT display_name, grade, family_id FROM kid WHERE id = ?", (self.inp.kid_id,)
         ).fetchone()
         self.kid_name, self.family_id = row["display_name"], row["family_id"]
-        self.grade = row["grade"] if self.inp.as_of_grade is None else self.inp.as_of_grade
+        # Time travel goes back, never ahead: a grade past hers is her real grade, so no turn is stamped with a grade
+        # she hasn't reached.
+        self.grade = row["grade"] if self.inp.as_of_grade is None else min(self.inp.as_of_grade, row["grade"])
         self.read_only = self.grade < row["grade"]
         self.band = band_for(self.grade)
 

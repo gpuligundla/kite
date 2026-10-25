@@ -18,6 +18,10 @@ import { Window } from "./Window";
 import s from "./shell.module.css";
 
 type Me = { name: string; grade: number };
+// Kite OS opens as a third grader, and every reload comes back here. Below her real grade a turn is time travel:
+// Kite answers as of that grade and saves nothing. The slider stops at her real grade, so no turn is ever stamped
+// with a grade she hasn't reached.
+const DEFAULT_GRADE = 3;
 /** The app on screen, and where inside it. Kite itself isn't here: it's always mounted (see KiteApp's Surface). */
 export type Screen =
   | { app: "home" }
@@ -58,7 +62,7 @@ export function KiteOs({ device }: { device: DeviceKind }) {
   const now = useNow();
   const [me, setMe] = useState<Me | null>(null);
   const [blocked, setBlocked] = useState<"unpaired" | "offline" | null>(null);
-  const [grade, setGrade] = useState(5);
+  const [grade, setGrade] = useState(DEFAULT_GRADE);
   const [muted, setMutedState] = useState(false);
   const [screen, setScreen] = useState<Screen>({ app: "home" });
   const [kite, setKite] = useState<KiteShown>("closed");
@@ -73,10 +77,7 @@ export function KiteOs({ device }: { device: DeviceKind }) {
 
   useEffect(() => {
     brain.get<Me>(`/kids/${KID_ID}/me`).then(
-      (m) => {
-        setMe(m);
-        setGrade(m.grade);
-      },
+      (m) => setMe(m),
       (err) => setBlocked(err instanceof BrainError && (err.status === 401 || err.status === 403) ? "unpaired" : "offline"),
     );
   }, [brain]);
@@ -258,7 +259,7 @@ export function KiteOs({ device }: { device: DeviceKind }) {
               <input
                 type="range"
                 min={0}
-                max={12}
+                max={me?.grade ?? 12}
                 step={1}
                 value={grade}
                 onChange={(e) => setGrade(Number(e.target.value))}

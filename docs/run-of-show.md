@@ -24,7 +24,7 @@ Never promise Kite's exact words. Its answers are generated live. Point at what 
 | Time | Moment | Screen |
 |---|---|---|
 | 0:00 | 1. Hook | Kid: Kite OS desktop |
-| 0:25 | 2. "Why is the sky blue?" at grade 2 | Kid: Kite app |
+| 0:25 | 2. "Why is the sky blue?" at grade 3 | Kid: Kite app |
 | 0:55 | 3. The same question at grade 11 | Kid: Kite app |
 | 1:25 | 4. Make a game, and start a brand-new one | Kid: Kite app |
 | 1:45 | 5. Make it a movie | Kid: Kite app |
@@ -54,18 +54,18 @@ Teach Kite and the director's cut are reserve moments. If any live moment drops 
 
 **If it fails.** Nothing live happens here.
 
-## 2. "Why is the sky blue?" at grade 2 (0:25 to 0:55)
+## 2. "Why is the sky blue?" at grade 3 (0:25 to 0:55)
 
 **Do.**
 
 1. Tap **Kite** in the app grid. If the window opens on its tiles, tap **Talk with Kite**.
 2. Press **New topic** in the window's title bar. Do this every time, even if the checklist already did it.
-3. Check that the status bar at the top right reads **Grade 2**.
+3. Check that the status bar at the top right reads **Grade 3**. Kite OS opens at grade 3 on every load.
 4. Hold the diamond (**Hold to talk**) and ask "Why is the sky blue?" If the room is loud, tap **Type instead** and type it.
 
-**Point at.** Kite speaks in the K-2 voice, slower and more expressive. The **FK** badge on the answer is the measured reading level of this answer. If Rexy, Maya's T. rex, shows up in the answer, point at that too.
+**Point at.** Kite speaks in the 3-5 voice, playful and a little slower. The **FK** badge on the answer is the measured reading level of this answer. If Rexy, Maya's T. rex, shows up in the answer, point at that too.
 
-**Say.** "Second-grade Maya. That FK badge isn't the model's opinion. Kite computes the reading level of every answer in code." If Rexy appeared, add "Kite remembers her T. rex."
+**Say.** "Third-grade Maya. That FK badge isn't the model's opinion. Kite computes the reading level of every answer in code." If Rexy appeared, add "Kite remembers her T. rex."
 
 **If it fails.** If voice fails, type the question. If no answer comes within 10 seconds, say "Kite checks every sentence for safety before it says it out loud." Then ask once more. If it still fails, go to moment 3.
 
@@ -73,9 +73,9 @@ Teach Kite and the director's cut are reserve moments. If any live moment drops 
 
 **Do.** Drag the status-bar slider to 11. Hold the diamond and ask "Why is the sky blue?" again.
 
-**Point at.** The sky moves from noon to an aurora night as the slider crosses the grade bands. Kite answers in a different, older voice. The answer is longer and uses formal terms, the FK badge is higher, and Kite often ends with a question back to Maya.
+**Point at.** The sky moves from afternoon to an aurora night as the slider crosses the grade bands. Kite answers in a different, older voice. The answer is longer and uses formal terms, the FK badge is higher, and Kite often ends with a question back to Maya.
 
-**Say.** "Same kid, same question, eleventh grade. The screen and Kite's voice grew up with her. The grade-2 question was time travel, so it wrote nothing to her memory."
+**Say.** "Same kid, same question, eleventh grade. The screen and Kite's voice grew up with her. The grade-3 question was time travel, so it wrote nothing to her memory."
 
 **If it fails.** Say "The reading level at every grade is in our Trust tab, and we'll show it in a minute." Then go to moment 4.
 
@@ -209,12 +209,12 @@ Rehearse twice with a timer first. Rehearsals write turns, creations, alerts, an
 
 1. Run the two smoke tests, because both make real model calls and write to the database. `scripts/smoke.sh <brain-url> <os-token> <parent-token>` must print `ok`. `OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs <web-url>` must end in `demo smoke: ok`.
 2. Put the night-shift snapshot back. Locally, run `scripts/restore-demo.sh` and restart the brain. The restart also copies the showcase creations back in and moves the class dates, so the water cycle quiz is live again. On Azure, restart the brain's revision, because the image carries the snapshot. If the snapshot or `COLLAB_LOG.md` changed since the last image build, rebuild the brain image first.
-3. About 15 minutes before the demo, check the hosted agent. In the kid window at grade 11, ask "Make me a brand-new game about volcanoes." The making card should say Kite is building a brand-new game. Use a topic other than the sky, so it can't be confused with the showcase game in **My creations**. If the card says Kite couldn't finish it within a few minutes, the agent is down, so skip the button in moment 4.
+3. About 15 minutes before the demo, check the hosted agent. In the kid window, drag the slider to 11 and ask "Make me a brand-new game about volcanoes." The making card should say Kite is building a brand-new game. Use a topic other than the sky, so it can't be confused with the showcase game in **My creations**. If the card says Kite couldn't finish it within a few minutes, the agent is down, so skip the button in moment 4.
 4. Reload each window. Each must still be signed in as its own device. In the parent window, click **Mark all 2 seen** under the app bar, so the SOS is the only alert bar in moment 7. The snapshot holds a bullying alert from October 13 and a stranger alert from October 18. Leave the parent console on **Overview** at grade 11. Leave the counselor window on **Reports**.
 5. On the phone, grant microphone and location permissions, turn off auto-lock, and turn the volume up. A real phone needs HTTPS for both. On a local demo, allow location in the Edge window.
 6. Play one answer and confirm Kite's voice comes out of the venue speakers through HDMI.
 7. Compare the Trust tab with `docs/trust/scorecard.json`, and update the moment 9 lines if the numbers changed.
 8. Have the phone hotspot ready in case the venue Wi-Fi drops.
 9. Turn off notifications on the laptop and the phone, and zoom each window so the back row can read the badges.
-10. Last, in the kid window, open Kite, tap **Talk with Kite**, and press **New topic**. The newest stored chat in the snapshot is a grade-11 question about song lyrics, and steps 3 and 6 added more. Without **New topic**, Kite treats them as recent history. Close the Kite window. Then set the status-bar slider to 2. It loads at Maya's grade, 11, after every reload, so this step comes after the last reload.
+10. Last, in the kid window, open Kite, tap **Talk with Kite**, and press **New topic**. The newest stored chat in the snapshot is a grade-11 question about song lyrics, and steps 3 and 6 added more. Without **New topic**, Kite treats them as recent history. Close the Kite window. Reload it once more, so the slider is back at grade 3, where moment 2 starts. Kite OS opens at grade 3 on every load.
 11. [pending: a recorded backup run of the whole demo, to play if the network fails]

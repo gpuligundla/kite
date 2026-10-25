@@ -26,7 +26,7 @@ from kite_brain.seed import KID_ID, seed
 from kite_brain.studio import store
 from kite_brain.studio_pro import PageResult, Playtest
 from kite_brain.turn import pipeline
-from kite_brain.turn.pipeline import TEACH_NOT_MET, TurnInput, run_turn, teaching_now
+from kite_brain.turn.pipeline import TEACH_NOT_MET, TurnInput, _Turn, run_turn, teaching_now
 from kite_brain.turn.route import FALLBACK, UNHEARD, teach_start_line
 from scripts.checks.audiences import drain
 from scripts.checks.ledger import CATALOG, NOW, add, fresh
@@ -130,6 +130,10 @@ def check_time_travel_writes_nothing() -> None:
     deps, bus = deps_for(stand)
     turn(deps, bus, stand, "tt2", as_of_grade=2)
     assert rows(deps, "alert") == 1 and rows(deps, "session_turn") == 0, "a time-travel alert is still recorded"
+
+    ahead = _Turn(TurnInput(kid_id=KID_ID, device="os", mode="talk", text="x", as_of_grade=12), deps, "tt3")
+    ahead.load_kid()
+    assert (ahead.grade, ahead.read_only) == (11, False), "a grade past hers is her real grade: nothing is stamped grade 12"
 
 
 def check_both_decide_paths_down_is_fallback() -> None:
