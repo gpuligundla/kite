@@ -315,8 +315,8 @@
 .cellRing { fill: none; stroke: transparent; stroke-width: 2.5; transition: stroke var(--dur-press) ease; }
 .cell:focus-visible .cellRing { stroke: var(--kite-yellow); }
 @media (hover: hover) and (pointer: fine) { .cell:hover .cellRing { stroke: #fff; } }
-.combLabel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--space-2); max-width: 220px; }
-.combLabel h3 { font-size: var(--step-0); color: #fff; width: 100%; }
+.combLabel { display: grid; grid-template-columns: auto auto; justify-content: start; align-items: center; gap: 2px var(--space-2); }
+.combLabel h3 { grid-column: 1 / -1; font-size: var(--step-0); color: #fff; }
 .combLabel > span:first-of-type { font-size: var(--step--1); line-height: 24px; color: var(--map-soft); font-variant-numeric: tabular-nums; }
 .strengthTag {
   display: inline-flex; align-items: center; gap: 5px; padding: 1px var(--space-2); border-radius: 999px;
@@ -335,6 +335,33 @@
 }
 .tip strong { font-size: var(--step-0); }
 
+
+/* Curiosity radar: this year in kite yellow, the earlier year dashed behind it. */
+.radarSection { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 540px); gap: var(--space-4) var(--space-6); align-items: center; min-width: 0; }
+.radarSection > details { grid-column: 1 / -1; }
+@media (max-width: 900px) { .radarSection { grid-template-columns: minmax(0, 1fr); } }
+.radarSection .mapLede + .mapLede { margin-top: var(--space-3); }
+.radar { position: relative; min-width: 0; }
+.radar svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ring { fill: none; stroke: var(--map-line); stroke-width: 1; }
+.ringLabel { fill: var(--map-soft); paint-order: stroke; stroke: var(--ink); stroke-width: 3px; font-size: 11px; font-family: var(--font-body); font-variant-numeric: tabular-nums; }
+.spoke { stroke: var(--map-line); stroke-width: 1; }
+.then { fill: none; stroke: rgba(255, 255, 255, 0.62); stroke-width: 2; stroke-dasharray: 5 4; stroke-linejoin: round; }
+.now { fill: color-mix(in srgb, var(--kite-yellow) 14%, transparent); stroke: var(--kite-yellow); stroke-width: 2; stroke-linejoin: round; }
+.radarDot { fill: var(--kite-yellow); stroke: var(--ink); stroke-width: 2; }
+.radarAxis { outline: none; cursor: default; }
+.axisHit { stroke: transparent; stroke-width: 28; }
+.axisLabel { fill: var(--map-text); font-size: 14px; font-weight: 700; font-family: var(--font-body); }
+.radarAxis:focus-visible .axisLabel { fill: var(--kite-yellow); text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { .radarAxis:hover .axisLabel { fill: #fff; } }
+@media (max-width: 640px) { .axisLabel { font-size: 19px; } .ringLabel { font-size: 15px; } }
+.radarKey { list-style: none; padding: 0; margin: var(--space-4) 0 0; display: grid; gap: var(--space-2); font-size: var(--step--1); color: var(--map-soft); }
+.radarKey li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.radarKey svg { width: 24px; height: 8px; }
+.keyNow { stroke: var(--kite-yellow); stroke-width: 2.5; }
+.keyThen { stroke: rgba(255, 255, 255, 0.62); stroke-width: 2; stroke-dasharray: 5 4; }
+.select { font-size: var(--step--1); color: var(--map-text); background: rgba(255, 255, 255, 0.08); border: 1px solid var(--map-line); border-radius: var(--radius-s); padding: 4px var(--space-2); }
+.select option { color: var(--ink); background: var(--paper); }
 /* Charts. Series colors validated with the dataviz palette script on --mist. */
 .chart { max-width: 640px; --viz-1: var(--kite-red); --viz-2: var(--tail-teal); --viz-3: #e0a100; --viz-other: #c5ccd8; }
 .chart svg { display: block; width: 100%; height: auto; }

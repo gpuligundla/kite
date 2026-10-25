@@ -171,32 +171,49 @@ export function growing(view: DashboardView): { name: string; concepts: string[]
   return [...groups].map(([name, concepts]) => ({ name, concepts }));
 }
 
-export interface CuriosityYears {
-  /** The three topics with the biggest share across the years shown, in slot order. */
-  series: { topic: string; name: string }[];
-  rows: { grade: number; shares: number[]; other: number }[];
+export interface Radar {
+  /** Earlier grades she can be compared with, oldest first. */
+  earlier: number[];
+  compare: number | null;
+  /** Clockwise from the top, biggest first, so her two main interests sit side by side. */
+  axes: { topic: string; name: string; now: number; then: number | null }[];
+  max: number;
 }
 
+const MAX_AXES = 6;
+const MIN_AXES = 3;
+const AXIS_SHARE = 0.03;
+
 /**
- * Each grade's share of her curiosity per topic. The brain's by_grade values are decayed from the
- * viewed grade's year end; within one grade every topic decays alike, so the per-grade share undoes it.
+ * Each topic's share of her curiosity in one school year. The brain's by_grade values are decayed from the viewed
+ * grade's year end; within one grade every topic decays alike, so the per-grade share undoes it. Unless a grade is
+ * picked, the comparison is the earlier year whose shape differs most from this one.
  */
-export function curiosityYears(view: DashboardView): CuriosityYears {
-  const grades = [...new Set(view.curiosity.topics.flatMap((t) => Object.keys(t.by_grade).map(Number)))].sort((a, b) => a - b);
-  const totals = new Map(grades.map((g) => [g, view.curiosity.topics.reduce((s, t) => s + (t.by_grade[g] ?? 0), 0)]));
-  const share = (topic: (typeof view.curiosity.topics)[number], g: number) => (topic.by_grade[g] ?? 0) / (totals.get(g) || 1);
-  const top = [...view.curiosity.topics]
-    .map((t) => ({ t, sum: grades.reduce((s, g) => s + share(t, g), 0) }))
-    .sort((a, b) => b.sum - a.sum)
-    .slice(0, 3)
-    .map(({ t }) => t);
-  return {
-    series: top.map((t) => ({ topic: t.topic, name: topicName(t.topic) })),
-    rows: grades.map((g) => {
-      const shares = top.map((t) => share(t, g));
-      return { grade: g, shares, other: Math.max(0, 1 - shares.reduce((a, b) => a + b, 0)) };
-    }),
+export function curiosityRadar(view: DashboardView, grade: number, pick: number | null): Radar {
+  const topics = view.curiosity.topics;
+  const shares = (g: number) => {
+    const total = topics.reduce((s, t) => s + (t.by_grade[g] ?? 0), 0);
+    return new Map(topics.map((t) => [t.topic, total ? (t.by_grade[g] ?? 0) / total : 0]));
   };
+  const now = shares(grade);
+  const earlier = [...new Set(topics.flatMap((t) => Object.keys(t.by_grade).map(Number)))].filter((g) => g < grade).sort((a, b) => a - b);
+  const distance = (g: number) => {
+    const m = shares(g);
+    return topics.reduce((s, t) => s + Math.abs((m.get(t.topic) ?? 0) - (now.get(t.topic) ?? 0)), 0);
+  };
+  const compare =
+    pick !== null && earlier.includes(pick) ? pick : earlier.length ? earlier.reduce((a, b) => (distance(b) > distance(a) ? b : a)) : null;
+  const then = compare === null ? null : shares(compare);
+  const weight = (t: string) => (now.get(t) ?? 0) + (then?.get(t) ?? 0);
+  const ranked = topics.map((t) => t.topic).sort((a, b) => weight(b) - weight(a));
+  const big = ranked.filter((t) => weight(t) >= AXIS_SHARE).slice(0, MAX_AXES);
+  const axes = (big.length >= MIN_AXES ? big : ranked.slice(0, MIN_AXES)).map((topic) => ({
+    topic,
+    name: topicName(topic),
+    now: now.get(topic) ?? 0,
+    then: then ? (then.get(topic) ?? 0) : null,
+  }));
+  return { earlier, compare, axes, max: Math.max(0.1, ...axes.flatMap((a) => [a.now, a.then ?? 0])) };
 }
 
 /** The hero's facts, all as of the end of the viewed grade. */

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Tip, useTip } from "./Tip";
 import { LEVELS, LEVEL_WORDS, knowledgeMap, type Cell, type Comb, type DashboardView, type Level } from "./model";
 import styles from "./parent.module.css";
@@ -114,6 +114,11 @@ function CombView({
   onHide: () => void;
 }) {
   const reduce = useReducedMotion();
+  // The comb fills from its center outward when it first appears; later level changes answer the slider at once.
+  const first = useRef(true);
+  useEffect(() => {
+    first.current = false;
+  }, []);
   const xs = comb.cells.map((c) => center(c)[0]);
   const ys = comb.cells.map((c) => center(c)[1]);
   const x0 = Math.min(...xs) - W / 2 - PAD;
@@ -132,7 +137,7 @@ function CombView({
       data-strength={comb.strength}
     >
       <svg viewBox={`${x0} ${y0} ${w} ${h}`} style={{ width: `calc(${w}px * var(--hex-scale))` }} role="group" aria-label={`${comb.name}: ${comb.solid} of ${comb.shown} ideas solid`}>
-        <motion.g initial={false} animate={{ opacity: comb.strength ? 1 : 0 }} transition={{ duration: 0.26, ease: EASE_OUT }}>
+        <motion.g initial={false} animate={{ opacity: comb.strength ? 1 : 0 }} transition={{ duration: 0.26, ease: EASE_OUT, delay: comb.strength ? 0.18 : 0 }}>
           {comb.cells.map((c) => (
             <path key={c.id} d={HALO} transform={`translate(${center(c).join(" ")})`} className={styles.halo} />
           ))}
@@ -163,7 +168,7 @@ function CombView({
                   initial={{ opacity: 0, transform: reduce ? "scale(1)" : "scale(0.9)" }}
                   animate={{ opacity: 1, transform: "scale(1)" }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.26, ease: EASE_OUT, delay: reduce ? 0 : Math.min(i, 10) * 0.04 + order * 0.05 }}
+                  transition={{ duration: 0.26, ease: EASE_OUT, delay: reduce || !first.current ? 0 : Math.min(i, 10) * 0.04 + order * 0.05 }}
                 >
                   <path d={CELL} style={{ fill: `var(--lv-${c.level})` }} />
                   {c.level === "can_teach" && <path d={KITE} className={styles.cellMark} />}
