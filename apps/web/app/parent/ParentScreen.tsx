@@ -122,7 +122,7 @@ export function ParentScreen() {
 
         {error && <p className={styles.error} role="alert">{error}</p>}
 
-        {/* Panels are plain divs so each section inside is the nearest section to its own heading. */}
+        {/* Panels are divs, not sections, so a locator for "the section holding this heading" finds that section, not the whole panel. */}
         <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" hidden={tab !== "overview"}>
           <GradeSlider grade={grade} onChange={(g) => go({ grade: g })} />
           {shown ? (

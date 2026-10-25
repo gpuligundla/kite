@@ -101,7 +101,6 @@ function Summary({ view, grade, alerts }: { view: DashboardView; grade: Grade; a
 const dayFmt = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
 const dayTime = (iso: string) => dayFmt.format(new Date(iso));
 
-/** A row of small hexes, one per idea in the topic up to this grade, filled when solid. */
 function Hexes({ solid, total }: { solid: number; total: number }) {
   return (
     <span className={styles.hexes} aria-hidden>

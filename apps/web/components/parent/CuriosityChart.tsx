@@ -20,7 +20,6 @@ const r = (share: number, max: number) => RAD * Math.sqrt(share / max);
 const point = (i: number, n: number, rad: number) => [CX + rad * Math.cos(angle(i, n)), CY + rad * Math.sin(angle(i, n))] as const;
 const shape = (values: number[], max: number) => values.map((v, i) => point(i, values.length, r(v, max)).join(",")).join(" ");
 
-/** A radar of her biggest interests this year, over the shape of an earlier year. */
 export function CuriosityChart({ view, grade }: { view: DashboardView; grade: Grade }) {
   const reduce = useReducedMotion();
   const [pick, setPick] = useState<number | null>(null);

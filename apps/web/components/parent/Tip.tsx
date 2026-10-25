@@ -11,7 +11,6 @@ interface TipState {
 
 const EDGE = 96;
 
-/** One hover-or-focus readout per chart, placed above the mark that asked for it. */
 export function useTip<E extends HTMLElement>() {
   const box = useRef<E>(null);
   const [tip, setTip] = useState<TipState | null>(null);
