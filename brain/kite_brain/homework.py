@@ -66,11 +66,14 @@ def load_assignments(kid_id: str, now: datetime) -> list[Assignment]:
 
 def status(a: Assignment, now: datetime) -> Literal["exam_live", "open", "closed"]:
     """exam_live: a quiz that is unlocked and neither locked nor due. open: homework that
-    is not locked yet. closed: everything else."""
+    is not locked yet, and a quiz not given yet, so its worked answers never come before it.
+    closed: everything else."""
     unlocked = a.unlock_at is None or a.unlock_at <= now
     locked = a.lock_at is not None and a.lock_at <= now
     due = a.due_at is not None and a.due_at <= now
-    if a.kind == "quiz" and unlocked and not locked and not due:
+    if a.kind == "quiz" and not unlocked:
+        return "open"
+    if a.kind == "quiz" and not locked and not due:
         return "exam_live"
     return "open" if a.kind == "homework" and not locked else "closed"
 

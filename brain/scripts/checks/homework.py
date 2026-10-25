@@ -84,7 +84,7 @@ def check_status() -> None:
     quiz, hw = (lambda **d: make("quiz", **d)), (lambda **d: make("homework", **d))  # noqa: E731
     cases = [
         (quiz(unlock_at=t - hour, due_at=t + hour, lock_at=t + hour), "exam_live"),
-        (quiz(unlock_at=t + hour), "closed"),
+        (quiz(unlock_at=t + hour), "open"),  # not given yet: hints only, never the worked answers
         (quiz(unlock_at=t - hour, due_at=t), "closed"),
         (quiz(unlock_at=t - hour, lock_at=t), "closed"),
         (hw(due_at=t - hour), "open"),
