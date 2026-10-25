@@ -128,6 +128,7 @@ async def build_game(deps: Deps, kid_id: str, creation_id: str, topic: str, lear
     meta = store.load_meta(creation_id)
     store.save_meta(creation_id, meta.model_copy(update={"concept_id": concept}))
     if studio_pro.directing():
+        store.save(creation.model_copy(update={"status": "pending"}))  # being built: not in My creations yet
         creation = await build_brand_new(deps, kid_id, creation, topic, learning_goal)
     store.publish(deps, kid_id, CreationReadyEvent, "game", creation_id=creation_id, status=creation.status)
     return creation
@@ -143,4 +144,7 @@ async def build_brand_new(
         deps, kid_id, template.id, "game", studio_pro.request_for(deps, kid_id, template.id, topic, learning_goal),
         lambda page: studio_pro.inject(page, "KITE_SOUNDS", studio_pro.GAME_SOUNDS), agent=agent,
     )
-    return store.take_page(template.id, "game", html) if html else template
+    if html:
+        return store.take_page(template.id, "game", html)
+    store.save(template)  # the template game is hers after all
+    return template

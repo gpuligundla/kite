@@ -77,6 +77,8 @@ def check_my_creations() -> None:
             "mine": Creation(id="mine", kind="game", status="ready", game=game),
             "theirs": Creation(id="theirs", kind="game", status="ready", game=game),
             "making": Creation(id="making", kind="movie", status="pending"),
+            # The studio agent is directing on top of a finished template: still being made, so not offered yet.
+            "directing": Creation(id="directing", kind="game", status="pending", game=game),
             "empty": Creation(id="empty", kind="game", status="fallback"),
             "agent": Creation(id="agent", kind="game", status="ready", html_url="/creations/agent/files/game.html"),
         }

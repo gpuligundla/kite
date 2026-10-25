@@ -164,6 +164,7 @@ async def build_movie(deps: Deps, kid_id: str, creation_id: str, topic: str, lea
     if creation.status == "ready":
         store.spawn(render_video(deps, kid_id, creation_id))
         if studio_pro.directing():
+            store.save(creation.model_copy(update={"status": "pending"}))  # being directed: not in My creations yet
             creation = await direct(deps, kid_id, creation, topic, learning_goal, grade)
     store.publish(deps, kid_id, CreationReadyEvent, "movie", creation_id=creation_id, status=creation.status)
     if creation.status != "ready" and creation.video_url:
@@ -213,7 +214,10 @@ async def direct(
         deps, kid_id, movie.id, "movie", _directors_cut_request(deps, kid_id, movie.id, movie, topic, learning_goal, grade),
         lambda page: studio_pro.inject(page, "KITE_AUDIO", files), agent=agent,
     )
-    return store.take_page(movie.id, "movie", html) if html else movie
+    if html:
+        return store.take_page(movie.id, "movie", html)
+    store.save(movie)  # the template is her movie after all
+    return movie
 
 
 async def _directors_cut_request(

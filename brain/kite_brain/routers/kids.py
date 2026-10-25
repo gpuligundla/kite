@@ -176,8 +176,9 @@ def _title(folder, creation) -> str:
 
 @router.get("/kids/{kid_id}/creations", dependencies=[require("os", "handheld")])
 async def my_creations(kid_id: str, request: Request) -> list[MadeThing]:
-    """Movies, games and stories she can open, newest first, for the My creations app. One still being made, or a
-    fallback with nothing to play, is left out, and so is one Kite made for another kid. One with no maker on record
+    """Movies, games and stories she can open, newest first, for the My creations app. One still being made (or
+    being directed by the studio agent on top of its template), or a fallback with nothing to play, is left out,
+    and so is one Kite made for another kid. One with no maker on record
     (the showcase, a studio-agent game) is shown: right for the one-family demo, and the same store the parent's movie
     list reads."""
     found = []
@@ -188,7 +189,7 @@ async def my_creations(kid_id: str, request: Request) -> list[MadeThing]:
             continue
         meta = store.load_meta(creation.id)
         playable = creation.storyboard or creation.storybook or creation.game or creation.html_url
-        if not playable or (meta is not None and meta.kid_id != kid_id):
+        if not playable or creation.status == "pending" or (meta is not None and meta.kid_id != kid_id):
             continue
         made = MadeThing(id=creation.id, kind=creation.kind, title=_title(path.parent, creation))
         found.append((path.stat().st_mtime, made))
