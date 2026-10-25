@@ -18,3 +18,4 @@ param appSecrets = {
 // can raise these so Claude Code in the studio agent isn't throttled.
 param sonnetCapacity = int(readEnvironmentVariable('KITE_SONNET_CAPACITY', '40'))
 param haikuCapacity = int(readEnvironmentVariable('KITE_HAIKU_CAPACITY', '40'))
+param opusCapacity = int(readEnvironmentVariable('KITE_OPUS_CAPACITY', '40'))

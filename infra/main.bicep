@@ -64,6 +64,8 @@ param claudeSku string = 'GlobalStandard'
 // and 1,000 tokens per minute, which read as per unit, so a capacity of 1 would allow one request a minute.
 param sonnetCapacity int = 40
 param haikuCapacity int = 40
+// Opus 5.5 directs the studio agent's movies, where its visual design is worth the cost.
+param opusCapacity int = 40
 param decisionCapacity int = 500
 param embedCapacity int = 50
 
@@ -101,6 +103,7 @@ var claudeProvider = {
 var models = {
   answer: { name: 'claude-sonnet-5-5', format: 'Anthropic', version: claudeVersion, sku: claudeSku, capacity: sonnetCapacity }
   fast: { name: 'claude-haiku-5-5', format: 'Anthropic', version: claudeVersion, sku: claudeSku, capacity: haikuCapacity }
+  director: { name: 'claude-opus-5-5', format: 'Anthropic', version: claudeVersion, sku: claudeSku, capacity: opusCapacity }
   decision: { name: 'decision-1', model: 'Microsoft-Decision-1', format: 'Microsoft', version: '1', sku: 'DataZoneStandard', capacity: decisionCapacity }
   embed: { name: 'text-embedding-3-small', format: 'OpenAI', version: '1', sku: 'GlobalStandard', capacity: embedCapacity }
 }
@@ -268,6 +271,7 @@ output projectEndpoint string = 'https://${foundryName}.services.ai.azure.com/ap
 output projectPrincipalId string = project.identity.principalId
 output answerDeployment string = models.answer.name
 output fastDeployment string = models.fast.name
+output directorDeployment string = models.director.name
 output decisionDeployment string = models.decision.name
 output embedDeployment string = models.embed.name
 output acrName string = acr.name

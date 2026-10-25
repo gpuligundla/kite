@@ -31,14 +31,14 @@ export KITE_DEVELOPER_ID="${KITE_DEVELOPER_ID:-$(az ad signed-in-user show --que
 
 # A rerun keeps the Claude capacity that is live now, so a limit raised by hand isn't cut back to 40.
 account=$(az cognitiveservices account list -g "$KITE_RG" --query "[?kind=='AIServices'] | [0].name" -o tsv 2>/dev/null || true)
-for model in sonnet haiku; do
+for model in sonnet haiku opus; do
   var="KITE_${model^^}_CAPACITY"
   live=""
   [ -n "$account" ] && live=$(az cognitiveservices account deployment show -g "$KITE_RG" -n "$account" \
     --deployment-name "claude-$model-5-5" --query sku.capacity -o tsv 2>/dev/null || true)
   export "$var=${!var:-${live:-40}}"
 done
-echo "claude capacity: sonnet $KITE_SONNET_CAPACITY  haiku $KITE_HAIKU_CAPACITY"
+echo "claude capacity: sonnet $KITE_SONNET_CAPACITY  haiku $KITE_HAIKU_CAPACITY  opus $KITE_OPUS_CAPACITY"
 
 if [ "$KITE_DEPLOY_APPS" = "true" ]; then
   # Read raw lines, because sourcing the file would strip the quotes inside the KITE_VOICES JSON.
