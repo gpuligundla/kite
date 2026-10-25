@@ -112,22 +112,60 @@
 .year h3 { font-size: var(--step-0); }
 .year ul { margin: var(--space-1) 0 0; padding-left: 1.1em; font-size: var(--step--1); line-height: 1.6; }
 
-/* Skills map */
-.levelKey { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); list-style: none; padding: 0; margin: 0 0 var(--space-5); color: var(--ink-soft); font-size: var(--step--1); }
-.levelKey li { display: inline-flex; align-items: center; gap: var(--space-2); }
-.topics { columns: 2 340px; column-gap: var(--space-7); }
-.topic { break-inside: avoid; margin-bottom: var(--space-6); }
-.topic ul { list-style: none; padding: 0; margin: var(--space-2) 0 0; }
-.strengthTag {
-  margin-left: var(--space-2); vertical-align: 3px; padding: 2px var(--space-2); border-radius: 999px;
-  font-family: var(--font-body); font-size: var(--step--1); font-weight: 700;
-  color: #0b6a64; background: color-mix(in srgb, var(--tail-teal) 16%, white);
+/* The map panel: the one dark surface on the page, so the two maps are the thing you remember.
+   Level steps are one teal ramp mixed from the tokens, validated as ordinal on --ink (dataviz validate_palette --ordinal). */
+.mapPanel {
+  --hex-scale: 1;
+  --lv-not_yet: color-mix(in oklab, var(--tail-teal) 50%, var(--ink));
+  --lv-learning: color-mix(in oklab, var(--tail-teal) 75%, var(--ink));
+  --lv-got_it: var(--tail-teal);
+  --lv-can_teach: color-mix(in oklab, var(--tail-teal) 70%, white);
+  --map-text: #e9edf6;
+  --map-soft: #b3bdd3;
+  --map-line: rgba(255, 255, 255, 0.14);
+  color: var(--map-text); background: var(--ink); border-radius: var(--radius-l);
+  padding: var(--space-6) var(--space-6) var(--space-5); margin-bottom: var(--space-7);
+  box-shadow: 0 1px 2px rgba(29, 43, 83, 0.2), 0 18px 40px -18px rgba(29, 43, 83, 0.55);
 }
-.concept { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); padding: 6px 0; border-top: 1px solid var(--line); }
-.level { display: inline-flex; align-items: center; gap: var(--space-2); flex: none; min-width: 7.5rem; color: var(--ink-soft); font-size: var(--step--1); }
-.pips { display: inline-flex; gap: 3px; }
-.pips span { width: 10px; height: 10px; border-radius: 2px; background: var(--line); }
-.pips span[data-on="true"] { background: var(--tail-teal); }
+@media (max-width: 640px) { .mapPanel { --hex-scale: 0.66; padding: var(--space-5) var(--space-4); margin-inline: calc(var(--space-2) * -1); } }
+.mapPanel h2 { color: #fff; }
+.mapPanel :focus-visible { outline-color: var(--kite-yellow); }
+.mapSection { min-width: 0; }
+.mapHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-4) var(--space-6); margin-bottom: var(--space-5); }
+.mapLede { color: var(--map-soft); margin-top: var(--space-2); max-width: 56ch; }
+.mapKey { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); list-style: none; padding: 0; margin: 0; font-size: var(--step--1); color: var(--map-soft); max-width: 440px; }
+.mapKey li { display: inline-flex; align-items: center; gap: 6px; }
+.swatchHex { width: 18px; height: 20px; flex: none; }
+.combs { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-5) var(--space-6); }
+.comb { margin: 0; min-width: 176px; display: grid; justify-items: start; gap: var(--space-2); }
+.comb svg { display: block; height: auto; max-width: 100%; overflow: visible; }
+.halo { fill: var(--kite-yellow); }
+.back { fill: var(--ink); }
+.cell { cursor: default; outline: none; }
+.cellEmpty { fill: rgba(255, 255, 255, 0.04); stroke: rgba(255, 255, 255, 0.22); stroke-width: 1; }
+.cellMark { fill: var(--ink); }
+.cellRing { fill: none; stroke: transparent; stroke-width: 2.5; transition: stroke var(--dur-press) ease; }
+.cell:focus-visible .cellRing { stroke: var(--kite-yellow); }
+@media (hover: hover) and (pointer: fine) { .cell:hover .cellRing { stroke: #fff; } }
+.combLabel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--space-2); max-width: 220px; }
+.combLabel h3 { font-size: var(--step-0); color: #fff; width: 100%; }
+.combLabel > span:first-of-type { font-size: var(--step--1); line-height: 24px; color: var(--map-soft); font-variant-numeric: tabular-nums; }
+.strengthTag {
+  display: inline-flex; align-items: center; gap: 5px; padding: 1px var(--space-2); border-radius: 999px;
+  font-size: var(--step--1); font-weight: 700; color: var(--ink); background: var(--kite-yellow);
+}
+.mapMore { margin-top: var(--space-5); color: var(--map-soft); }
+.mapMore summary { cursor: pointer; font-weight: 700; padding: var(--space-1) 0; width: fit-content; }
+.mapMore .table th, .mapMore .table td { border-bottom-color: var(--map-line); }
+.mapRule { border: 0; border-top: 1px solid var(--map-line); margin: var(--space-6) 0; }
+
+.tip {
+  position: absolute; z-index: 5; pointer-events: none; transform: translate(-50%, calc(-100% - 10px));
+  display: grid; gap: 2px; width: max-content; max-width: 220px; padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-s); background: var(--paper); color: var(--ink); font-size: var(--step--1); line-height: 1.35;
+  box-shadow: 0 1px 2px rgba(29, 43, 83, 0.25), 0 8px 24px -8px rgba(29, 43, 83, 0.45);
+}
+.tip strong { font-size: var(--step-0); }
 
 /* Charts. Series colors validated with the dataviz palette script on --mist. */
 .chart { max-width: 640px; --viz-1: var(--kite-red); --viz-2: var(--tail-teal); --viz-3: #e0a100; --viz-other: #c5ccd8; }

@@ -64,6 +64,66 @@ export function skillsByTopic(view: DashboardView): Topic[] {
     .sort((a, b) => b.concepts.length - a.concepts.length || a.name.localeCompare(b.name));
 }
 
+/** One idea in the knowledge map. `level` is null for an idea in the topic she hasn't shown Kite yet. */
+export interface Cell {
+  id: string;
+  name: string;
+  grade: number;
+  level: Level | null;
+  /** Axial hex coordinates inside its comb, a pure function of the catalog so a cell never moves between grades. */
+  q: number;
+  r: number;
+}
+export interface Comb {
+  topic: string;
+  name: string;
+  strength: boolean;
+  cells: Cell[];
+  solid: number;
+  shown: number;
+}
+
+// Axial directions for pointy-top hexes, walked as a spiral: center, then ring 1, ring 2, ...
+const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]] as const;
+const SPIRAL: [number, number][] = [[0, 0]];
+for (let k = 1; k <= 3; k++) {
+  let [q, r] = [DIRS[4][0] * k, DIRS[4][1] * k];
+  for (const [dq, dr] of DIRS)
+    for (let j = 0; j < k; j++) {
+      SPIRAL.push([q, r]);
+      [q, r] = [q + dq, r + dr];
+    }
+}
+
+const TOPIC_CATALOG = new Map<string, typeof catalog>();
+for (const c of [...catalog].sort((a, b) => a.grade - b.grade || a.id.localeCompare(b.id)))
+  TOPIC_CATALOG.set(c.topic, [...(TOPIC_CATALOG.get(c.topic) ?? []), c]);
+
+/**
+ * Every topic she has shown Kite anything in, as a comb holding the topic's whole catalog: earliest idea at the
+ * center, later ones spiralling out. Combs keep a fixed order (biggest topic first) so the map only fills in.
+ */
+export function knowledgeMap(view: DashboardView): Comb[] {
+  const levels = new Map(view.skills.concepts.map((c) => [c.concept_id, c.level]));
+  const strengths = new Set(view.strengths ?? []);
+  const topics = new Set(view.skills.concepts.map((c) => CONCEPTS.get(c.concept_id)?.topic).filter((t) => t !== undefined));
+  return [...topics]
+    .map((topic) => {
+      const cells = TOPIC_CATALOG.get(topic)!.map((c, i) => ({
+        id: c.id, name: c.name, grade: c.grade, level: levels.get(c.id) ?? null, q: SPIRAL[i][0], r: SPIRAL[i][1],
+      }));
+      return {
+        topic,
+        name: topicName(topic),
+        strength: strengths.has(topic),
+        cells,
+        solid: cells.filter((c) => c.level && solid(c.level)).length,
+        shown: cells.filter((c) => c.level).length,
+      };
+    })
+    .sort((a, b) => b.cells.length - a.cells.length || a.name.localeCompare(b.name));
+}
+
 // The brain's bar for "she asks about it a lot" (maps.py: top 3 curiosity topics scoring 0.6 or more).
 // The strength verdict itself comes from DashboardView.strengths; these only pick who is "getting there".
 const TOP_CURIOSITY = 3;

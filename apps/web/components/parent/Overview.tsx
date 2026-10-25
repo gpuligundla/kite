@@ -18,7 +18,9 @@ export function Overview({ view, grade, stale }: { view: DashboardView; grade: G
         <CuriosityChart view={view} grade={grade} />
         <HowSheLearns shares={view.how_she_learns} />
       </div>
-      <SkillsMap view={view} />
+      <div className={styles.mapPanel}>
+        <SkillsMap view={view} />
+      </div>
       <div className={styles.pair}>
         <Cards cards={view.cards} />
         <Moments moments={view.moments_by_grade} />
