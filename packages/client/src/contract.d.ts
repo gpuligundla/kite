@@ -132,6 +132,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/kids/{kid_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * History
+         * @description Past chats, read-only, for the kid's own screen: what was said, never levels or scores.
+         */
+        get: operations["history_kids__kid_id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kids/{kid_id}/me": {
         parameters: {
             query?: never;
@@ -146,6 +166,48 @@ export interface paths {
         get: operations["me_kids__kid_id__me_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kids/{kid_id}/fresh-start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fresh Start
+         * @description New topic: Kite's next answer leans on nothing said before now, a new session begins, and the time-travel
+         *     exchanges go. What Kite remembers about the kid (the ledger, the kid view) stays.
+         */
+        post: operations["fresh_start_kids__kid_id__fresh_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kids/{kid_id}/hear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hear
+         * @description Only the words, for a screen that asked one thing ("What should your movie be about?"). The screen sends
+         *     them on in a turn, where safety and routing see them, so nothing is checked or stored here.
+         */
+        post: operations["hear_kids__kid_id__hear_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -641,6 +703,14 @@ export interface components {
              */
             strengths: string[] | null;
         };
+        /** FreshStart */
+        FreshStart: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
         /** GameItem */
         GameItem: {
             /** Label */
@@ -683,6 +753,11 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** Heard */
+        Heard: {
+            /** Text */
+            text: string;
         };
         /** KidView */
         KidView: {
@@ -737,6 +812,30 @@ export interface components {
              * @enum {string}
              */
             time_of_day: "morning" | "day" | "evening" | "night";
+        };
+        /** PastChat */
+        PastChat: {
+            /** Id */
+            id: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Title */
+            title: string;
+            /** Turns */
+            turns: components["schemas"]["PastTurn"][];
+        };
+        /** PastTurn */
+        PastTurn: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "kid" | "kite";
+            /** Text */
+            text: string;
         };
         /** PolicyBody */
         PolicyBody: {
@@ -797,6 +896,16 @@ export interface components {
             lat?: number | null;
             /** Lng */
             lng?: number | null;
+        };
+        /** Spoken */
+        Spoken: {
+            /** Audio B64 */
+            audio_b64: string;
+            /**
+             * Mime
+             * @default audio/webm
+             */
+            mime: string;
         };
         /** Storyboard */
         Storyboard: {
@@ -1697,6 +1806,37 @@ export interface operations {
             };
         };
     };
+    history_kids__kid_id__history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PastChat"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     me_kids__kid_id__me_get: {
         parameters: {
             query?: never;
@@ -1715,6 +1855,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fresh_start_kids__kid_id__fresh_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FreshStart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hear_kids__kid_id__hear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Spoken"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Heard"];
                 };
             };
             /** @description Validation Error */

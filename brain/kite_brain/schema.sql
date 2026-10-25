@@ -117,3 +117,9 @@ CREATE TABLE IF NOT EXISTS access_receipt (
   what TEXT NOT NULL,
   at TEXT NOT NULL
 );
+
+-- The kid's last "New topic". Recall's history and the session start again after it; learning stays.
+CREATE TABLE IF NOT EXISTS fresh_start (
+  kid_id TEXT PRIMARY KEY REFERENCES kid(id),
+  at TEXT NOT NULL
+);

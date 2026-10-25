@@ -246,6 +246,12 @@ def _remember_time_travel(turn: _Turn, kid_text: str, kite_text: str) -> None:
     rows.extend([(now, "kid", kid_text), (now, "kite", kite_text)])
 
 
+def forget_time_travel(kid_id: str) -> None:
+    """A fresh start: every grade's in-memory exchange goes, as a forget would drop the last one."""
+    for key in [k for k in _time_travel if k[0] == kid_id]:
+        del _time_travel[key]
+
+
 def _time_travel_history(turn: _Turn) -> list[tuple[str, str]]:
     since = turn.deps.clock() - TIME_TRAVEL_KEPT
     return [(role, text) for at, role, text in _time_travel.get((turn.inp.kid_id, turn.grade), ()) if at >= since]

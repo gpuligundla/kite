@@ -90,14 +90,26 @@ def events(conn: sqlite3.Connection, keys: FamilyKeys, kid_id: str, as_of_grade:
     ]
 
 
+def mark_fresh_start(conn: sqlite3.Connection, kid_id: str, at: datetime) -> None:
+    """The kid's "New topic": recall's history and the session start again after `at`. Learning events stay."""
+    conn.execute("INSERT OR REPLACE INTO fresh_start(kid_id, at) VALUES (?, ?)", (kid_id, iso(at)))
+    conn.commit()
+
+
+def fresh_start_at(conn: sqlite3.Connection, kid_id: str) -> str:
+    """The kid's last fresh start, or "" before the first one, so `at > ?` keeps every row."""
+    row = conn.execute("SELECT at FROM fresh_start WHERE kid_id = ?", (kid_id,)).fetchone()
+    return row["at"] if row else ""
+
+
 def session_for(conn: sqlite3.Connection, kid_id: str, at: datetime) -> str:
-    """Reuse the kid's latest session when its last activity is 30 minutes ago or less."""
+    """Reuse the kid's latest session when its last activity is 30 minutes ago or less and after any fresh start."""
     last = conn.execute(
         "SELECT session_id, at FROM ("
         " SELECT session_id, at FROM session_turn WHERE kid_id = ?1 AND at <= ?2"
         " UNION ALL SELECT session_id, at FROM learning_event WHERE kid_id = ?1 AND at <= ?2"
-        ") ORDER BY at DESC LIMIT 1",
-        (kid_id, iso(at)),
+        ") WHERE at > ?3 ORDER BY at DESC LIMIT 1",
+        (kid_id, iso(at), fresh_start_at(conn, kid_id)),
     ).fetchone()
     if last and at - datetime.fromisoformat(last["at"]) <= SESSION_GAP:
         return last["session_id"]

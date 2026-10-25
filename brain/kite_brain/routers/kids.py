@@ -1,18 +1,39 @@
+import base64
+import binascii
+import logging
+import re
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from kite_brain.auth import require
+from kite_brain.config import UPLOAD_CAP_BYTES
 from kite_brain.contract import AlertEvent, KidView
 from kite_brain.memory import ledger
-from kite_brain.memory.recall import remembered
-from kite_brain.turn.pipeline import start_teach, teachable_concepts, teaching_now
+from kite_brain.memory.recall import PastChat, past_chats, remembered
+from kite_brain.turn.pipeline import forget_time_travel, start_teach, teachable_concepts, teaching_now
 
+log = logging.getLogger(__name__)
 router = APIRouter()
 
 
 class Me(BaseModel):
     name: str
     grade: int
+
+
+class FreshStart(BaseModel):
+    at: datetime
+
+
+class Spoken(BaseModel):
+    audio_b64: str = Field(max_length=UPLOAD_CAP_BYTES * 4 // 3 + 4)
+    mime: str = Field(default="audio/webm", pattern=r"^audio/[a-z0-9.+-]{1,30}$")
+
+
+class Heard(BaseModel):
+    text: str
 
 
 class Sos(BaseModel):
@@ -76,8 +97,41 @@ async def kid_view(kid_id: str, request: Request) -> KidView:
     return remembered(request.app.state.deps, kid_id)
 
 
+@router.get("/kids/{kid_id}/history", dependencies=[require("os", "handheld")])
+async def history(kid_id: str, request: Request) -> list[PastChat]:
+    """Past chats, read-only, for the kid's own screen: what was said, never levels or scores."""
+    return past_chats(request.app.state.deps, kid_id, datetime.now(timezone.utc))
+
+
 @router.get("/kids/{kid_id}/me", dependencies=[require("os", "handheld")])
 async def me(kid_id: str, request: Request) -> Me:
     """The kid's name and grade, so their screen can greet them and match its look to their age."""
     row = request.app.state.deps.conn.execute("SELECT display_name, grade FROM kid WHERE id = ?", (kid_id,)).fetchone()
     return Me(name=row["display_name"], grade=row["grade"])
+
+
+@router.post("/kids/{kid_id}/fresh-start", dependencies=[require("os", "handheld")])
+async def fresh_start(kid_id: str, request: Request) -> FreshStart:
+    """New topic: Kite's next answer leans on nothing said before now, a new session begins, and the time-travel
+    exchanges go. What Kite remembers about the kid (the ledger, the kid view) stays."""
+    deps = request.app.state.deps
+    at = deps.clock()
+    ledger.mark_fresh_start(deps.conn, kid_id, at)
+    forget_time_travel(kid_id)
+    return FreshStart(at=at)
+
+
+@router.post("/kids/{kid_id}/hear", dependencies=[require("os", "handheld")])
+async def hear(kid_id: str, body: Spoken, request: Request) -> Heard:
+    """Only the words, for a screen that asked one thing ("What should your movie be about?"). The screen sends
+    them on in a turn, where safety and routing see them, so nothing is checked or stored here."""
+    try:
+        audio = base64.b64decode(body.audio_b64, validate=True)
+    except binascii.Error:
+        raise HTTPException(422, "audio_b64 is not base64") from None
+    try:
+        text = await request.app.state.deps.stt.transcribe(audio, body.mime)
+    except Exception as e:  # the type only: a vendor error body can echo the kid's words
+        log.warning("hear: stt failed (%s)", type(e).__name__)
+        text = ""
+    return Heard(text=re.sub(r"\s+", " ", text).strip())

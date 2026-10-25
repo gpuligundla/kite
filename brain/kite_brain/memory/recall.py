@@ -2,8 +2,11 @@
 guidance is instruction for this turn's concept and never states a level or score."""
 
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Literal
 
 import numpy as np
+from pydantic import BaseModel
 
 from kite_brain.catalog import Catalog
 from kite_brain.config import ABOUT_ME_THRESHOLD
@@ -15,6 +18,19 @@ from kite_brain.memory.embed import top_k
 
 HISTORY_TURNS = 10
 TOP_MOMENTS = 5
+TITLE_CHARS = 60
+
+
+class PastTurn(BaseModel):
+    role: Literal["kid", "kite"]
+    text: str
+
+
+class PastChat(BaseModel):
+    id: str  # the session
+    at: datetime  # when it started
+    title: str  # the kid's first question, trimmed
+    turns: list[PastTurn]
 
 
 @dataclass
@@ -61,14 +77,40 @@ def _top_moments(deps: Deps, evts: list[ledger.LedgerEvent], query_vec: np.ndarr
 
 def _history(deps: Deps, kid_id: str) -> list[tuple[str, str]]:
     rows = deps.conn.execute(
-        "SELECT id, role, text FROM session_turn WHERE kid_id = ? ORDER BY at DESC, id DESC LIMIT ?",
-        (kid_id, HISTORY_TURNS),
+        "SELECT id, role, text FROM session_turn WHERE kid_id = ? AND at > ? ORDER BY at DESC, id DESC LIMIT ?",
+        (kid_id, ledger.fresh_start_at(deps.conn, kid_id), HISTORY_TURNS),
     ).fetchall()
     key = deps.keys.for_kid(kid_id)
     return [
         (r["role"], open_sealed(key, r["text"], aad("session_turn", kid_id, r["id"])).decode())
         for r in reversed(rows)
     ]
+
+
+def _title(text: str) -> str:
+    return text if len(text) <= TITLE_CHARS else text[: TITLE_CHARS - 1].rsplit(" ", 1)[0] + "…"
+
+
+def past_chats(deps: Deps, kid_id: str, now: datetime) -> list[PastChat]:
+    """The kid's stored conversations inside the 30-day window, one per session, newest first. `now` is the real
+    clock, as expiry is. A turn that raised an alert is the grown-up's safety record and never shows here; today
+    such turns store no session_turn at all, and the alert's `at` matching the turn's keeps it so."""
+    rows = deps.conn.execute(
+        "SELECT id, session_id, role, at, text FROM session_turn st WHERE kid_id = ?1"
+        " AND datetime(expires_at) > datetime(?2)"
+        " AND NOT EXISTS (SELECT 1 FROM alert a WHERE a.kid_id = ?1 AND a.at = st.at)"
+        " ORDER BY at, id",
+        (kid_id, ledger.iso(now)),
+    ).fetchall()
+    key = deps.keys.for_kid(kid_id)
+    chats: dict[str, PastChat] = {}
+    for r in rows:
+        text = open_sealed(key, r["text"], aad("session_turn", kid_id, r["id"])).decode()
+        chat = chats.setdefault(r["session_id"], PastChat(id=r["session_id"], at=r["at"], title="", turns=[]))
+        chat.turns.append(PastTurn(role=r["role"], text=text))
+        if r["role"] == "kid" and not chat.title:
+            chat.title = _title(text)
+    return [c if c.title else c.model_copy(update={"title": "A chat with Kite"}) for c in reversed(chats.values())]
 
 
 def _read(deps: Deps, kid_id: str, grade: Grade) -> tuple[list[ledger.LedgerEvent], SkillsMap, list[str]]:
