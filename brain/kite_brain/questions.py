@@ -49,7 +49,7 @@ INITIATIVE = Question(
     "Where did this question come from?",
     ("own_question", "follow_up_why", "assigned_work"),
     {
-        "own_question": "The child is curious about something new on their own",
+        "own_question": "The child is curious about something new on their own, or wants Kite to make them a movie or a game",
         "follow_up_why": "The child is asking why or how about something they were just told",
         "assigned_work": "The child is asking for help with schoolwork, homework or a test that a teacher assigned",
     },
