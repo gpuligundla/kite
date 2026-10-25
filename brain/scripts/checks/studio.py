@@ -568,6 +568,8 @@ def check_tool_call_starts_the_right_job() -> None:
             "kid_id": KID_ID, "grade": 11, "read_only": False, "concept_id": None, "scored": False}
         kid = asyncio.run(drain(bus, "os"))
         assert kid[0].type == "creation.progress" and kid[-1].type == "creation.ready" and kid[-1].kind == "movie"
+        # A screen opened later, while a slow job still runs, must not claim it for its own newest turn.
+        assert {e.turn_id for e in kid} == {"t1"}, "every event names the turn that asked"
         assert {e.audience for e in asyncio.run(drain(bus, "parent"))} == {"parent"}, "and the grown-up copy"
 
     with patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())):

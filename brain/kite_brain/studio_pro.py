@@ -13,6 +13,7 @@ import logging
 import re
 import secrets
 from collections.abc import Awaitable, Callable
+from contextvars import ContextVar
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
@@ -178,17 +179,23 @@ def save(
     return creation
 
 
-def _publish(deps: Deps, kid_id: str, cls, kind: CreationKind, **fields) -> None:
+# The turn that asked for the creation. act_on_tool_call sets it, and a background job keeps the value it was spawned
+# with, so every event of a creation names its turn, a director's cut finishing minutes later included. A screen
+# opened in the meantime then can't claim the job for its own newest turn. None for the game button, which has no turn.
+ASKING_TURN: ContextVar[str | None] = ContextVar("asking_turn", default=None)
+
+
+def publish(deps: Deps, kid_id: str, cls, kind: CreationKind, **fields) -> None:
     """To the kid, with the grown-up copy to the parent. A creation is never a counselor matter."""
     for audience in ("kid", "parent"):
-        deps.bus.publish(cls(kid_id=kid_id, turn_id=None, at=deps.clock(), audience=audience, kind=kind, **fields))
+        deps.bus.publish(cls(kid_id=kid_id, turn_id=ASKING_TURN.get(), at=deps.clock(), audience=audience, kind=kind, **fields))
 
 
 def start_page(deps: Deps, kid_id: str, kind: CreationKind) -> str:
     """A pending creation under an unguessable id, announced as step 0. build_page does the work."""
     creation_id = secrets.token_hex(16)
     save(creation_id, kind, "pending")
-    _publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=0, steps_total=STEPS_TOTAL)
+    publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=0, steps_total=STEPS_TOTAL)
     return creation_id
 
 
@@ -213,7 +220,7 @@ async def build_page(
     steps = itertools.count(1)
 
     def progress(_text: str) -> None:  # the agent's words stay in the sandbox; only the count goes out
-        _publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=min(next(steps), STEPS_TOTAL), steps_total=STEPS_TOTAL)
+        publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=min(next(steps), STEPS_TOTAL), steps_total=STEPS_TOTAL)
 
     html = None
     try:
@@ -223,7 +230,7 @@ async def build_page(
     except Exception as e:
         log.warning("studio %s %s falls back: %s", kind, creation_id, type(e).__name__)
     creation = save(creation_id, kind, "ready", html, **(ready_fields or {})) if html else save(creation_id, kind, "fallback")
-    _publish(deps, kid_id, CreationReadyEvent, kind, creation_id=creation_id, status=creation.status)
+    publish(deps, kid_id, CreationReadyEvent, kind, creation_id=creation_id, status=creation.status)
     return creation
 
 

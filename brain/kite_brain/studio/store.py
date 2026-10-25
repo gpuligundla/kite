@@ -14,7 +14,6 @@ import secrets
 import shutil
 from collections.abc import Coroutine
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 from pydantic import BaseModel
@@ -108,10 +107,7 @@ def load_meta(creation_id: str) -> Meta | None:
         return None
 
 
-def publish(deps: Deps, kid_id: str, cls: type, kind: CreationKind, **fields: Any) -> None:
-    """To the kid, with the grown-up copy to the parent. A creation is never a counselor matter."""
-    for audience in ("kid", "parent"):
-        deps.bus.publish(cls(kid_id=kid_id, turn_id=None, at=deps.clock(), audience=audience, kind=kind, **fields))
+publish = studio_pro.publish
 
 
 def spawn(coro: Coroutine) -> None:
