@@ -83,9 +83,21 @@ Every dashboard, contacts and movies read writes an access receipt, so don't pol
 
 ## Counselor page (Task 26)
 
-`GET /counselor/alerts` with a `counselor` token returns `[{alert_id, kinds, at, excerpt}]`, newest first,
-for the kid that counselor device is bound to. Only counselor-routed alerts (abuse) appear; bullying and
-SOS go to the parent. Each excerpt returned is recorded as a receipt.
+Every route needs a `counselor` token and answers for the kid that device is bound to. None of them carry
+her learning, and the parent's routes never carry anything below.
+
+- `GET /counselor/alerts` returns the counselor-routed alerts (abuse), newest first, as `CounselorAlertView`:
+  `kinds`, `at`, `excerpt`, `said` (the flagged message), `reply` (Kite's fixed reply), the case `status` and
+  `history`, `context` (up to 3 earlier exchanges from the same session, found by the alert's session id) and
+  `context_purged` (true once the 30-day session-turn expiry removed them), and `lat`/`lng` when present.
+  Each report returned is recorded as a receipt, so read it once and again only on a new `alert` event.
+- `PUT /counselor/alerts/{alert_id}/status` with `{status, note?}` moves the case (`new`, `reviewing`,
+  `met_with_student`, `reported`, `closed`) or adds a note. It returns the case history, oldest first. Notes are
+  sealed. Each change is a receipt. The same status with no note is a 422.
+- `GET /counselor/student` returns `{name, grade, school_start_year, last_heard, reports}`, where `reports`
+  counts her counselor reports by case status. It is recorded as a receipt.
+- `GET /counselor/receipts` returns the counselor's own receipts for her, newest first: `{who, what, at}`, where
+  `what` is `alert <id>`, `case <id> <status>[ with a note]` or `student profile`. Reading it writes nothing.
 
 ## "What Kite remembers" (Task 28)
 
