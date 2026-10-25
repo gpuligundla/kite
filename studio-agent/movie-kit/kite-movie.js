@@ -84,6 +84,22 @@
     a.play().catch(function () {});
   }
 
+  // Inside the kid's card the kid already pressed play, so start at once when the browser allows sound.
+  // A silent probe of the first line asks the browser; if it says no, the page shows its own Play button.
+  function autoplayOrButton() {
+    var probe = movie.lines.length ? sound(movie.lines[0].key) : null;
+    if (!probe) return showButton("Play");
+    probe.volume = 0;
+    probe.play().then(function () {
+      probe.pause();
+      probe.volume = 1;
+      window.kite.play();
+    }, function () {
+      probe.volume = 1;
+      showButton("Play");
+    });
+  }
+
   // Start the line under the playhead at the right offset; later lines start from their cues.
   function speakAt(t) {
     hush();
@@ -143,7 +159,9 @@
       });
       fit();
       window.addEventListener("resize", fit);
-      showButton("Play");
+      // Opened on its own (as the play-test does), the page waits for a press; in the kid's card it starts itself.
+      if (window.parent !== window) autoplayOrButton();
+      else showButton("Play");
       post({ type: "kite.ready" });
     },
 
