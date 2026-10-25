@@ -17,6 +17,9 @@ export function Contacts({ brain, name }: { brain: Brain; name: string }) {
       <ul className={styles.contacts}>
         {data?.map((c) => (
           <li key={c.phone}>
+            <span className={styles.avatar} aria-hidden>
+              {c.name.charAt(0)}
+            </span>
             <strong>{c.name}</strong>
             <a href={`tel:${c.phone}`}>{c.phone}</a>
           </li>

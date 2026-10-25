@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useBrain, useBrainEvents } from "@/lib/brain";
 import { Masthead } from "@/components/parent/Masthead";
-import { KID, formatWhen, kindWords, type CounselorAlert } from "@/components/parent/model";
+import { ALERT_KINDS, KID, ago, formatWhen, kindWords, leadKind, type CounselorAlert } from "@/components/parent/model";
 import styles from "@/components/parent/parent.module.css";
 
 /** Every read records a receipt per excerpt returned, so the inbox reads once and again only for a new report. */
@@ -41,13 +41,19 @@ export function CounselorInbox() {
           </p>
         </header>
         {state.error && <p className={styles.error}>The inbox didn&apos;t load: {state.error}. Reload to try again.</p>}
-        {state.alerts?.length === 0 && <p className={styles.empty}>No reports.</p>}
+        {state.alerts?.length === 0 && (
+          <p className={styles.empty}>
+            <strong>No reports.</strong> When Kite sends one, it appears here right away.
+          </p>
+        )}
         <ol className={styles.inbox}>
           {state.alerts?.map((a) => (
-            <li key={a.alert_id} className={styles.report}>
+            <li key={a.alert_id} className={styles.report} data-tone={ALERT_KINDS[leadKind(a.kinds)].tone}>
               <div className={styles.reportHead}>
                 <strong>{kindWords(a.kinds)}</strong>
-                <time dateTime={a.at}>{formatWhen(a.at)}</time>
+                <time dateTime={a.at}>
+                  {formatWhen(a.at)}, {ago(a.at, Date.now())}
+                </time>
               </div>
               <blockquote>{a.excerpt}</blockquote>
             </li>

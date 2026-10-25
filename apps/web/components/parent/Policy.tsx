@@ -47,7 +47,7 @@ export function Policy({
           </div>
         ))}
       </dl>
-      <ul className={styles.plainList}>
+      <ul className={styles.policyList}>
         {POLICY_TOPICS.map(({ topic, name: label }) => {
           const s = status[topic];
           return (

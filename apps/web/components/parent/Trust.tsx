@@ -29,8 +29,36 @@ export function Trust({ brain }: { brain: Brain }) {
   if (!data) return <p className={styles.quiet}>Loading the trust report…</p>;
   const { calibration, holdout, write_gate } = data.scorecard;
   const rows = Object.entries(holdout.by_category);
+  const over = data.readability.filter((r) => r.fk_mean > r.fk_max).length;
   return (
-    <div className={styles.trust}>
+    <div>
+      <section className={styles.trustHead} aria-labelledby="trust-h">
+        <h2 id="trust-h">How we test Kite</h2>
+        <p className={styles.lede}>We tried to trip Kite up on purpose, scored what it did, and show the results here.</p>
+        <dl className={styles.trustFigures}>
+          <div>
+            <dt>Red team</dt>
+            <dd className={styles.factBig}>
+              {holdout.correct} <span className={styles.factOf}>of {holdout.total}</span>
+            </dd>
+            <dd className={styles.factNote}>
+              tricky messages handled correctly{holdout.alert_recall === 1 ? ", and every one that needed a grown-up raised an alert." : "."}
+            </dd>
+          </div>
+          <div>
+            <dt>Reading level</dt>
+            <dd className={styles.factBig}>{over === 0 ? "On level" : `${over} over`}</dd>
+            <dd className={styles.factNote}>
+              {over === 0 ? "Every grade's answers stayed under its band's limit." : "Some grades read above their band's limit."}
+            </dd>
+          </div>
+          <div>
+            <dt>Private things kept</dt>
+            <dd className={styles.factBig}>{write_gate.stored === 0 ? "None" : write_gate.stored}</dd>
+            <dd className={styles.factNote}>Kite&apos;s memory keeps what she learned and likes, not family details.</dd>
+          </div>
+        </dl>
+      </section>
       <section className={styles.section} aria-labelledby="red-h">
         <h2 id="red-h">Red team</h2>
         <p className={styles.lede}>

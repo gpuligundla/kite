@@ -377,7 +377,11 @@
 .table { border-collapse: collapse; font-size: var(--step--1); font-variant-numeric: tabular-nums; margin-top: var(--space-2); }
 .table th, .table td { padding: var(--space-1) var(--space-4) var(--space-1) 0; text-align: left; border-bottom: 1px solid var(--line); }
 
-/* Sensitive topics */
+/* Sensitive topics: the choices sit together on one paper card, each row saving on its own. */
+.policyList { list-style: none; margin: 0; padding: 0 var(--space-5); max-width: 980px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-l); box-shadow: var(--shadow-1); }
+.policyList > li:first-child { border-top: 0; }
+.policyList .segmented { background: var(--mist); }
+@media (max-width: 640px) { .policyList { padding: 0 var(--space-4); } }
 .actionKey { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); margin: 0 0 var(--space-5); max-width: 860px; }
 .actionKey dt { font-weight: 700; }
 .actionKey dd { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }
@@ -406,14 +410,29 @@
 .saveState[data-state="failed"] { color: var(--kite-red-deep); }
 
 /* Contacts and movies */
-.contacts { list-style: none; padding: 0; margin: 0; max-width: 480px; }
-.contacts li { display: flex; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
+.contacts { list-style: none; padding: 0 var(--space-5); margin: 0; max-width: 560px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-m); box-shadow: var(--shadow-1); }
+.contacts li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; }
+.contacts li + li { border-top: 1px solid var(--line); }
+.contacts a { font-variant-numeric: tabular-nums; font-weight: 700; text-underline-offset: 3px; }
+.avatar {
+  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
+  font-family: var(--font-display); font-weight: 700; color: var(--ink); background: var(--mist); box-shadow: inset 0 0 0 1px var(--line);
+}
 .movies { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--space-5); }
-.movies li { display: grid; gap: var(--space-1); }
+.movies li { display: grid; gap: var(--space-2); padding: var(--space-2) var(--space-2) var(--space-3); background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-m); box-shadow: var(--shadow-1); }
+.movies li > :not(video) { padding-inline: var(--space-2); }
 .movies video { width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-s); background: var(--ink); }
 .movies span { font-weight: 700; }
 
-/* Trust */
+/* Trust: the three results lead on raised paper, the evidence follows in the open. */
+.trustHead { padding: var(--space-6); margin-bottom: var(--space-7); background: var(--paper); border-radius: var(--radius-l); box-shadow: var(--shadow-2); }
+@media (max-width: 640px) { .trustHead { padding: var(--space-5); } }
+.trustFigures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5) var(--space-6); margin: var(--space-2) 0 0; }
+@media (max-width: 760px) { .trustFigures { grid-template-columns: minmax(0, 1fr); } }
+.trustFigures > div + div { padding-left: var(--space-6); border-left: 1px solid var(--line); }
+@media (max-width: 760px) { .trustFigures > div + div { padding: var(--space-4) 0 0; border-left: 0; border-top: 1px solid var(--line); } }
+.trustFigures dt { font-size: var(--step--1); color: var(--ink-soft); }
+.trustFigures dd { margin: 0; }
 .scoreRow {
   display: grid; grid-template-columns: 11rem 8rem minmax(0, 1fr); align-items: center; gap: 2px var(--space-4);
   padding: var(--space-3) 0; border-top: 1px solid var(--line); max-width: 860px;
@@ -424,12 +443,22 @@
 .gateFigure { font-family: var(--font-display); font-weight: 800; font-size: var(--step-3); margin: var(--space-1) 0 var(--space-2); }
 
 /* Counselor inbox */
-.inboxHead { padding: var(--space-6) 0 var(--space-5); }
-.notice { display: inline-block; padding: var(--space-2) var(--space-3); border-radius: var(--radius-s); background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); font-size: var(--step--1); }
-.empty { padding: var(--space-5) 0; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: var(--step-1); }
-.inbox { list-style: none; padding: 0; margin: 0; max-width: 760px; }
-.report { padding: var(--space-5) 0; border-top: 1px solid var(--line); }
-.reportHead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-1) var(--space-4); }
-.reportHead strong { font-family: var(--font-display); font-size: var(--step-1); }
-.reportHead time { color: var(--ink-soft); }
-.report blockquote { margin: var(--space-3) 0 0; padding-left: var(--space-4); border-left: 3px solid var(--line); max-width: 68ch; }
+.inboxHead { display: grid; gap: var(--space-2); padding: var(--space-7) 0 var(--space-5); }
+.inboxHead h1 { font-size: clamp(2.2rem, 5vw, 3rem); line-height: 1; letter-spacing: -0.02em; }
+.inboxHead .lede { margin-bottom: var(--space-2); }
+.notice {
+  display: flex; align-items: center; gap: var(--space-2); width: fit-content; padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-s); background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); font-size: var(--step--1);
+}
+.notice::before { content: ""; flex: none; width: 10px; height: 10px; background: var(--ink); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.empty { max-width: 760px; padding: var(--space-6); border-radius: var(--radius-l); background: var(--paper); box-shadow: var(--shadow-1); color: var(--ink-soft); }
+.empty strong { display: block; font-family: var(--font-display); font-size: var(--step-2); color: var(--ink); }
+.inbox { list-style: none; padding: 0; margin: 0; max-width: 760px; display: grid; gap: var(--space-3); }
+.report {
+  padding: var(--space-5); background: var(--paper); border-radius: var(--radius-m); box-shadow: var(--shadow-1);
+  border: 1px solid color-mix(in oklab, var(--tone, var(--ink)) 22%, var(--line)); border-left: 4px solid var(--tone, var(--ink));
+}
+.reportHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-1) var(--space-4); }
+.reportHead strong { font-family: var(--font-display); font-size: var(--step-1); color: var(--tone-deep, var(--ink)); }
+.reportHead time { color: var(--ink-soft); font-size: var(--step--1); }
+.report blockquote { margin: var(--space-3) 0 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-s); background: var(--mist); max-width: 68ch; }
