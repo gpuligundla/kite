@@ -322,3 +322,20 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   - The gate came from a bug the creations helper found: the earlier Sonnet game couldn't be finished after round 3.
 - **On the deployed agent, the first live director's cut ran out of time.** The cloud sandbox is slower than the laptop, so Claude raised the budget and redeployed.
 - **The live brand-new game worked the first time:** a night sky that turns blue as the kid answers questions about Rayleigh scattering.
+
+## 2026-10-24 ~22:30 to 2026-10-25 ~00:15 EDT: Session 1, the human reviews like a product owner and helpers rebuild the screens
+
+- **The human tested the app and kept sending product feedback, one message at a time.** Claude turned each message into a scoped brief for the helper that already owned those files, so four or five helpers could run at once without colliding:
+  - "it's still chat mode": a tile home screen and a voice-first stage with the hold-to-talk diamond in the center, after a research pass over ChatGPT voice, Gemini Live, Alexa and kids' products
+  - "how do I start a new chat?": a New topic button that also cuts the brain's context, and a Past chats view that leaves out safety alerts
+  - "the movie asks a question nobody can answer": an interactive question card over the paused movie, read aloud by Kite, for template movies and director's cuts alike
+  - "games look low resolution": sharp canvases at any screen density, with a play-test that now fails a blurry game, plus full screen, play again and close on every card
+  - "why professor, narrator…?" and "add music": Kite narrates its own movies in the kid's grade-band voice, with one guest voice at most and an ElevenLabs music bed
+  - "the parent page is plain": SOS as a calm card with a map, a honeycomb knowledge map and a curiosity radar, after reading the Refactoring UI, dashboard and data-visualization skills the human asked Claude to find
+  - "add story mode, also fun and social stories": Story time with learn, fun and feelings stories and a bedtime mode, narrated with sound effects and music
+- **Claude checked each helper's screenshots before merging,** and caught things the helpers' own checks missed:
+  - a score shown on the kid's screen
+  - "Dinosaurs" listed as both a strength and still growing
+  - bedtime stories with sunset skies
+  - a demo-smoke step that measured answer length when the claim is reading level
+- **A safety guard held twice.** The secret-scanning hook flagged a showcase page's embedded audio. The permission check blocked Claude from loosening the hook, so Claude stored the sounds beside the page instead and kept the guard as it was. Separately, a helper's request to send the kid's teach-back grade to the kid's screen ran into the contract's allow-list. Claude kept the allow-list and had the screen celebrate the teaching, not the grade.
