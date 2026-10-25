@@ -34,8 +34,9 @@ from claude_agent_sdk import (
 
 HERE = Path(__file__).resolve().parent
 TOOLS = ["Read", "Write", "Edit", "Bash"]
-MAX_TURNS = 14
-RUN_TIMEOUT_S = 420
+# The cloud sandbox has 2 vCPUs: a director's cut that took 5.7 min locally ran out at 420 s there.
+MAX_TURNS = 18
+RUN_TIMEOUT_S = 660
 PLAYTEST_TIMEOUT_S = 120
 FOUNDRY_SCOPE = "https://ai.azure.com/.default"
 KID_VIEW_FIELDS = ("interests", "characters", "moments", "deep_topics")

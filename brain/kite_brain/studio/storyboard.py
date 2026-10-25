@@ -11,7 +11,7 @@ from kite_brain.voice import CHARACTER_VOICES
 
 log = logging.getLogger(__name__)
 
-NARRATION_WORD_CAP = 130  # about 40 s at the pace the voices speak; the prompt asks for 100
+NARRATION_WORD_CAP = 150  # about 50 s at the pace the voices speak; the prompt asks for 80-110
 ATTEMPTS = 2
 NO_CONCEPT = "none"  # the brain fills in the concept, so Claude never names one
 
@@ -20,7 +20,7 @@ Reading level: grade {fk_max:g} or lower. Keep every sentence under {max_words} 
 Style for this age: {style}
 
 Rules:
-- At most 5 scenes and about 100 words of narration in total. Every scene has 1 to 3 actors and 1 to 3 narration lines.
+- At most 5 scenes. Every scene has 1 to 3 actors and at most 2 narration lines. Keep each line to one or two sentences and under 14 words, so the whole narration stays between 80 and 110 words.
 - Each scene's background is one of: sky, space, ocean, forest, town, classroom. Pick fitting colors and time of day.
 - Actors use only these sprite names: {sprites}. Rexy is the sprite trex. A character the child already loves may star.
 - Narration flows in full sentences, like a warm science-show host talking to this child. No strings of short punchy lines, no lists of numbers.
