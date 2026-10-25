@@ -54,7 +54,8 @@ export default function MovieStage({ data, take, onEnd, overlay }: StageProps) {
         moveToBeginningWhenEnded={false}
         renderPoster={() => <PlayPoster />}
         showPosterWhenUnplayed
-        className={styles.movie}
+        // Both sizes set, so it fits inside the box, card or full screen, with no part cut off.
+        style={{ width: "100%", height: "100%" }}
       />
       {overlay}
     </div>
