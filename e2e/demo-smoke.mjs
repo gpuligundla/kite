@@ -75,7 +75,8 @@ try {
       await kid.keyboard.press("Enter");
     });
     await turn.getByText(/^FK \d+\.\d$/).waitFor({ timeout: 25_000 });
-    return { turn, answer: (await turn.locator("div[aria-live]").textContent())?.trim() ?? "" };
+    const fk = parseFloat(((await turn.getByText(/^FK \d+\.\d$/).textContent()) ?? "").slice(3));
+    return { turn, fk, answer: (await turn.locator("div[aria-live]").textContent())?.trim() ?? "" };
   }
 
   let first;
@@ -83,14 +84,17 @@ try {
     // /os opens on the home tiles, greeting her by name; talking is the big tile.
     await kid.getByText(/Maya/).first().waitFor({ timeout: 15_000 });
     await kid.getByRole("button", { name: /Talk with Kite/ }).click();
+    // Start fresh, as on stage: earlier turns of the same question would make Kite answer "you asked this before".
+    await kid.getByRole("button", { name: "New topic" }).click();
+    await kid.waitForTimeout(800);
     first = await ask(2, "why is the sky blue?");
     assert.equal(await kid.locator("main").getAttribute("data-band"), "k2");
   });
 
-  await step("the same question at grade 10 is longer, and the screen grows up", async () => {
+  await step("the same question at grade 10 reads at a higher level, and the screen grows up", async () => {
     const tenth = await ask(10, "why is the sky blue?");
     assert.equal(await kid.locator("main").getAttribute("data-band"), "g912");
-    assert.ok(tenth.answer.length > first.answer.length, `${tenth.answer.length} vs ${first.answer.length} chars`);
+    assert.ok(tenth.fk > first.fk + 2, `reading level ${tenth.fk} at grade 10 vs ${first.fk} at grade 2`);
   });
 
   let spoken;

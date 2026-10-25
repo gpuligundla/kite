@@ -163,11 +163,11 @@ Check each item in the 30 minutes before the demo.
 
 1. Put the night-shift snapshot back. Locally, run `scripts/restore-demo.sh` and restart the brain. On Azure, restart the brain's revision, because the image carries the snapshot. Rehearsal turns at grade 11, SOS presses, and movies all write to the database. [pending: whether the demo runs on the local brain or on Container Apps]
 2. Run `scripts/smoke.sh <brain-url> <os-token> <parent-token>`. It must print `ok`.
-3. [pending: the Playwright smoke of the demo path, plan Task 31. It isn't in the repo yet.]
+3. Run the Playwright demo smoke: `OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs <web-url>`. It walks every live moment in two browser profiles and must end in `demo smoke: ok`. It makes real model calls, so run it before step 1, not after.
 4. Reload each profile and the phone. Each must still be signed in as its own device.
 5. On the phone, grant microphone and location permissions, turn off auto-lock, and turn the volume up. The phone needs HTTPS for the microphone and location.
 6. Play one answer and confirm Kite's voice comes out of the venue speakers through HDMI.
-7. Set the kid profile's slider to 2 and clear the creations panel. Set the parent dashboard to grade 7.
+7. On the kid profile, open Talk with Kite and press **New topic**, so Kite doesn't answer "you asked this before" from rehearsal turns. Set the slider to 2. Set the parent dashboard to grade 7.
 8. Compare the Trust tab with `docs/trust/scorecard.json`, and update the moment 9 lines if the numbers changed.
 9. Build one brand-new game about 15 minutes before the demo to confirm the hosted agent answers. Each game gets a fresh sandbox, so this checks that the agent is healthy. It may not shorten the cold start.
 10. The brain reads `COLLAB_LOG.md` once, at startup. Rebuild or restart the brain after the last edit to the log.
