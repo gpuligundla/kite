@@ -137,8 +137,10 @@ type View = "card" | "full" | "closed";
 
 function heading(stage: Playing): { title: string; sub?: string } {
   const { data } = stage;
-  if (stage.show === "movie") return { title: data.storyboard!.title };
-  if (stage.show === "game") return { title: data.game!.title };
+  // A fallback is Kite's cached sky movie or game, whatever she asked about: say so, as a fallback story does.
+  const instead = data.status === "fallback" ? `Kite couldn't finish your ${data.kind} this time, so here's one of its favorites.` : undefined;
+  if (stage.show === "movie") return { title: data.storyboard!.title, sub: instead };
+  if (stage.show === "game") return { title: data.game!.title, sub: instead };
   return data.kind === "movie"
     ? { title: data.storyboard?.title ?? "Your movie", sub: "Kite's special version" }
     : { title: "Your brand-new game", sub: "Kite built this one just for you." };

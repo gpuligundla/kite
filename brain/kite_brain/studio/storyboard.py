@@ -81,12 +81,20 @@ def readable_text(storyboard: Storyboard) -> list[str]:
 
 
 async def write_storyboard(deps: Deps, topic: str, learning_goal: str, kid_view: KidView, grade: Grade) -> Storyboard:
-    """Sonnet with adaptive thinking at medium effort. One retry when the board uses a sprite
-    outside the set, runs long or casts more than one guest, with the reason added so the second
+    """Sonnet with adaptive thinking at medium effort. One retry when the board doesn't parse, or uses a
+    sprite outside the set, runs long or casts more than one guest, with the reason added so the second
     attempt can fix it."""
     request = storyboard_request(topic, learning_goal, kid_view, grade)
     for attempt in range(ATTEMPTS):
-        storyboard = await deps.llm.parse(request, Storyboard, deep=True)
+        try:
+            storyboard = await deps.llm.parse(request, Storyboard, deep=True)
+        except ValueError as e:
+            # Structured output doesn't enforce limits like five scenes, so a board can fail Pydantic here, or not
+            # parse at all. That's a bad sample, not a bad request: ask again.
+            log.warning("storyboard attempt %d didn't parse (%s)", attempt + 1, type(e).__name__)
+            if attempt + 1 == ATTEMPTS:
+                raise
+            continue
         try:
             return validate(storyboard)
         except (KeyError, ValueError) as e:

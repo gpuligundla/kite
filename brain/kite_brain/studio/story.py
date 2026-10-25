@@ -166,7 +166,13 @@ async def write_story(
     """Sonnet with adaptive thinking at medium effort, and one retry that is told what was wrong."""
     request = story_request(topic, learning_goal, kid_view, grade, mode, purpose)
     for attempt in range(ATTEMPTS):
-        book = await deps.llm.parse(request, Storybook, deep=True)
+        try:
+            book = await deps.llm.parse(request, Storybook, deep=True)
+        except ValueError as e:  # a book that broke the schema or didn't parse is a bad sample: ask again
+            log.warning("story attempt %d didn't parse (%s)", attempt + 1, type(e).__name__)
+            if attempt + 1 == ATTEMPTS:
+                raise
+            continue
         try:
             return validate(book, mode, purpose)
         except (KeyError, ValueError) as e:
