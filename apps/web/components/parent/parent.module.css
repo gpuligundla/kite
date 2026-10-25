@@ -315,8 +315,8 @@
 .cellEmpty { fill: rgba(255, 255, 255, 0.04); stroke: rgba(255, 255, 255, 0.22); stroke-width: 1; }
 .cellMark { fill: var(--ink); }
 .cellRing { fill: none; stroke: transparent; stroke-width: 2.5; transition: stroke var(--dur-press) ease; }
-.cell:focus-visible .cellRing { stroke: var(--kite-yellow); }
-@media (hover: hover) and (pointer: fine) { .cell:hover .cellRing { stroke: #fff; } }
+.cell:focus-visible .cellRing { stroke: #fff; stroke-width: 3.5; }
+@media (hover: hover) and (pointer: fine) { .cell:hover .cellRing { stroke: rgba(255, 255, 255, 0.75); } }
 .combLabel { display: grid; grid-template-columns: auto auto; justify-content: start; align-items: center; gap: 2px var(--space-2); }
 .combLabel h3 { grid-column: 1 / -1; font-size: var(--step-0); color: #fff; }
 @media (max-width: 640px) {

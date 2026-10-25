@@ -153,7 +153,6 @@ function Where({ where }: { where: { lat: number; lng: number } | null }) {
         {shown && !failed && (
           <div className={styles.tiles}>
             {tilesAround(where.lat, where.lng).map((t) => (
-              // eslint-disable-next-line @next/next/no-img-element
               <img key={t.url} src={t.url} alt="" style={{ left: t.left, top: t.top }} onError={() => setFailed(true)} />
             ))}
           </div>
