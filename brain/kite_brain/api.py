@@ -23,7 +23,7 @@ from kite_brain.llm import FoundryLlm
 from kite_brain.memory.embed import FoundryEmbed
 from kite_brain.memory.ledger import purge_loop
 from kite_brain.policy import collab_log, fk_grade
-from kite_brain.routers import counselor, creations, dashboard, games, kids, stream, turns
+from kite_brain.routers import classroom, counselor, creations, dashboard, games, kids, stream, turns
 from kite_brain.safety import AzureSafety
 from kite_brain.voice import ElevenTts, ScribeStt
 from kite_brain.studio.store import seed_showcase
@@ -90,7 +90,8 @@ def create_app(conn: sqlite3.Connection | None = None) -> FastAPI:
     app.state.limiter = RateLimiter()
     app.add_middleware(turns.UploadCap)
     for router in (
-        stream.router, turns.router, kids.router, games.router, creations.router, dashboard.router, counselor.router,
+        stream.router, turns.router, kids.router, classroom.router, games.router, creations.router, dashboard.router,
+        counselor.router,
     ):
         app.include_router(router)
 

@@ -214,6 +214,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/kids/{kid_id}/approved-contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Approved Contacts
+         * @description The people the grown-ups approved, by name. The phone numbers are never decrypted here.
+         */
+        get: operations["approved_contacts_kids__kid_id__approved_contacts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kids/{kid_id}/creations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Creations
+         * @description Finished movies, games and stories, newest first, for the My creations app. A creation Kite made for another
+         *     kid is left out. One with no maker on record (the showcase, a studio-agent game) is shown: right for the one-family
+         *     demo, and the same store the parent's movie list reads.
+         */
+        get: operations["my_creations_kids__kid_id__creations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kids/{kid_id}/classroom": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Classroom
+         * @description The stored class, the same rows and clock the homework guard uses, so the screen's status matches what
+         *     Kite will do: hints for open work, a pause during a live quiz, worked explanations once it's closed.
+         */
+        get: operations["classroom_kids__kid_id__classroom_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kids/{kid_id}/games/custom": {
         parameters: {
             query?: never;
@@ -585,6 +648,42 @@ export interface components {
             /** Concept Id */
             concept_id: string;
         };
+        /** ClassAssignment */
+        ClassAssignment: {
+            /** Id */
+            id: string;
+            /** Course Id */
+            course_id: string;
+            /** Title */
+            title: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "homework" | "quiz";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "upcoming" | "open" | "exam_live" | "closed";
+            /** Unlock At */
+            unlock_at: string | null;
+            /** Due At */
+            due_at: string | null;
+            /** Lock At */
+            lock_at: string | null;
+            /** Description */
+            description: string;
+            /** Questions */
+            questions: string[];
+        };
+        /** Classroom */
+        Classroom: {
+            /** Courses */
+            courses: components["schemas"]["Course"][];
+            /** Assignments */
+            assignments: components["schemas"]["ClassAssignment"][];
+        };
         /** ConceptLevel */
         ConceptLevel: {
             /** Concept Id */
@@ -596,6 +695,16 @@ export interface components {
              * @enum {string}
              */
             level: "not_yet" | "learning" | "got_it" | "can_teach";
+        };
+        /**
+         * ContactName
+         * @description A name only: the kid's phone shows who it may call, and the numbers stay on the grown-up side.
+         */
+        ContactName: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** ContactView */
         ContactView: {
@@ -617,6 +726,15 @@ export interface components {
             at: string;
             /** Excerpt */
             excerpt: string;
+        };
+        /** Course */
+        Course: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Teacher */
+            teacher: string;
         };
         /** Creation */
         Creation: {
@@ -771,6 +889,18 @@ export interface components {
             moments: string[];
             /** Deep Topics */
             deep_topics: string[];
+        };
+        /** MadeThing */
+        MadeThing: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "movie" | "game" | "story";
+            /** Title */
+            title: string;
         };
         /** Me */
         Me: {
@@ -2002,6 +2132,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Heard"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approved_contacts_kids__kid_id__approved_contacts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactName"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_creations_kids__kid_id__creations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MadeThing"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    classroom_kids__kid_id__classroom_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Classroom"];
                 };
             };
             /** @description Validation Error */
