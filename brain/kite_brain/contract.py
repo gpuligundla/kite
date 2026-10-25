@@ -29,6 +29,8 @@ StoryMode = Literal["story", "bedtime"]
 StoryPurpose = Literal["learn", "fun", "feelings"]
 CharacterVoiceName = Literal["narrator", "professor", "explorer", "storyteller", "robot_buddy"]
 LearningStyle = Literal["story", "game", "picture", "explain", "hands_on"]
+# A counselor report's case, in the order a counselor usually works it. Any status can follow any other.
+CaseStatus = Literal["new", "reviewing", "met_with_student", "reported", "closed"]
 
 # ---- Events -----------------------------------------------------------------
 
@@ -276,11 +278,53 @@ class AlertView(BaseModel):
     lng: float | None = None
 
 
+class ContextTurn(BaseModel):
+    role: Literal["kid", "kite"]
+    text: str
+    at: datetime
+
+
+class CaseChange(BaseModel):
+    status: CaseStatus
+    at: datetime
+    note: str | None = None
+
+
+class CaseUpdate(BaseModel):
+    status: CaseStatus
+    note: Annotated[str, Field(max_length=2000)] | None = None
+
+
 class CounselorAlertView(BaseModel):
     alert_id: str
     kinds: list[AlertKind]
     at: datetime
     excerpt: str  # the flagged message plus the 2 turns before it
+    said: str  # the flagged message alone, kept as long as the alert
+    reply: str  # Kite's fixed reply to it
+    status: CaseStatus
+    history: list[CaseChange]  # oldest first; empty while the report is new
+    # Up to 3 earlier exchanges from the same session, oldest first. Session turns expire after 30 days of
+    # real time; after that this is empty and context_purged is true.
+    context: list[ContextTurn]
+    context_purged: bool
+    lat: float | None = None
+    lng: float | None = None
+
+
+class CounselorStudentView(BaseModel):
+    """What a counselor may know about the student: who she is and her safety reports. Never her learning."""
+    name: str
+    grade: Grade
+    school_start_year: int
+    last_heard: datetime | None
+    reports: dict[CaseStatus, int]  # counselor reports by case status, every status present
+
+
+class ReceiptView(BaseModel):
+    who: DeviceKind
+    what: str
+    at: datetime
 
 
 class DashboardView(BaseModel):

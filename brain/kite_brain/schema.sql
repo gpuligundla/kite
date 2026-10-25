@@ -68,8 +68,22 @@ CREATE TABLE IF NOT EXISTS alert (
   at TEXT NOT NULL,
   expires_at TEXT NOT NULL,
   excerpt BLOB NOT NULL,
-  location BLOB               -- SOS only
+  location BLOB,              -- SOS only
+  source_turn_id TEXT,        -- the kid's turn that raised it; NULL for SOS
+  session_id TEXT             -- that turn's session, so the counselor's context never matches by time
 );
+
+-- The counselor's case log for a counselor-routed alert, one row per change. The latest row is the
+-- status; an alert with no row is new. Notes are sealed with the family key.
+CREATE TABLE IF NOT EXISTS alert_case (
+  id TEXT PRIMARY KEY,        -- ULID
+  alert_id TEXT NOT NULL REFERENCES alert(id) ON DELETE CASCADE,
+  kid_id TEXT NOT NULL REFERENCES kid(id),
+  status TEXT NOT NULL CHECK (status IN ('new', 'reviewing', 'met_with_student', 'reported', 'closed')),
+  at TEXT NOT NULL,
+  note BLOB
+);
+CREATE INDEX IF NOT EXISTS alert_case_alert ON alert_case(alert_id);
 
 CREATE TABLE IF NOT EXISTS big_question_card (
   id TEXT PRIMARY KEY,

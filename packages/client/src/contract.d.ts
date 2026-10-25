@@ -494,10 +494,71 @@ export interface paths {
         };
         /**
          * Get Alerts
-         * @description Counselor-routed alerts for the kid this device is bound to, newest first, with their
-         *     excerpts. Every excerpt returned is recorded as a receipt.
+         * @description Counselor-routed alerts for the kid this device is bound to, newest first, each with its case and the
+         *     turns before it. Every report returned is recorded as a receipt.
          */
         get: operations["get_alerts_counselor_alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/counselor/alerts/{alert_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Put Status
+         * @description Move a report's case, or add a note to it. Returns the case history, oldest first. Each change is a receipt.
+         */
+        put: operations["put_status_counselor_alerts__alert_id__status_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/counselor/student": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Student
+         * @description The student's name, grade and safety picture: when Kite last heard from her and her reports by status.
+         */
+        get: operations["get_student_counselor_student_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/counselor/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Receipts
+         * @description The counselor's own reads and changes for this student, newest first. The parent's reads of learning data
+         *     aren't the counselor's business, so they stay out.
+         */
+        get: operations["get_receipts_counselor_receipts_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -638,6 +699,31 @@ export interface components {
             /** Starter */
             starter: string;
         };
+        /** CaseChange */
+        CaseChange: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "reviewing" | "met_with_student" | "reported" | "closed";
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Note */
+            note?: string | null;
+        };
+        /** CaseUpdate */
+        CaseUpdate: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "reviewing" | "met_with_student" | "reported" | "closed";
+            /** Note */
+            note?: string | null;
+        };
         /** CheckQuestion */
         CheckQuestion: {
             /** Question */
@@ -714,6 +800,21 @@ export interface components {
             /** Phone */
             phone: string;
         };
+        /** ContextTurn */
+        ContextTurn: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "kid" | "kite";
+            /** Text */
+            text: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
         /** CounselorAlertView */
         CounselorAlertView: {
             /** Alert Id */
@@ -727,6 +828,43 @@ export interface components {
             at: string;
             /** Excerpt */
             excerpt: string;
+            /** Said */
+            said: string;
+            /** Reply */
+            reply: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "reviewing" | "met_with_student" | "reported" | "closed";
+            /** History */
+            history: components["schemas"]["CaseChange"][];
+            /** Context */
+            context: components["schemas"]["ContextTurn"][];
+            /** Context Purged */
+            context_purged: boolean;
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
+        };
+        /**
+         * CounselorStudentView
+         * @description What a counselor may know about the student: who she is and her safety reports. Never her learning.
+         */
+        CounselorStudentView: {
+            /** Name */
+            name: string;
+            /** Grade */
+            grade: number;
+            /** School Start Year */
+            school_start_year: number;
+            /** Last Heard */
+            last_heard: string | null;
+            /** Reports */
+            reports: {
+                [key: string]: number;
+            };
         };
         /** Course */
         Course: {
@@ -1001,6 +1139,21 @@ export interface components {
             characters: string[];
             /** Styles */
             styles: ("story" | "game" | "picture" | "explain" | "hands_on")[];
+        };
+        /** ReceiptView */
+        ReceiptView: {
+            /**
+             * Who
+             * @enum {string}
+             */
+            who: "os" | "handheld" | "parent" | "counselor";
+            /** What */
+            what: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
         };
         /**
          * Reflection
@@ -2662,6 +2815,81 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CounselorAlertView"][];
+                };
+            };
+        };
+    };
+    put_status_counselor_alerts__alert_id__status_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseChange"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_student_counselor_student_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounselorStudentView"];
+                };
+            };
+        };
+    };
+    get_receipts_counselor_receipts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptView"][];
                 };
             };
         };

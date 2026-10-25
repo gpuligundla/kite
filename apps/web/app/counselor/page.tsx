@@ -1,5 +1,5 @@
-import { CounselorInbox } from "./CounselorInbox";
+import { CounselorConsole } from "@/components/counselor/CounselorConsole";
 
 export default function CounselorPage() {
-  return <CounselorInbox />;
+  return <CounselorConsole />;
 }
