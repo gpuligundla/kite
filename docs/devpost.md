@@ -69,7 +69,7 @@ Kite is one companion that follows a kid across every grade. This weekend's buil
 
 ## Challenges we ran into
 
-- **Privacy claims that were only true in the prompt.** Our first design gave the kid's device and the parent dashboard one shared event stream and one kind of token. That made "abuse never reaches the parent" false at the API. A four-model review caught it. The fix was structural: every event has an audience, every device has a kind, and one dependency checks every endpoint.
+- **Privacy claims that were only true in the prompt.** Our first design gave the kid's device and the parent dashboard one shared event stream and one kind of token. That made "abuse never reaches the parent" false at the API. A four-model review caught it. The fix was structural. Every event now has an audience, every device has a kind, and one dependency checks every endpoint.
 - **A simulated kid who wouldn't show what she knew.** Mastery evidence comes only from what the kid shows, through Teach Kite, movie check questions, and games. Halfway through the first night shift, Claude read the half-built database and found 3 skill-evidence events after six grades. The Haiku persona almost never chose to teach back. Claude scheduled a short lesson into two of every three sittings and proved the fix on real services before the rerun.
 - **A rule that read the data wrong.** A rehearsal failed because one dinosaur concept sat at "learning" while the others were mastered, and the rule required every concept to be mastered. We changed it to at least 2 mastered concepts making up at least 75% of the topic. Then the real run showed dinosaurs dipping in grade 7, at 3 of 6 concepts mastered. We kept the data and moved the demo to grade 8, where the claim is true.
 - **A coding agent that crashed before writing a line.** The first call to the hosted agent returned only "Failed to forward request." Claude read the agent's Application Insights traces and found a `PermissionError`. Foundry sets `HOME` to a session folder the image's user can't write to. One writable work folder fixed it.
@@ -79,7 +79,7 @@ Kite is one companion that follows a kid across every grade. This weekend's buil
 
 - Claude Code built a playable kids' game inside an Azure sandbox, billed through Azure. It read the kit, planned the game, wrote it, and ran the play-test until it passed. We re-ran the play-test on the returned file and checked screenshots independently.
 - The safety checks are code. `brain/scripts/check_safety.py` prints `ok` for 63 named checks, including that an abuse turn is invisible to the parent and that the kid-view endpoint returns no skills.
-- On the held-out red-team prompts, every safety alert fired: 16 of 16, with alert recall of 1.0. The live write-gate check stored 0 of 3 personal statements. [pending: final scorecard numbers]
+- On the held-out red-team prompts, every safety alert fired, 16 of 16, for an alert recall of 1.0. The live write-gate check stored 0 of 3 personal statements. [pending: final scorecard numbers]
 - An AI-simulated childhood of 330 turns over eleven grades, run through the same code path a real kid's turn takes.
 - A narrated movie that goes from a kid's request to a storyboard, ElevenLabs voices, a browser player, and an MP4.
 
@@ -97,7 +97,7 @@ Kite is one companion that follows a kid across every grade. This weekend's buil
 - Fix the weak spots the Trust tab shows: the homework guard, jailbreaks, and answers that read too simply for older kids.
 - A pilot with one classroom and one group of families, with consent flows, standards mapping, and a teacher view.
 - Real Canvas and Google Classroom connectors. The simulated class already uses Canvas's assignment format, so a connector replaces one function.
-- A native handheld: the Expo launcher that is only a scaffold today, then dedicated hardware.
+- A native handheld, starting from the Expo launcher that is only a scaffold today, and later dedicated hardware.
 - Smaller per-grade-band models distilled for on-device use on Chromebook Plus NPUs.
 - Family-held keys, so the cloud keeps only a backup it can't read. Until then, we don't claim "even we can't read it."
 
@@ -117,7 +117,7 @@ Python, FastAPI, Pydantic, uv, SQLite, cryptography (AES-256-GCM), textstat, Typ
 
 ### How responsibilities changed
 
-In the morning, Claude was a planner. It read the HarborHack rules and found that one third of the score is collaboration and that the submission deadline comes before the demo. By early afternoon it was a design partner, arguing about safety and memory with the humans. After the humans moved the work onto pstack, Claude became the lead. It sent helpers into separate worktrees and kept a decision trail. By evening it was operating real systems: it read a half-built database, an agent's Application Insights traces, and rendered movie frames. It also merged three helpers' work on a separate branch, so the night shift running in the human's checkout was never disturbed.
+In the morning, Claude was a planner. It read the HarborHack rules and found that one third of the score is collaboration and that the submission deadline comes before the demo. By early afternoon it was a design partner, arguing about safety and memory with the humans. After the humans moved the work onto pstack, Claude became the lead. It sent helpers into separate worktrees and kept a decision trail. By evening it was operating real systems. It read a half-built database, an agent's Application Insights traces, and rendered movie frames. It also merged three helpers' work on a separate branch, so the night shift running in the human's checkout was never disturbed.
 
 The in-product agents took on jobs no human could do in a weekend. They lived eleven years of a childhood overnight, attacked Kite with unsafe prompts, and wrote new games on demand.
 
@@ -127,7 +127,7 @@ The in-product agents took on jobs no human could do in a weekend. They lived el
 - Claude saw that an abuse alert sent to a parent can endanger a kid when the parent is the abuser. Abuse disclosures now go to the school counselor.
 - The human proposed keeping chats until the end of each grade. Claude and an advisor model chose a rolling 30-day window instead. Per-grade retention would keep a September chat for 10 months, and the 2025 COPPA amendments require a retention period tied to a purpose.
 - Claude made "the kid never sees their own analytics" structural. Claude never receives levels or scores, only teaching guidance.
-- Claude added a third homework state the human hadn't named: a quiz that is live right now gets a kind pause and no help.
+- Claude added a third homework state the human hadn't named. A quiz that is live right now gets a kind pause and no help.
 - Claude recommended against mem0 and Supermemory, because they store free-text facts about the user, which Kite deliberately doesn't keep.
 
 ### Where the humans shaped it

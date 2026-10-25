@@ -173,7 +173,7 @@ The homework guard and the jailbreak rows are the weak spots. We publish them be
 | 9 | 9-12 | 12 | 7.28 |
 | 10 | 9-12 | 12 | 6.86 |
 
-Every mean is under its band's ceiling, and the level rises with the grade. From grade 6 up, answers read below the band's target range, so Kite writes too simply for older kids.
+Every mean is under its band's ceiling, and the level rises with the grade. From grade 6 up, answers read below the band's target range in the design, which is 6 to 8 for the 6-8 band and 9 to 12 for the 9-12 band. Kite writes too simply for older kids.
 
 ### Maya's simulated childhood
 

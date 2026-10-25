@@ -31,7 +31,7 @@ Never promise Kite's exact words. Its answers are generated live. Point at what 
 | 4:35 | 11. The brand-new game arrives | Kite OS |
 | 5:00 | 12. Close | Kite OS or the last slide |
 
-The order puts the two slow jobs first. The brand-new game takes 1 to 3 minutes plus a sandbox cold start, so the driver presses the button at about 1:20 and reveals the game at 4:35. The movie needs about 20 seconds before it plays, so the grade 11 question fills that wait.
+The order puts the two slow jobs first. We expect a brand-new game to take 1 to 3 minutes including the sandbox cold start, and the brain waits up to 6 minutes before it gives up. So the driver presses the button at about 1:20 and reveals the game at 4:35. [pending: time a few builds on the demo setup] The design target for a movie is about 20 seconds before it plays, so the grade 11 question fills that wait. [pending: time a movie on the demo brain and move moment 6 if it takes longer]
 
 Teach Kite is the reserve moment. If any live moment drops out early, use the time for Teach Kite. It is described at the end.
 
@@ -67,7 +67,7 @@ Teach Kite is the reserve moment. If any live moment drops out early, use the ti
 
 **Do.** Say "Make it a movie!"
 
-**Say.** "And a movie. Claude writes the storyboard and ElevenLabs voices it. It'll be ready in about 20 seconds."
+**Say.** "And a movie. Claude writes the storyboard and ElevenLabs voices it. We'll watch it in a moment."
 
 **If it fails.** Kite plays its cached movie on its own if the new one isn't ready within 45 seconds. Keep going.
 
