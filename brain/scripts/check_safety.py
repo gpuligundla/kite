@@ -1,14 +1,20 @@
 """Safety and privacy claims, as plain asserts. Run from brain/: uv run python -m scripts.check_safety"""
 
-from datetime import datetime, timezone
+import os
 
-from cryptography.exceptions import InvalidTag
-from pydantic import TypeAdapter, ValidationError
+# The checks make no network calls. brain/.env names the deployed studio agent, so blank it before any settings load:
+# a check that wants an agent passes a fake one.
+os.environ["STUDIO_AGENT_ENDPOINT"] = ""
 
-from kite_brain.crypto import FamilyKeys, aad, new_key, open_sealed, seal
-from kite_brain.contract import KiteEvent, LearningPayload
-from kite_brain.db import connect, init_db
-from scripts.checks import (
+from datetime import datetime, timezone  # noqa: E402
+
+from cryptography.exceptions import InvalidTag  # noqa: E402
+from pydantic import TypeAdapter, ValidationError  # noqa: E402
+
+from kite_brain.crypto import FamilyKeys, aad, new_key, open_sealed, seal  # noqa: E402
+from kite_brain.contract import KiteEvent, LearningPayload  # noqa: E402
+from kite_brain.db import connect, init_db  # noqa: E402
+from scripts.checks import (  # noqa: E402
     about_kite, audiences, classroom, counselor, dashboard, decide, evals, forget, fresh_start, homework, ledger, memory,
     past_chats, pipeline, route, story, studio, studio_pro, teach, trust, voice,
 )

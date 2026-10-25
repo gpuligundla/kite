@@ -19,7 +19,7 @@ from kite_brain.api import create_app
 from kite_brain.deps import Deps
 from kite_brain.routers import games
 from kite_brain.seed import KID_ID, seed
-from kite_brain.studio import movie, store
+from kite_brain.studio import game, movie, store
 from kite_brain.studio_pro import PageResult, Playtest, build_custom_game, start_page, text_strings
 from scripts.checks.audiences import drain
 from scripts.checks.ledger import CATALOG, NOW, fresh
@@ -267,6 +267,8 @@ def check_kits_play_test_under_the_served_policy() -> None:
 def check_no_endpoint_no_directors_cut() -> None:
     with patch.object(movie, "get_settings", lambda: SimpleNamespace(STUDIO_AGENT_ENDPOINT="")):
         assert movie.start_directors_cut(None, KID_ID, None, TOPIC, GOAL, 11) is None
+    with patch.object(game, "get_settings", lambda: SimpleNamespace(STUDIO_AGENT_ENDPOINT="")):
+        assert game.start_brand_new_game(None, KID_ID, TOPIC, GOAL) is None, "no agent, no brand-new game"
 
 
 def run() -> None:

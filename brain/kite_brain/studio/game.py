@@ -5,6 +5,8 @@ cached sky-is-blue catch game, so the kid always gets a game."""
 import asyncio
 import logging
 
+from kite_brain import studio_pro
+from kite_brain.config import get_settings
 from kite_brain.contract import (
     Creation, CreationProgressEvent, CreationReadyEvent, GameItem, GameSpec, Grade, KidView,
 )
@@ -77,8 +79,14 @@ def readable_text(spec: GameSpec) -> list[str]:
 
 
 async def write_game(deps: Deps, topic: str, learning_goal: str, kid_view: KidView, grade: Grade) -> GameSpec:
-    """Sonnet with adaptive thinking at medium effort, parsed straight into a GameSpec."""
-    return validate(await deps.llm.parse(game_request(topic, learning_goal, kid_view, grade), GameSpec, deep=True))
+    """Sonnet with adaptive thinking at medium effort, parsed straight into a GameSpec. A spec that doesn't parse
+    or validate gets one more try before the sky game stands in."""
+    request = game_request(topic, learning_goal, kid_view, grade)
+    try:
+        return validate(await deps.llm.parse(request, GameSpec, deep=True))
+    except ValueError as e:
+        log.warning("game spec rejected (%s), asking once more", type(e).__name__)
+        return validate(await deps.llm.parse(request, GameSpec, deep=True))
 
 
 async def start_game(
@@ -120,4 +128,16 @@ async def build_game(deps: Deps, kid_id: str, creation_id: str, topic: str, lear
     meta = store.load_meta(creation_id)
     store.save_meta(creation_id, meta.model_copy(update={"concept_id": concept}))
     store.publish(deps, kid_id, CreationReadyEvent, "game", creation_id=creation_id, status=status)
+    start_brand_new_game(deps, kid_id, topic, learning_goal)
     return creation
+
+
+def start_brand_new_game(deps: Deps, kid_id: str, topic: str, learning_goal: str) -> str | None:
+    """Kite's own version of every game, as every movie gets a director's cut: the studio agent (Claude Code on
+    Opus 5.5) builds a brand-new game about the same topic while the template plays, and her card offers it when
+    it's ready. If the template fell back to the sky game, this is the one about her topic. None with no agent."""
+    if not get_settings().STUDIO_AGENT_ENDPOINT:
+        return None
+    creation_id = studio_pro.start_page(deps, kid_id, "game")
+    store.spawn(studio_pro.build_custom_game(deps, kid_id, creation_id, topic, learning_goal))
+    return creation_id
