@@ -103,7 +103,7 @@ flowchart LR
 
 - **Compliance:** COPPA (verifiable parental consent under 13), FERPA (school records), CIPA (school filtering), and state student-privacy laws.
 - **Business promises:** no ads, no selling data, and no optimizing for engagement time.
-- **Guardrails:** grade-appropriate content policy on input and output, kind redirects instead of cold refusals, and an escalation protocol. Self-harm, abuse disclosure, bullying, or a stranger contact triggers an immediate parent alert and crisis resources.
+- **Guardrails:** grade-appropriate content policy on input and output, kind redirects instead of cold refusals, and an escalation protocol. Self-harm, bullying, or a stranger contact triggers an immediate parent alert and crisis resources. An abuse disclosure goes only to the school counselor, because the parent could be the abuser.
 - **Anti-dependency by design:** Kite pushes the kid *outward*, toward friends, family, the outdoors, and building things. It has time limits, is clearly an AI, and avoids parasocial patterns.
 - **Transparency:** parents see what Kite told their kid, and we publish our safety and reading-level eval scores.
 - **On-device endgame:** no cloud means no breach and no shutdown that bricks a kid's friend.

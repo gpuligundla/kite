@@ -229,10 +229,10 @@ Do this on Sunday, after the brain and web images exist.
 
 	The image holds `brain/data/demo-snapshot.db` (as `data/kite.db`) and `brain/data/concept_vectors.npy` when they exist at build time. Checkpoint the snapshot first, so no `-wal` file is left behind: `sqlite3 brain/data/demo-snapshot.db "PRAGMA wal_checkpoint(TRUNCATE)"`. The movie renderer's `npm ci` is skipped until `packages/movie` exists.
 
-2. Build the web image.
+2. Build the web image. Its build context is the repo root too, because the web app compiles the workspace packages (`packages/client`, `packages/games`, `packages/movie`) from source. The image runs Next's standalone server and reads `BRAIN_URL` at request time.
 
 	```bash
-	az acr build --registry <acrName> --image kite-web:latest apps/web
+	az acr build --registry <acrName> --image kite-web:latest -f apps/web/Dockerfile .
 	```
 
 3. Deploy the apps. The script reads `ELEVENLABS_API_KEY`, `KITE_MASTER_KEY`, `OPENROUTER_KEY` and `KITE_VOICES` from `brain/.env` and stores the keys as Container Apps secrets.
