@@ -18,9 +18,9 @@ const SPRITE_SIZE = 230;
 const CAMERA_TRAVEL = 140;
 const CAMERA_ZOOM = 0.15;
 const ENTRANCE_FRAMES = 20;
-/** The music bed: the director's cut's level between lines, half that under a voice. */
+/** The music bed: the director's cut's level between lines, a light duck under a voice so the bed stays audible. */
 const MUSIC_VOLUME = 0.16;
-const MUSIC_UNDER_VOICE = 0.08;
+const MUSIC_UNDER_VOICE = 0.12;
 const DUCK_FRAMES = 8;
 
 /** Absolute and data URLs play as they are. Anything else is a file in the bundle's public dir. */
