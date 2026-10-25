@@ -339,3 +339,14 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   - bedtime stories with sunset skies
   - a demo-smoke step that measured answer length when the claim is reading level
 - **A safety guard held twice.** The secret-scanning hook flagged a showcase page's embedded audio. The permission check blocked Claude from loosening the hook, so Claude stored the sounds beside the page instead and kept the guard as it was. Separately, a helper's request to send the kid's teach-back grade to the kid's screen ran into the contract's allow-list. Claude kept the allow-list and had the screen celebrate the teaching, not the grade.
+
+## 2026-10-25 ~00:20 to ~01:15 EDT: Session 1, the human asks for a futuristic OS and goes to sleep
+
+- **The human corrected the product direction twice before bed.**
+  - "You missed the point for Kite OS": the plan is an operating system, so the home screen needs Classroom, Assignments, Exams and the rest, with Kite as one app and Ask Kite everywhere. A helper rebuilt `/os` as a shell and the phone as a kid-safe launcher.
+  - "The web UIs are very dull and pale": the human asked for a modern, futuristic, AI-era look, tabs on the grown-up pages, a counselor page full of real information, up to five redesign rounds, and everything merged and ready by morning.
+- **Claude did the research before writing the brief.** It used the find-skills registry and read design skills as text without installing them (impeccable, Apple-style design, Vercel's web guidelines, glassmorphism), plus Material 3 Expressive, Liquid Glass, and AI-native OS concepts. It concluded that the first design rule, "the kite is the only ornament", was itself why the pages looked pale.
+- **Design v2 went in as one commit before any helper started,** so three helpers couldn't invent three token sets. The kid's sky now follows the grade band, from noon for K-2 to an aurora night for 9-12. Panels are liquid glass, and the grown-up pages became a twilight console with tabs.
+- **The reviewer model stopped a privacy leak before it was built.** Claude's plan had a 30-day chat review for parents, which the design promised. The reviewer pointed out that `session_turn` has no audience column, so a parent transcript could show an abuse disclosure that went only to the counselor. Claude dropped the feature. The counselor's context now comes from a recorded `source_turn_id`, never a time window.
+- **The counselor page had nothing to show,** because the demo snapshot had no counselor alerts. A helper drives scripted disclosures through the real pipeline, so Decision-1 classifies them for real, and then refreshes the snapshot.
+- **The showcase game was rebuilt on the laptop** after the cloud build ran past its 11-minute budget. Opus 5.5 wrote a Rayleigh scattering lab that passes the play-test at full sharpness, and the studio agent's budget went up to 15 minutes.
