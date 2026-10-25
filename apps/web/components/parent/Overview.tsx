@@ -4,7 +4,7 @@ import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { MiniComb } from "./SkillsMap";
 import {
   HOW_SHE_LEARNS, KID, STYLE_WORDS, curiosityYears, growing, knowledgeMap, lately, percent, portrait, standings, topicName,
-  type Alert, type Comb, type DashboardView, type Grade, type Standing,
+  type Alert, type DashboardView, type Grade, type Standing,
 } from "./model";
 import ui from "./parent.module.css";
 import t from "./tabs.module.css";
@@ -73,7 +73,8 @@ function Standings({ view, grade }: { view: DashboardView; grade: Grade }) {
                     className={t.standing}
                     data-strength={s.strength}
                   >
-                    {combs.get(s.topic) && <MiniComb comb={combs.get(s.topic) as Comb} size={s.strength ? 84 : 56} />}
+                    {/* A topic she only asks about, with no idea shown yet, has no comb. */}
+                    {combs.has(s.topic) && <MiniComb comb={combs.get(s.topic)!} size={s.strength ? 84 : 56} />}
                     <div>
                       <strong>{s.name}</strong>
                       <span>{standingLine(s)}</span>

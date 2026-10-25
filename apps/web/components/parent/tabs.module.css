@@ -112,9 +112,10 @@
 .momentStats dt { color: var(--ink-soft); font-size: var(--step--1); display: flex; align-items: center; gap: 6px; }
 .momentStats div[data-kind] dt::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--c-figured); }
 .momentStats div[data-kind="taught"] dt::before { background: var(--c-taught); }
-.momentChart .legend { margin: 0 0 var(--space-2); }
 
-.timeline { display: grid; gap: var(--space-4); }
+.timeline { position: relative; display: grid; gap: var(--space-4); }
+/* One rail of light down the years, in the gap between the grade numbers and their panels. */
+.timeline::before { content: ""; position: absolute; left: 95px; top: 12px; bottom: 12px; width: 2px; border-radius: 2px; background: linear-gradient(180deg, var(--c-taught), var(--c-figured) 60%, transparent); opacity: 0.6; }
 .yearRow { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--space-4); align-items: start; }
 .yearMark { position: sticky; top: 84px; display: flex; flex-direction: column; align-items: flex-end; padding-top: var(--space-2); }
 .yearMark > :first-child { font-size: var(--step-5); background: linear-gradient(180deg, var(--ink), rgba(238, 241, 255, 0.45)); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -271,6 +272,7 @@
   .figures div:last-child { grid-column: 1 / -1; }
   .worldCols { grid-template-columns: minmax(0, 1fr); }
   .yearRow { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+  .timeline::before { display: none; }
   .yearMark { position: static; flex-direction: row; align-items: baseline; gap: var(--space-2); }
   .yearMark > :first-child { font-size: var(--step-4); order: 2; }
   .tHead { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }

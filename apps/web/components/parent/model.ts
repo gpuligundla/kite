@@ -1,4 +1,4 @@
-import type { DashboardView, Grade, KiteEvent } from "@kite/client";
+import type { DashboardView, Grade } from "@kite/client";
 import type { components } from "../../../../packages/client/src/contract";
 // ponytail: the dashboard sends concept ids without their topic or grade, so the catalog is read here.
 // Drop this import once ConceptLevel carries `topic` and `grade` (or DashboardView carries strength_topics).
@@ -14,7 +14,6 @@ export type PolicyAction = DashboardView["policy"][string];
 export type CounselorAlert = components["schemas"]["CounselorAlertView"];
 export type Contact = components["schemas"]["ContactView"];
 export type Creation = components["schemas"]["Creation"];
-export type AlertEvent = Extract<KiteEvent, { type: "alert" }>;
 
 /** From brain/kite_brain/seed.py. The dashboard has no name, current grade or family id yet. */
 export const KID = { name: "Maya", grade: 11 as Grade, family: "rivera", firstGrade: 1 as Grade };
@@ -340,7 +339,7 @@ export const plainSummary = (s: string) => {
 };
 
 /** Moments are written to the kid ("You taught Kite about…"); the parent reads them about her. */
-export const momentForParent = (m: string) => m.replace(/^You taught Kite about/, "Taught Kite about");
+const momentForParent = (m: string) => m.replace(/^You taught Kite about/, "Taught Kite about");
 
 export const mapUrl = (lat: number, lng: number) => `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
 export const formatPlace = (lat: number, lng: number) =>

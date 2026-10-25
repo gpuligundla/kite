@@ -54,16 +54,7 @@ export function Moments({ view, grade }: { view: DashboardView; grade: Grade }) 
         </div>
         {years.length > 0 && (
           <div className={t.momentChart}>
-            <ul className={t.legend}>
-              <li>
-                <span style={{ background: "var(--c-figured)" }} aria-hidden />
-                Figured out
-              </li>
-              <li>
-                <span style={{ background: "var(--c-taught)" }} aria-hidden />
-                Taught Kite
-              </li>
-            </ul>
+            {/* The Figured out and Taught Kite figures beside the chart carry its legend swatches. */}
             <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Moments per school year. The timeline below lists every one.">
               <line x1={M.left} x2={W - M.right} y1={y(0)} y2={y(0)} className={t.grid} />
               {Array.from({ length: grade }, (_, i) => i + 1).map((g) => {
