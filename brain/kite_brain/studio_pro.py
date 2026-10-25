@@ -1,16 +1,18 @@
-"""Brand-new games (Studio Pro, M11). The brain asks the kite-studio hosted agent for one KAPLAY
-game, screens every string the kid could read, saves the file under the creation and tells the
-kid and the parent. Any failure, timeout or flag leaves her the template game (status fallback).
+"""Pages the kite-studio hosted agent builds (Studio Pro, M11): brand-new games, and the director's
+cut of a movie, which studio.movie starts. The brain asks the agent for one self-contained page,
+screens every string the kid could read, adds its own media, saves the file under the creation and
+tells the kid and the parent. Any failure, timeout or flag leaves her the template (status fallback).
 
 A creation moves pending -> ready | fallback, and creation.json is that state on disk."""
 
 import asyncio
+import base64
 import itertools
 import json
 import logging
 import re
 import secrets
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
@@ -20,14 +22,14 @@ import httpx
 from azure.identity import DefaultAzureCredential
 
 from kite_brain.config import STUDIO_AGENT_TIMEOUT_S, get_settings
-from kite_brain.contract import Creation, CreationProgressEvent, CreationReadyEvent
+from kite_brain.contract import Creation, CreationKind, CreationProgressEvent, CreationReadyEvent
 from kite_brain.deps import Deps
 from kite_brain.memory.recall import recall
 
 log = logging.getLogger(__name__)
 
 CREATIONS_DIR = Path("data/creations")
-STEPS_TOTAL = 8  # the agent's turn cap; each progress line it streams counts as one step
+STEPS_TOTAL = 14  # the agent's turn cap; each progress line it streams counts as one step
 INVOCATIONS_SCOPE = "https://ai.azure.com/.default"
 SAFETY_CHUNK = 5000  # Content Safety takes 10k characters a call
 
@@ -155,35 +157,69 @@ async def text_is_safe(deps: Deps, html: str) -> bool:
 # ---- The creation on disk and on the bus ---------------------------------------
 
 
-def game_path(creation_id: str) -> Path:
-    return CREATIONS_DIR / creation_id / "game.html"
+def page_path(creation_id: str, kind: CreationKind) -> Path:
+    return CREATIONS_DIR / creation_id / f"{kind}.html"
 
 
-def save(creation_id: str, status: Literal["pending", "ready", "fallback"], html: str | None = None) -> Creation:
+def save(creation_id: str, kind: CreationKind, status: Literal["pending", "ready", "fallback"], html: str | None = None) -> Creation:
     folder = CREATIONS_DIR / creation_id
     folder.mkdir(parents=True, exist_ok=True)
     if html is not None:
-        (folder / "game.html").write_text(html)
+        page_path(creation_id, kind).write_text(html)
     creation = Creation(
-        id=creation_id, kind="game", status=status,
-        html_url=f"/creations/{creation_id}/game.html" if html is not None else None,
+        id=creation_id, kind=kind, status=status,
+        html_url=f"/creations/{creation_id}/{kind}.html" if html is not None else None,
     )
     (folder / "creation.json").write_text(creation.model_dump_json(indent=2))
     return creation
 
 
-def _publish(deps: Deps, kid_id: str, cls, **fields) -> None:
-    """To the kid, with the grown-up copy to the parent. A game is never a counselor matter."""
+def _publish(deps: Deps, kid_id: str, cls, kind: CreationKind, **fields) -> None:
+    """To the kid, with the grown-up copy to the parent. A creation is never a counselor matter."""
     for audience in ("kid", "parent"):
-        deps.bus.publish(cls(kid_id=kid_id, turn_id=None, at=deps.clock(), audience=audience, kind="game", **fields))
+        deps.bus.publish(cls(kid_id=kid_id, turn_id=None, at=deps.clock(), audience=audience, kind=kind, **fields))
 
 
-def start_custom_game(deps: Deps, kid_id: str, topic: str, learning_goal: str) -> str:
-    """A pending creation under an unguessable id, announced as step 0. build_custom_game does the work."""
+def start_page(deps: Deps, kid_id: str, kind: CreationKind) -> str:
+    """A pending creation under an unguessable id, announced as step 0. build_page does the work."""
     creation_id = secrets.token_hex(16)
-    save(creation_id, "pending")
-    _publish(deps, kid_id, CreationProgressEvent, creation_id=creation_id, step=0, steps_total=STEPS_TOTAL)
+    save(creation_id, kind, "pending")
+    _publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=0, steps_total=STEPS_TOTAL)
     return creation_id
+
+
+def inject(html: str, name: str, files: dict[str, Path]) -> str:
+    """The page with the kit's empty `window.<name>` slot filled with each MP3 as a base64 data: URL,
+    which the page's media-src data: policy allows. ValueError when the page has no slot."""
+    slot = f'<script data-kit="{name}">window.{name} = {{}};</script>'
+    if slot not in html:
+        raise ValueError(f"the page has no {name} slot")
+    urls = {key: "data:audio/mpeg;base64," + base64.b64encode(path.read_bytes()).decode() for key, path in files.items()}
+    return html.replace(slot, f'<script data-kit="{name}">window.{name} = {json.dumps(urls)};</script>', 1)
+
+
+async def build_page(
+    deps: Deps, kid_id: str, creation_id: str, kind: CreationKind, request: Awaitable[dict],
+    finish: Callable[[str], str] = lambda html: html, *, agent: StudioAgent | None = None,
+) -> Creation:
+    """Ask the studio agent for the page, screen its text, finish it (the brain's own media go in
+    here) and save it. Never raises: any failure, flag or timeout saves a fallback."""
+    agent = agent or default_agent()
+    steps = itertools.count(1)
+
+    def progress(_text: str) -> None:  # the agent's words stay in the sandbox; only the count goes out
+        _publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=min(next(steps), STEPS_TOTAL), steps_total=STEPS_TOTAL)
+
+    html = None
+    try:
+        result = await asyncio.wait_for(agent.build(await request, progress), STUDIO_AGENT_TIMEOUT_S)
+        if result.status == "ready" and result.html and await text_is_safe(deps, result.html):
+            html = finish(result.html)
+    except Exception as e:
+        log.warning("studio %s %s falls back: %s", kind, creation_id, type(e).__name__)
+    creation = save(creation_id, kind, "ready" if html else "fallback", html)
+    _publish(deps, kid_id, CreationReadyEvent, kind, creation_id=creation_id, status=creation.status)
+    return creation
 
 
 async def request_for(deps: Deps, kid_id: str, creation_id: str, topic: str, learning_goal: str) -> dict:
@@ -196,20 +232,4 @@ async def request_for(deps: Deps, kid_id: str, creation_id: str, topic: str, lea
 async def build_custom_game(
     deps: Deps, kid_id: str, creation_id: str, topic: str, learning_goal: str, *, agent: StudioAgent | None = None
 ) -> Creation:
-    agent = agent or default_agent()
-    steps = itertools.count(1)
-
-    def progress(_text: str) -> None:  # the agent's words stay in the sandbox; only the count goes out
-        _publish(deps, kid_id, CreationProgressEvent, creation_id=creation_id, step=min(next(steps), STEPS_TOTAL), steps_total=STEPS_TOTAL)
-
-    html = None
-    try:
-        request = await request_for(deps, kid_id, creation_id, topic, learning_goal)
-        result = await asyncio.wait_for(agent.build(request, progress), STUDIO_AGENT_TIMEOUT_S)
-        if result.status == "ready" and result.html and await text_is_safe(deps, result.html):
-            html = result.html
-    except Exception as e:
-        log.warning("brand-new game %s falls back: %s", creation_id, type(e).__name__)
-    creation = save(creation_id, "ready" if html else "fallback", html)
-    _publish(deps, kid_id, CreationReadyEvent, creation_id=creation_id, status=creation.status)
-    return creation
+    return await build_page(deps, kid_id, creation_id, "game", request_for(deps, kid_id, creation_id, topic, learning_goal), agent=agent)

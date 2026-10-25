@@ -1,10 +1,12 @@
-"""The kite-studio hosted agent. One Invocations call builds one brand-new KAPLAY game with
-the Claude Agent SDK, play-tests it and returns a single self-contained game.html.
+"""The kite-studio hosted agent. One Invocations call builds one brand-new KAPLAY game or one
+director's-cut movie with the Claude Agent SDK, play-tests it and returns a single self-contained
+HTML page.
 
 Hosted:  python agent.py                     (Foundry Invocations protocol on port 8088)
 Local:   python agent.py --local request.json (same build, progress on stderr, result on stdout)
 
-Request  {creation_id, topic, learning_goal, grade, kid_view}
+Request  {kind: "game", creation_id, topic, learning_goal, grade, kid_view}
+         {kind: "movie", ...the same, storyboard, timings}   (no kind means a game)
 Stream   newline-delimited JSON: {"progress": str}... then {"status", "html", "playtest"}
 """
 
@@ -31,14 +33,28 @@ from claude_agent_sdk import (
 )
 
 HERE = Path(__file__).resolve().parent
-KIT_DIR = Path(os.environ.get("KIT_DIR", HERE / "game-kit"))
-INSTRUCTIONS = (HERE / "instructions.md").read_text()
 TOOLS = ["Read", "Write", "Edit", "Bash"]
-MAX_TURNS = 8
-RUN_TIMEOUT_S = 180
+MAX_TURNS = 14
+RUN_TIMEOUT_S = 420
 PLAYTEST_TIMEOUT_S = 90
 FOUNDRY_SCOPE = "https://ai.azure.com/.default"
 KID_VIEW_FIELDS = ("interests", "characters", "moments", "deep_topics")
+MOVIE_DATA_CAP = 100_000  # bytes of storyboard and timings; a real one is about 15 KB
+
+
+@dataclass(frozen=True)
+class Kind:
+    kit: Path
+    instructions: str
+    page: str  # the one file the agent writes
+
+
+KINDS = {
+    "game": Kind(Path(os.environ.get("KIT_DIR", HERE / "game-kit")), (HERE / "instructions.md").read_text(), "game.html"),
+    "movie": Kind(
+        Path(os.environ.get("MOVIE_KIT_DIR", HERE / "movie-kit")), (HERE / "movie-instructions.md").read_text(), "movie.html"
+    ),
+}
 
 
 @dataclass
@@ -48,7 +64,7 @@ class Playtest:
 
 
 @dataclass
-class GameResult:
+class Result:
     status: Literal["ready", "failed"]
     html: str | None
     playtest: Playtest
@@ -58,6 +74,9 @@ def parse_request(data: object) -> dict:
     """The request as the brain sends it, or ValueError. Nothing else is trusted."""
     if not isinstance(data, dict):
         raise ValueError("request must be a JSON object")
+    kind = data.get("kind", "game")
+    if kind not in KINDS:
+        raise ValueError("kind must be game or movie")
     cid = data.get("creation_id")
     if not (isinstance(cid, str) and len(cid) == 32 and all(c in "0123456789abcdef" for c in cid)):
         raise ValueError("creation_id must be 32 hex characters")
@@ -74,7 +93,30 @@ def parse_request(data: object) -> dict:
     if not isinstance(view, dict):
         raise ValueError("kid_view must be an object")
     kid_view = {f: [str(x)[:60] for x in view.get(f, [])][:10] for f in KID_VIEW_FIELDS}
-    return {"creation_id": cid, "grade": grade, **text, "kid_view": kid_view}
+    req = {"kind": kind, "creation_id": cid, "grade": grade, **text, "kid_view": kid_view}
+    return req | (parse_movie(data) if kind == "movie" else {})
+
+
+def parse_movie(data: dict) -> dict:
+    """The storyboard and its word timings, shaped the way kite-movie.js reads them."""
+    board, timings = data.get("storyboard"), data.get("timings")
+    scenes = board.get("scenes") if isinstance(board, dict) else None
+    if not (
+        isinstance(scenes, list) and 1 <= len(scenes) <= 5 and isinstance(board.get("title"), str)
+        and all(isinstance(s, dict) and isinstance(s.get("lines"), list) and s["lines"] for s in scenes)
+        and all(isinstance(line, dict) and isinstance(line.get("text"), str) for s in scenes for line in s["lines"])
+    ):
+        raise ValueError("storyboard must have a title and 1 to 5 scenes, each with lines of text")
+    if not (
+        isinstance(timings, dict)
+        and all(isinstance(words, list) for words in timings.values())
+        and all(isinstance(w, dict) and isinstance(w.get("start"), int | float) and isinstance(w.get("end"), int | float)
+                for words in timings.values() for w in words)
+    ):
+        raise ValueError("timings must map line keys to lists of words with start and end")
+    if len(json.dumps([board, timings])) > MOVIE_DATA_CAP:
+        raise ValueError("storyboard and timings are too large")
+    return {"storyboard": board, "timings": timings}
 
 
 def brief(req: dict) -> str:
@@ -85,14 +127,28 @@ def brief(req: dict) -> str:
         f"Grade: {req['grade']}",
         f"Characters the kid loves: {', '.join(view['characters']) or 'none known, invent a friendly one'}",
         f"Interests: {', '.join(view['interests']) or 'none known'}",
-        "Write game.html in this folder, run `npm run playtest`, fix until it passes, then stop.",
     ]
+    if req["kind"] == "movie":
+        board = req["storyboard"]
+        lines += ["", f"Storyboard: {board['title']} (kite.movie has it, with every time on the clock)"]
+        for s, scene in enumerate(board["scenes"]):
+            actors = ", ".join(a.get("name") or a.get("sprite", "") for a in scene.get("actors", []) if isinstance(a, dict))
+            lines.append(f"Scene {s} ({scene.get('background', '')}, {scene.get('camera', '')} camera; template actors: {actors or 'none'})")
+            lines += [f"  {s}-{n} {line.get('speaker', '')}: {line['text']}" for n, line in enumerate(scene["lines"])]
+        lines += [
+            "",
+            "Your instructions document the kit, so don't read gsap.js, kite-movie.js, movie-data.js or playtest.mjs.",
+            "Write movie.html in this folder, run `npm run playtest`, fix until it passes, "
+            "then Read the shots, critique them, revise at least once, and stop.",
+        ]
+    else:
+        lines.append("Write game.html in this folder, run `npm run playtest`, fix until it passes, then stop.")
     return "\n".join(lines)
 
 
 def work_home() -> Path:
     """A home this process can write to. The hosted platform sets HOME to its session folder,
-    which the image's non-root user cannot write, so the game, Claude Code's config and npm's
+    which the image's non-root user cannot write, so the page, Claude Code's config and npm's
     cache all live here instead."""
     for candidate in (os.environ.get("KITE_WORK_HOME"), os.environ.get("HOME"), "/home/agent"):
         if candidate:
@@ -103,17 +159,27 @@ def work_home() -> Path:
                 continue
             if os.access(path, os.W_OK):
                 return path
-    raise PermissionError("no writable home for the game")
+    raise PermissionError("no writable home for the page")
 
 
-def game_dir() -> Path:
-    """<work home>/game with the kit in it. Idempotent, so a retry on the same session is fine."""
-    d = Path(os.environ.get("KITE_GAME_DIR") or work_home() / "game")
-    shutil.copytree(KIT_DIR, d, dirs_exist_ok=True, ignore=shutil.ignore_patterns("node_modules", "dist", "samples"))
+def work_dir(kind: str) -> Path:
+    """<work home>/<kind> with the kit in it and last run's page and frames gone. Idempotent."""
+    kit = KINDS[kind].kit
+    d = work_home() / kind
+    shutil.copytree(kit, d, dirs_exist_ok=True, ignore=shutil.ignore_patterns("node_modules", "dist", "samples", "shots", "check-samples.mjs"))
     modules = d / "node_modules"
     if not modules.exists():
-        modules.symlink_to(KIT_DIR / "node_modules", target_is_directory=True)
+        modules.symlink_to(kit / "node_modules", target_is_directory=True)
+    (d / KINDS[kind].page).unlink(missing_ok=True)
+    for old in ("dist", "shots"):
+        shutil.rmtree(d / old, ignore_errors=True)
     return d
+
+
+def write_movie_data(req: dict, cwd: Path) -> None:
+    """movie-data.js from the request. `<` is escaped so no narration can close the inlined script."""
+    data = {"title": req["storyboard"]["title"], "grade": req["grade"], "storyboard": req["storyboard"], "timings": req["timings"]}
+    (cwd / "movie-data.js").write_text("window.KITE_MOVIE = " + json.dumps(data).replace("<", "\\u003c") + ";\n")
 
 
 def foundry_env() -> dict[str, str]:
@@ -145,7 +211,7 @@ def progress_lines(msg: object) -> list[str]:
 
 async def run_agent(req: dict, cwd: Path) -> AsyncIterator[str]:
     options = ClaudeAgentOptions(
-        system_prompt=INSTRUCTIONS,
+        system_prompt=KINDS[req["kind"]].instructions,
         tools=TOOLS,
         allowed_tools=TOOLS,
         cwd=str(cwd),
@@ -175,14 +241,15 @@ async def run_agent(req: dict, cwd: Path) -> AsyncIterator[str]:
         await stream.aclose()
 
 
-def playtest(cwd: Path) -> Playtest:
-    """The kit's verdict on game.html, run by us, not taken from the agent's word."""
-    if not (cwd / "game.html").exists():
-        return Playtest(False, ["NO_HTML: the agent never wrote game.html"])
+def playtest(kind: str, cwd: Path) -> Playtest:
+    """The verdict of the image's own kit, not the copy the agent could edit, and not its word."""
+    page = cwd / KINDS[kind].page
+    if not page.exists():
+        return Playtest(False, [f"NO_HTML: the agent never wrote {page.name}"])
     try:
         r = subprocess.run(
-            ["npm", "run", "--silent", "playtest"], cwd=cwd, capture_output=True, text=True, timeout=PLAYTEST_TIMEOUT_S,
-            env={**os.environ, "HOME": str(work_home())},
+            ["node", str(KINDS[kind].kit / "playtest.mjs"), str(page)], cwd=cwd, capture_output=True, text=True,
+            timeout=PLAYTEST_TIMEOUT_S, env={**os.environ, "HOME": str(work_home())},
         )
         verdict = json.loads(r.stdout.strip().splitlines()[-1])
     except (subprocess.TimeoutExpired, ValueError, IndexError) as e:
@@ -190,19 +257,26 @@ def playtest(cwd: Path) -> Playtest:
     return Playtest(bool(verdict.get("passed")), [str(x) for x in verdict.get("errors", [])])
 
 
-async def build(req: dict) -> AsyncIterator[str | GameResult]:
-    cwd = game_dir()
-    (cwd / "game.html").unlink(missing_ok=True)
-    yield f"Building a game about {req['topic']}"
+async def build(req: dict) -> AsyncIterator[str | Result]:
+    kind = req["kind"]
+    cwd = work_dir(kind)
+    if kind == "movie":
+        write_movie_data(req, cwd)
+    yield f"Building a {kind} about {req['topic']}"
+    page, before = cwd / KINDS[kind].page, cwd / "before-critic.html"
     async for line in run_agent(req, cwd):
+        if line.startswith("Read ") and line.endswith(".png") and page.exists() and not before.exists():
+            shutil.copy(page, before)  # what the page was when the critic first looked, for review
         yield line
     yield "Play-testing"
-    result = await asyncio.to_thread(playtest, cwd)
-    html = (cwd / "dist" / "game.html").read_text() if result.passed else None
-    yield GameResult("ready" if html else "failed", html, result)
+    if kind == "movie":
+        write_movie_data(req, cwd)  # the data that ships is ours, whatever the agent did to its copy
+    result = await asyncio.to_thread(playtest, kind, cwd)
+    html = (cwd / "dist" / KINDS[kind].page).read_text() if result.passed else None
+    yield Result("ready" if html else "failed", html, result)
 
 
-def event_line(item: str | GameResult) -> str:
+def event_line(item: str | Result) -> str:
     return json.dumps({"progress": item} if isinstance(item, str) else asdict(item)) + "\n"
 
 
@@ -225,7 +299,7 @@ def serve() -> None:
                 async for item in build(req):
                     yield event_line(item)
             except Exception as e:  # a crash still ends the stream with a result the brain can read
-                yield event_line(GameResult("failed", None, Playtest(False, [f"AGENT_CRASHED: {type(e).__name__}"])))
+                yield event_line(Result("failed", None, Playtest(False, [f"AGENT_CRASHED: {type(e).__name__}"])))
 
         return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 

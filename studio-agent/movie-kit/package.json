@@ -1,0 +1,14 @@
+{
+  "name": "kite-movie-kit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "cd node_modules/gsap/dist && cat gsap.min.js CustomEase.min.js CustomBounce.min.js CustomWiggle.min.js DrawSVGPlugin.min.js MorphSVGPlugin.min.js MotionPathPlugin.min.js Physics2DPlugin.min.js > ../../../gsap.js",
+    "playtest": "node playtest.mjs",
+    "check-samples": "node check-samples.mjs"
+  },
+  "dependencies": {
+    "gsap": "3.15.0",
+    "playwright": "1.64.1"
+  }
+}

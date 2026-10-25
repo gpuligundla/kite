@@ -1,4 +1,8 @@
 game-kit/node_modules/
 game-kit/kaplay.js
 game-kit/samples/dist/
+movie-kit/node_modules/
+movie-kit/gsap.js
+movie-kit/samples/dist/
+movie-kit/samples/shots/
 __pycache__/

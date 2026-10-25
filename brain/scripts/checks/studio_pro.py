@@ -2,11 +2,16 @@
 checks/pipeline.py. Run from brain/: uv run python -m scripts.checks.studio_pro"""
 
 import asyncio
+import base64
 import json
+import re
 import tempfile
+from functools import partial
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from kite_brain import studio_pro
@@ -14,11 +19,14 @@ from kite_brain.api import create_app
 from kite_brain.deps import Deps
 from kite_brain.routers import games
 from kite_brain.seed import KID_ID, seed
-from kite_brain.studio_pro import GameResult, Playtest, build_custom_game, start_custom_game, text_strings
+from kite_brain.studio import movie
+from kite_brain.studio_pro import GameResult, Playtest, build_custom_game, start_page, text_strings
 from scripts.checks.audiences import drain
 from scripts.checks.ledger import CATALOG, NOW, fresh
 from scripts.checks.memory import async_embed
 from scripts.checks.pipeline import StandIns, deps_for, types
+from scripts.checks.studio import Studio, board, creation_in, run_job
+from scripts.checks.voice import use_sample_voices
 
 TOPIC, GOAL = "light", "The sky looks blue because air scatters blue light."
 GAME = """<!doctype html><html><head><title>Catch the blue light</title></head><body>
@@ -53,7 +61,7 @@ def run_build(stand, agent, timeout_s=studio_pro.STUDIO_AGENT_TIMEOUT_S):
     folder = Path(tempfile.mkdtemp())
 
     async def go():
-        cid = start_custom_game(deps, KID_ID, TOPIC, GOAL)
+        cid = start_page(deps, KID_ID, "game")
         return cid, await build_custom_game(deps, KID_ID, cid, TOPIC, GOAL, agent=agent)
 
     with patch.object(studio_pro, "CREATIONS_DIR", folder), patch.object(studio_pro, "STUDIO_AGENT_TIMEOUT_S", timeout_s):
@@ -144,6 +152,79 @@ def check_endpoint_is_for_kid_devices() -> None:
     assert kid[-1].type == "creation.ready" and kid[-1].status == "ready" and kid[-1].creation_id == cid
 
 
+MOVIE = """<!doctype html><html><body><div id="stage"><p>Magma rises</p></div>
+<script data-kit="KITE_AUDIO">window.KITE_AUDIO = {};</script>
+<script>kite.ready();</script></body></html>"""
+
+
+def run_cut(agent, timeout_s=studio_pro.STUDIO_AGENT_TIMEOUT_S):
+    """The template movie job with its director's cut on and no MP4 render.
+    Returns (template id, cut id, folder, the cut's events by device, every event by device)."""
+    use_sample_voices()
+    patches = {"start_directors_cut": partial(movie.start_directors_cut, agent=agent), "RENDER_SCRIPT": Path(tempfile.mkdtemp()) / "absent.mjs"}
+    with patch.object(studio_pro, "STUDIO_AGENT_TIMEOUT_S", timeout_s):
+        _, template, folder, seen = run_job(Studio(board()), movie.start_movie, movie=patches)
+    [cut] = {e.creation_id for e in seen["os"]} - {template}
+    return template, cut, folder, {kind: [e for e in seen[kind] if e.creation_id == cut] for kind in ("os", "parent")}, seen
+
+
+def check_directors_cut_gets_the_narration_and_no_network() -> None:
+    agent = StandInAgent(ready(MOVIE))
+    template_id, cut, folder, events, seen = run_cut(agent)
+    template = creation_in(folder, template_id)
+    assert template.status == "ready" and template.html_url is None, "the template stays her movie"
+    made = creation_in(folder, cut)
+    assert made.kind == "movie" and made.status == "ready" and made.html_url == f"/creations/{cut}/movie.html", made
+    page = (folder / cut / "movie.html").read_text()
+    audio = json.loads(re.search(r'<script data-kit="KITE_AUDIO">window\.KITE_AUDIO = (\{.*?\});</script>', page).group(1))
+    mp3 = "data:audio/mpeg;base64," + base64.b64encode(b"mp3").decode()
+    assert set(audio) == set(template.audio) and set(audio.values()) == {mp3}, "every narration line, inlined"
+    [req] = agent.requests
+    assert set(req) == {"kind", "creation_id", "topic", "learning_goal", "grade", "kid_view", "storyboard", "timings"}, req
+    assert req["kind"] == "movie" and req["creation_id"] == cut and req["grade"] == 11
+    assert req["storyboard"] == template.storyboard.model_dump(mode="json") and set(req["timings"]) == set(template.audio)
+    kid = events["os"]
+    assert types(kid) == ["creation.progress"] * 3 + ["creation.ready"] and kid[-1].status == "ready" and kid[-1].kind == "movie", types(kid)
+    assert types(events["parent"]) == types(kid) and not seen["counselor"], "the parent gets a copy, never the counselor"
+    app = FastAPI()
+    app.include_router(games.router)
+    client = TestClient(app)
+    with patch.object(studio_pro, "CREATIONS_DIR", folder):
+        r = client.get(f"/creations/{cut}/movie.html")
+        assert r.status_code == 200 and r.text == page, r.status_code
+        assert r.headers["content-security-policy"] == games.CSP and games.CSP.startswith("default-src 'none'"), "no network"
+        assert client.get(f"/creations/{cut}/game.html").status_code == 404, "a movie has no game page"
+        assert client.get(f"/creations/{cut}/creation.html").status_code == 404, "only game and movie pages are served"
+
+
+def check_directors_cut_failures_keep_the_template() -> None:
+    for why, agent, timeout_s in (
+        ("an agent error", StandInAgent(error=RuntimeError("502")), studio_pro.STUDIO_AGENT_TIMEOUT_S),
+        ("an agent that gave up", StandInAgent(GameResult("failed", None, Playtest(False, ["SAME_FRAMES"]))), studio_pro.STUDIO_AGENT_TIMEOUT_S),
+        ("a page with no audio slot", StandInAgent(ready()), studio_pro.STUDIO_AGENT_TIMEOUT_S),
+        ("a timeout", StandInAgent(ready(MOVIE), delay_s=0.5), 0.05),
+    ):
+        template_id, cut, folder, events, seen = run_cut(agent, timeout_s)
+        made = creation_in(folder, cut)
+        assert made.status == "fallback" and made.html_url is None and not (folder / cut / "movie.html").exists(), why
+        assert creation_in(folder, template_id).status == "ready", f"{why}: the template still plays"
+        for kind, cut_events in events.items():
+            last = cut_events[-1]
+            assert last.type == "creation.ready" and last.status == "fallback" and last.kind == "movie", f"{why}: {kind} hears fallback"
+        assert not seen["counselor"], why
+
+
+def check_kits_play_test_under_the_served_policy() -> None:
+    kits = Path(__file__).resolve().parents[3] / "studio-agent"
+    for kit in ("movie-kit",):
+        assert games.CSP in (kits / kit / "playtest.mjs").read_text(), f"{kit} play-tests under the policy the brain serves"
+
+
+def check_no_endpoint_no_directors_cut() -> None:
+    with patch.object(movie, "get_settings", lambda: SimpleNamespace(STUDIO_AGENT_ENDPOINT="")):
+        assert movie.start_directors_cut(None, KID_ID, None, TOPIC, GOAL, 11) is None
+
+
 def run() -> None:
     check_text_strings()
     check_success_publishes_ready_and_stores_html_url()
@@ -151,6 +232,10 @@ def run() -> None:
     check_agent_failure_is_fallback()
     check_timeout_is_fallback()
     check_endpoint_is_for_kid_devices()
+    check_directors_cut_gets_the_narration_and_no_network()
+    check_directors_cut_failures_keep_the_template()
+    check_no_endpoint_no_directors_cut()
+    check_kits_play_test_under_the_served_policy()
 
 
 if __name__ == "__main__":

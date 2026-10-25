@@ -26,7 +26,7 @@ DECIDE_TOTAL_TIMEOUT_S = 10.0  # the whole backend chain; Haiku alone takes up t
 SAFETY_TIMEOUT_S = 3.0
 RECALL_TIMEOUT_S = 3.0
 UPLOAD_CAP_BYTES = 900_000
-STUDIO_AGENT_TIMEOUT_S = 360.0  # the agent's 3 min of work plus a 1-3 min sandbox cold start
+STUDIO_AGENT_TIMEOUT_S = 600.0  # the agent's 7 min of work plus a 1-3 min sandbox cold start
 
 # Content Safety category to alert kind. Sexual and violence go to the counselor, the safer adult for ambiguous cases.
 CS_MAP = {"SelfHarm": "self_harm", "Sexual": "abuse", "Violence": "abuse", "Hate": "bullying"}

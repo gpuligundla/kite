@@ -5,20 +5,20 @@
 # Required:  ACR_NAME                    registry name, without .azurecr.io
 #            FOUNDRY_PROJECT_ENDPOINT    https://<account>.services.ai.azure.com/api/projects/<project>
 #            ANTHROPIC_FOUNDRY_RESOURCE  the Foundry resource name that holds the Claude deployments
-#            SONNET_DEPLOYMENT           the Claude Sonnet deployment name
-# Optional:  HAIKU_DEPLOYMENT (defaults to SONNET_DEPLOYMENT), AGENT_NAME (kite-studio), IMAGE_TAG (git sha),
+#            OPUS_DEPLOYMENT             the Claude Opus deployment name (claude-opus-5-5): Claude Code builds with it
+# Optional:  HAIKU_DEPLOYMENT (defaults to OPUS_DEPLOYMENT; Claude Code's small internal calls), AGENT_NAME (kite-studio), IMAGE_TAG (git sha),
 #            SKIP_BUILD=1 to reuse an image already in the registry under IMAGE_TAG
 #
 # The project must be in a hosted-agent region, and the caller needs Foundry Project Manager on it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-for v in ACR_NAME FOUNDRY_PROJECT_ENDPOINT ANTHROPIC_FOUNDRY_RESOURCE SONNET_DEPLOYMENT; do
+for v in ACR_NAME FOUNDRY_PROJECT_ENDPOINT ANTHROPIC_FOUNDRY_RESOURCE OPUS_DEPLOYMENT; do
   [ -n "${!v:-}" ] || { echo "set $v (see the header of $0)" >&2; exit 2; }
 done
 AGENT_NAME=${AGENT_NAME:-kite-studio}
 IMAGE_TAG=${IMAGE_TAG:-$(git rev-parse --short HEAD)}
-HAIKU_DEPLOYMENT=${HAIKU_DEPLOYMENT:-$SONNET_DEPLOYMENT}
+HAIKU_DEPLOYMENT=${HAIKU_DEPLOYMENT:-$OPUS_DEPLOYMENT}
 
 az account show >/dev/null 2>&1 || { echo "not logged in to Azure: run 'az login'" >&2; exit 2; }
 LOGIN_SERVER=$(az acr show --name "$ACR_NAME" --query loginServer -o tsv 2>/dev/null) \
@@ -46,8 +46,8 @@ DEFINITION=$(cat <<JSON
   "environment_variables": {
     "CLAUDE_CODE_USE_FOUNDRY": "1",
     "ANTHROPIC_FOUNDRY_RESOURCE": "$ANTHROPIC_FOUNDRY_RESOURCE",
-    "ANTHROPIC_MODEL": "$SONNET_DEPLOYMENT",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "$SONNET_DEPLOYMENT",
+    "ANTHROPIC_MODEL": "$OPUS_DEPLOYMENT",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "$OPUS_DEPLOYMENT",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "$HAIKU_DEPLOYMENT"
   }
 }

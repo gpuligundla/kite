@@ -23,6 +23,7 @@ Rules:
 - At most 5 scenes and about 100 words of narration in total. Every scene has 1 to 3 actors and 1 to 3 narration lines.
 - Each scene's background is one of: sky, space, ocean, forest, town, classroom. Pick fitting colors and time of day.
 - Actors use only these sprite names: {sprites}. Rexy is the sprite trex. A character the child already loves may star.
+- Narration flows in full sentences, like a warm science-show host talking to this child. No strings of short punchy lines, no lists of numbers.
 - Each narration line names a speaker and a voice. Voices: {voices}. A voice only reads lines: it is not an actor and has no sprite.
 - You may start a line with one audio tag in square brackets, such as [excited] or [whispers].
 - End with one check question with 2 to 4 choices, exactly one correct, in words the child knows. Set check.concept_id to "{no_concept}".

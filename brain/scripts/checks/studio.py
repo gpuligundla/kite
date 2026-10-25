@@ -85,6 +85,8 @@ def run_job(stand, start, *, setup=None, read_only=False, **patches):
         await store.settle()
         return creation_id
 
+    # No director's cut unless a check asks for one: a configured endpoint must never be called from here.
+    patches = patches | {"movie": {"start_directors_cut": lambda *a, **k: None} | patches.get("movie", {})}
     with ExitStack() as stack:
         stack.enter_context(patch.object(studio_pro, "CREATIONS_DIR", folder))
         for module in (movie, game):
@@ -402,7 +404,7 @@ def check_answer_and_result_record_evidence() -> None:
 
         client4, deps4, bearer4 = client_for()
         studio_game = "c" * 32
-        studio_pro.save(studio_game, "ready", "<html></html>")
+        studio_pro.save(studio_game, "game", "ready", "<html></html>")
         r = client4.post(f"/creations/{studio_game}/result", json={"correct": 5, "total": 5}, headers=bearer4["os"])
         assert r.status_code == 200 and r.json() == {"recorded": False} and not evidence_rows(deps4), "a brand-new studio game has no concept to score"
 
@@ -441,7 +443,7 @@ def check_tool_call_starts_the_right_job() -> None:
         await store.settle()
         return deps, bus, stand
 
-    with patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())):
+    with patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())), patch.object(movie, "start_directors_cut", lambda *a, **k: None):
         folder = studio_pro.CREATIONS_DIR
         deps, bus, stand = asyncio.run(go(ToolCall("make_movie", TOPIC, GOAL)))
         made = [creation_in(folder, p.name) for p in folder.iterdir()]

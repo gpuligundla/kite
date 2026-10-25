@@ -94,8 +94,10 @@ def spawn(coro: Coroutine) -> None:
 
 async def settle() -> None:
     """Wait for every background creation job. The safety checks use it."""
-    while _tasks:
-        await asyncio.gather(*_tasks, return_exceptions=True)
+    # A finished task stays in _tasks until its done callback runs, and gather over only finished
+    # tasks never yields to the loop, so waiting on _tasks itself could spin forever.
+    while pending := [t for t in _tasks if not t.done()]:
+        await asyncio.gather(*pending, return_exceptions=True)
 
 
 async def strings_are_safe(deps: Deps, texts: list[str]) -> bool:

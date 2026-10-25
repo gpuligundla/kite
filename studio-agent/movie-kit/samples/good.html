@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Why the sky is blue</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1530; }
+  #stage { position: absolute; width: 1280px; height: 720px; overflow: hidden; font-family: "Trebuchet MS", system-ui, sans-serif; }
+  #caption { position: absolute; left: 140px; right: 140px; bottom: 48px; text-align: center; font-size: 40px; font-weight: 700; color: #fff; }
+  #caption div { position: absolute; left: 0; right: 0; bottom: 0; visibility: hidden; }
+  #caption span { display: inline-block; margin: 0 6px; opacity: 0; }
+</style></head>
+<body>
+<div id="stage">
+  <svg width="1280" height="720" viewBox="0 0 1280 720">
+    <rect id="sky" width="1280" height="720" fill="#7fc4e8"/>
+    <circle id="sun" cx="1080" cy="140" r="70" fill="#ffd54f"/>
+    <path id="ray" d="M1010 170 C 800 260 600 300 380 520" stroke="#64b5f6" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <rect y="560" width="1280" height="160" fill="#4caf50"/>
+  </svg>
+  <div id="caption"></div>
+</div>
+<script src="gsap.js"></script>
+<script src="movie-data.js"></script>
+<script src="kite-movie.js"></script>
+<script>
+  const tl = kite.timeline, movie = kite.movie;
+  tl.from("#sun", { scale: 0, transformOrigin: "50% 50%", duration: 1, ease: "back.out(1.7)" }, 0);
+  tl.fromTo("#ray", { drawSVG: "0%" }, { drawSVG: "100%", duration: 3 }, movie.scenes[0].lines[1].start);
+  tl.to("#sky", { attr: { fill: movie.scenes[1].palette.sky }, duration: 1.2 }, movie.scenes[1].start);
+  const caption = document.getElementById("caption");
+  for (const line of movie.lines) {
+    const row = caption.appendChild(document.createElement("div"));
+    for (const w of line.words) row.appendChild(document.createElement("span")).textContent = w.text;
+    tl.set(row, { autoAlpha: 1 }, line.start).set(row, { autoAlpha: 0 }, line.end);
+    line.words.forEach((w, i) => tl.fromTo(row.children[i], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.25 }, w.start));
+  }
+  tl.to("#sun", { y: -20, duration: movie.outro.end - movie.outro.start, ease: "sine.inOut" }, movie.outro.start);
+  kite.ready();
+</script>
+</body>
+</html>

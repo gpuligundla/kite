@@ -1,5 +1,6 @@
 """Brand-new games: a kid device asks for one, the brain builds it after replying, and the finished
-file is served under its unguessable id with a policy that allows no network."""
+file is served under its unguessable id with a policy that allows no network. A movie's director's
+cut is served the same way."""
 
 import re
 
@@ -8,7 +9,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, constr
 
 from kite_brain.auth import require
-from kite_brain.studio_pro import build_custom_game, game_path, start_custom_game
+from kite_brain.studio_pro import build_custom_game, page_path, start_page
 
 router = APIRouter()
 CREATION_ID = re.compile(r"[0-9a-f]{32}")
@@ -24,13 +25,13 @@ class CustomGame(BaseModel):
 @router.post("/kids/{kid_id}/games/custom", dependencies=[require("os", "handheld")])
 async def custom_game(kid_id: str, body: CustomGame, request: Request, background: BackgroundTasks) -> dict[str, str]:
     deps = request.app.state.deps
-    creation_id = start_custom_game(deps, kid_id, body.topic, body.learning_goal)
+    creation_id = start_page(deps, kid_id, "game")
     background.add_task(build_custom_game, deps, kid_id, creation_id, body.topic, body.learning_goal)
     return {"creation_id": creation_id}
 
 
-@router.get("/creations/{creation_id}/game.html")
-def game_html(creation_id: str) -> FileResponse:
-    if not CREATION_ID.fullmatch(creation_id) or not game_path(creation_id).exists():
-        raise HTTPException(404, "no such game")
-    return FileResponse(game_path(creation_id), media_type="text/html", headers={"Content-Security-Policy": CSP})
+@router.get("/creations/{creation_id}/{kind}.html")
+def page_html(creation_id: str, kind: str) -> FileResponse:
+    if kind not in ("game", "movie") or not CREATION_ID.fullmatch(creation_id) or not page_path(creation_id, kind).exists():
+        raise HTTPException(404, "no such page")
+    return FileResponse(page_path(creation_id, kind), media_type="text/html", headers={"Content-Security-Policy": CSP})

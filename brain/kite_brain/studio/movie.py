@@ -10,6 +10,8 @@ import logging
 import shutil
 from pathlib import Path
 
+from kite_brain import studio_pro
+from kite_brain.config import get_settings
 from kite_brain.contract import (
     Creation, CreationProgressEvent, CreationReadyEvent, CreationVideoEvent, Grade, KidView, Word,
 )
@@ -127,6 +129,7 @@ async def build_movie(deps: Deps, kid_id: str, creation_id: str, topic: str, lea
     store.publish(deps, kid_id, CreationReadyEvent, "movie", creation_id=creation_id, status=creation.status)
     if creation.status == "ready":
         store.spawn(render_video(deps, kid_id, creation_id))
+        start_directors_cut(deps, kid_id, creation, topic, learning_goal, grade)
     elif creation.video_url:
         store.publish(deps, kid_id, CreationVideoEvent, "movie", creation_id=creation_id, video_url=creation.video_url)
     return creation
@@ -157,3 +160,32 @@ async def render_video(deps: Deps, kid_id: str, creation_id: str) -> None:
     url = video_url(creation_id)
     store.save(store.load(creation_id).model_copy(update={"video_url": url}))
     store.publish(deps, kid_id, CreationVideoEvent, "movie", creation_id=creation_id, video_url=url)
+
+
+def start_directors_cut(
+    deps: Deps, kid_id: str, movie: Creation, topic: str, learning_goal: str, grade: Grade, *, agent: studio_pro.StudioAgent | None = None
+) -> str | None:
+    """A second movie creation: the studio agent hand-animates this movie's narration as one page,
+    and the brain adds the narration's MP3s. The template stays her movie unless the cut is ready.
+    None when no studio agent is configured."""
+    if agent is None and not get_settings().STUDIO_AGENT_ENDPOINT:
+        return None
+    creation_id = studio_pro.start_page(deps, kid_id, "movie")
+    narration = {key: store.folder(movie.id) / name for key, name in movie.audio.items()}
+    store.spawn(studio_pro.build_page(
+        deps, kid_id, creation_id, "movie", _directors_cut_request(deps, kid_id, creation_id, movie, topic, learning_goal, grade),
+        lambda html: studio_pro.inject(html, "KITE_AUDIO", narration), agent=agent,
+    ))
+    return creation_id
+
+
+async def _directors_cut_request(
+    deps: Deps, kid_id: str, creation_id: str, movie: Creation, topic: str, learning_goal: str, grade: Grade
+) -> dict:
+    """What a game request carries, plus the storyboard and its word timings. Never levels."""
+    return {
+        "kind": "movie", "creation_id": creation_id, "topic": topic, "learning_goal": learning_goal, "grade": grade,
+        "kid_view": (await _kid_view(deps, kid_id, grade)).model_dump(),
+        "storyboard": movie.storyboard.model_dump(mode="json"),
+        "timings": {key: [w.model_dump() for w in words] for key, words in movie.timings.items()},
+    }
