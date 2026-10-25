@@ -137,7 +137,11 @@ def check_signals() -> None:
     assert signal(deps, None, None, 0.5).near_live_quiz, "assigned work during a live quiz pauses"
     assert signal(deps, None, None, 0.49).status is None
     hw_during_quiz = signal(deps, axis(open_item), None, 0.9)
-    assert hw_during_quiz.near_live_quiz, "even a homework match pauses while a quiz is live"
+    assert (hw_during_quiz.status, hw_during_quiz.near_live_quiz) == ("open", False), "a homework match is help during a live quiz"
+    by_topic = signal(deps, at_cosine(open_item, 0.5), "ap_perimeter", 0.9)
+    assert (by_topic.status, by_topic.title) == ("open", "Area and perimeter practice"), "assigned work on the homework's topic is help"
+    assert signal(deps, at_cosine(open_item, 0.5), "ap_perimeter", 0.3).status is None, "the topic without assigned work is not homework"
+    assert signal(deps, None, "light_see", 0.9).near_live_quiz, "a closed quiz's topic is not enough to explain, so it pauses"
 
     open_match = signal(deps, axis(open_item))
     assert (open_match.status, open_match.title, open_match.near_live_quiz) == ("open", "Area and perimeter practice", False)

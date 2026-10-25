@@ -156,18 +156,22 @@ async def homework_signal(
     stored = stored_assignments(deps.conn, deps.keys, kid_id)
     live = [(a, m) for a, m in stored if status(a, now) == "exam_live"]
     rest = [(a, m) for a, m in stored if status(a, now) != "exam_live"]
+    topic = deps.catalog.get(concept_id).topic if concept_id else None
+    assigned = assigned_work_p >= ASSIGNED_WORK_THRESHOLD
+
+    matched, cosine = _nearest(rest, query_vec)
+    if cosine < MATCH_COSINE:
+        # A topic names no single question, so it places assigned work only on open homework,
+        # whose help mode never states the answer, and never on closed work's full solution.
+        matched = next((a for a, _ in rest if assigned and topic and a.topic == topic and status(a, now) == "open"), None)
 
     if live:
         nearest, cosine = _nearest(live, query_vec)
-        topic = deps.catalog.get(concept_id).topic if concept_id else None
         same = next((a for a, _ in live if concept_id and (a.concept_id == concept_id or a.topic == topic)), None)
-        if cosine >= NEAR_QUIZ_COSINE or same or assigned_work_p >= ASSIGNED_WORK_THRESHOLD:
+        if cosine >= NEAR_QUIZ_COSINE or same or (assigned and not matched):
             quiz = nearest if cosine >= NEAR_QUIZ_COSINE else same or live[0][0]
             return HomeworkSignal("exam_live", quiz.title, True)
 
-    matched, cosine = _nearest(rest, query_vec)
-    if matched and cosine >= MATCH_COSINE:
+    if matched:
         return HomeworkSignal(status(matched, now), matched.title, False)
-    if not live and assigned_work_p >= ASSIGNED_WORK_THRESHOLD:
-        return HomeworkSignal("open", None, False)
-    return NO_HOMEWORK
+    return HomeworkSignal("open", None, False) if assigned else NO_HOMEWORK
