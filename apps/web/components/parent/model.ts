@@ -11,7 +11,6 @@ export type Card = DashboardView["cards"][number];
 export type Concept = DashboardView["skills"]["concepts"][number];
 export type Level = Concept["level"];
 export type PolicyAction = DashboardView["policy"][string];
-export type CounselorAlert = components["schemas"]["CounselorAlertView"];
 export type Contact = components["schemas"]["ContactView"];
 export type Creation = components["schemas"]["Creation"];
 
