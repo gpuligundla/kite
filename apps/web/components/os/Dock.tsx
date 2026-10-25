@@ -162,7 +162,7 @@ export function Dock({ device, band, teaching, thinking, onSend, onAudio, onList
       clock={teaching && look === "listening" ? clock : undefined} start={start} stop={stop} toggle={toggle} />
   );
   const typeToggle = (
-    <button type="button" className={s.typeToggle} aria-expanded={typing} aria-controls={`type-${device}`} onClick={() => chooseTyping(!typing)}>
+    <button type="button" className={s.typeToggle} data-on={typing} onClick={() => chooseTyping(!typing)}>
       <Glyph name={typing ? "mic" : "keyboard"} size={20} />
       {typing ? "Talk instead" : "Type instead"}
     </button>
@@ -181,7 +181,6 @@ export function Dock({ device, band, teaching, thinking, onSend, onAudio, onList
       )}
       {typing && (
         <form
-          id={`type-${device}`}
           className={s.typeBox}
           onSubmit={(e) => {
             e.preventDefault();

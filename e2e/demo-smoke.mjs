@@ -39,7 +39,7 @@ try {
 
   const strengths = () => parent.locator("section", { hasText: "Where Maya is strong" }).first();
   await step("parent sees dinosaurs become a strength at grade 8, not 7", async () => {
-    await parent.getByRole("heading", { name: "Maya" }).waitFor({ timeout: 15_000 });
+    await parent.getByRole("heading", { name: "Maya", exact: true }).waitFor({ timeout: 15_000 });
     const slider = parent.locator('input[type="range"]').first();
     await slider.fill("7");
     await parent.waitForTimeout(2500);

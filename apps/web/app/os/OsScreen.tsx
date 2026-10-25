@@ -132,7 +132,8 @@ export function OsScreen({ device }: { device: DeviceKind }) {
       return null;
     });
 
-  const ask = async (utterance: { text: string } | { audio: Blob }) => {
+  /** Resolves false when the brain didn't take the turn; the kid has already been told. */
+  const ask = async (utterance: { text: string } | { audio: Blob }): Promise<boolean> => {
     setProblem(null);
     const image = photo?.blob;
     clearPhoto();
@@ -140,8 +141,10 @@ export function OsScreen({ device }: { device: DeviceKind }) {
     setSending(true);
     try {
       await brain.say({ ...utterance, ...lesson, ...(image ? { image } : {}), asOfGrade: grade as Grade });
+      return true;
     } catch {
       showProblem("Kite didn't get that. Try sending it again.");
+      return false;
     } finally {
       setSending(false);
     }
@@ -151,17 +154,12 @@ export function OsScreen({ device }: { device: DeviceKind }) {
     const key = `${t.id}:${kind}`;
     setMaking((m) => new Set(m).add(key));
     hush();
-    setProblem(null);
-    try {
-      await brain.say({ text: MAKE_ASK[kind], asOfGrade: grade as Grade });
-    } catch {
-      setMaking((m) => {
-        const next = new Set(m);
-        next.delete(key);
-        return next;
-      });
-      showProblem(`Kite couldn't start your ${kind}. Try again in a moment.`);
-    }
+    if (await ask({ text: MAKE_ASK[kind] })) return;
+    setMaking((m) => {
+      const next = new Set(m);
+      next.delete(key);
+      return next;
+    });
   };
 
   const followTeach = () =>

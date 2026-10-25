@@ -230,7 +230,7 @@
   cursor: pointer;
   transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-press) ease, font-size var(--dur-band) var(--ease-in-out);
 }
-.typeToggle[aria-expanded="true"] { border-color: var(--ink); background: var(--paper); }
+.typeToggle[data-on="true"] { border-color: var(--ink); background: var(--paper); }
 
 .typeBox {
   flex: 1;
