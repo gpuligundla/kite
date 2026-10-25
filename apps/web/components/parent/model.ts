@@ -199,6 +199,70 @@ export function curiosityYears(view: DashboardView): CuriosityYears {
   };
 }
 
+/** The hero's facts, all as of the end of the viewed grade. */
+export function portrait(view: DashboardView) {
+  const concepts = view.skills.concepts;
+  const best = Object.entries(view.how_she_learns ?? {}).sort((a, b) => b[1] - a[1])[0];
+  return {
+    strengths: (view.strengths ?? []).map(topicName),
+    curious: view.curiosity.topics[0] ? topicName(view.curiosity.topics[0].topic) : null,
+    solid: concepts.filter((c) => solid(c.level)).length,
+    shown: concepts.length,
+    canTeach: view.skills.can_teach.length,
+    best: best ? { way: HOW_SHE_LEARNS[best[0]] ?? best[0].replaceAll("_", " "), share: best[1] } : null,
+  };
+}
+
+export interface Happening {
+  key: string;
+  kind: "alert" | "card" | "moment";
+  text: string;
+  at?: string;
+}
+
+const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * What's new. At her current grade: this week's alerts and big questions, else the latest of each, plus her newest
+ * moment. At a past grade: that year's moments. Moments carry no date, so they're never called "this week".
+ */
+export function lately(view: DashboardView, grade: Grade, current: boolean, alerts: Alert[], now: number) {
+  const moments = (view.moments_by_grade[grade] ?? []).map(momentForParent);
+  if (!current) {
+    const asked = view.cards.filter((c) => c.grade === grade).length;
+    return {
+      title: `In grade ${grade}`,
+      items: [
+        ...moments.slice(-3).reverse().map((text, i): Happening => ({ key: `m${i}`, kind: "moment", text })),
+        ...(asked ? [{ key: "cards", kind: "card", text: `Asked ${asked === 1 ? "one big question" : `${asked} big questions`}` } as Happening] : []),
+      ],
+    };
+  }
+  const recent = <T extends { at: string }>(xs: T[]) => xs.filter((x) => now - Date.parse(x.at) < WEEK);
+  const week = { alerts: recent(alerts), cards: recent(view.cards) };
+  const thisWeek = week.alerts.length + week.cards.length > 0;
+  const shownAlerts = thisWeek ? week.alerts : alerts.slice(0, 1);
+  const shownCards = thisWeek ? week.cards : view.cards.slice(0, 1);
+  const byKind = new Map<string, Alert[]>();
+  for (const a of shownAlerts) byKind.set(kindWords(a.kinds), [...(byKind.get(kindWords(a.kinds)) ?? []), a]);
+  const byTopic = new Map<string, Card[]>();
+  for (const c of shownCards) byTopic.set(c.topic, [...(byTopic.get(c.topic) ?? []), c]);
+  const times = (n: number) => (n === 1 ? "" : n === 2 ? " twice" : ` ${n} times`);
+  return {
+    title: thisWeek ? "This week" : "Lately",
+    items: [
+      ...[...byKind].map(([word, list]): Happening => ({
+        key: `a-${word}`, kind: "alert", at: list[0].at,
+        text: word === "SOS" ? `Pressed SOS${times(list.length)}` : `${word} alert${list.length > 1 ? `, ${list.length} times` : ""}`,
+      })),
+      ...[...byTopic].map(([topic, list]): Happening => ({
+        key: `c-${topic}`, kind: "card", at: list[0].at, text: `Asked about ${topicName(topic).toLowerCase()}${times(list.length)}`,
+      })),
+      ...moments.slice(-1).map((text): Happening => ({ key: "m", kind: "moment", text })),
+    ],
+  };
+}
+
 export const HOW_SHE_LEARNS: Record<string, string> = {
   teach_back: "teaching it back to Kite",
   check_question: "a check question after a movie",

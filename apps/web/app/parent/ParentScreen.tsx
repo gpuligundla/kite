@@ -122,25 +122,26 @@ export function ParentScreen() {
 
         {error && <p className={styles.error} role="alert">{error}</p>}
 
-        <section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" hidden={tab !== "overview"}>
+        {/* Panels are plain divs so each section inside is the nearest section to its own heading. */}
+        <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" hidden={tab !== "overview"}>
           <GradeSlider grade={grade} onChange={(g) => go({ grade: g })} />
           {shown ? (
-            <Overview view={shown.view} grade={shown.grade} stale={shown.grade !== grade} />
+            <Overview view={shown.view} grade={shown.grade} stale={shown.grade !== grade} alerts={alerts} />
           ) : (
             !error && <p className={styles.quiet}>Loading {KID.name}&apos;s grade {grade}…</p>
           )}
-        </section>
-        <section id="panel-topics" role="tabpanel" aria-labelledby="tab-topics" hidden={tab !== "topics"}>
+        </div>
+        <div id="panel-topics" role="tabpanel" aria-labelledby="tab-topics" hidden={tab !== "topics"}>
           {policy && <Policy brain={brain} family={KID.family} name={KID.name} policy={policy} onChange={(set) => setPolicy((p) => p && set(p))} />}
-        </section>
+        </div>
         {(["contacts", "movies", "trust"] as const).map(
           (id) =>
             opened.has(id) && (
-              <section key={id} id={`panel-${id}`} role="tabpanel" aria-labelledby={`tab-${id}`} hidden={tab !== id}>
+              <div key={id} id={`panel-${id}`} role="tabpanel" aria-labelledby={`tab-${id}`} hidden={tab !== id}>
                 {id === "contacts" && <Contacts brain={brain} name={KID.name} />}
                 {id === "movies" && <Movies brain={brain} name={KID.name} />}
                 {id === "trust" && <Trust brain={brain} />}
-              </section>
+              </div>
             ),
         )}
       </div>
