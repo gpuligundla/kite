@@ -24,6 +24,7 @@ export function CheckCard({
   celebrate,
   again,
   close,
+  againLabel = "Watch again",
 }: {
   brain: Brain;
   id: string;
@@ -33,7 +34,9 @@ export function CheckCard({
   setAnswer: (a: Answer) => void;
   celebrate: () => void;
   again: () => void;
-  close: () => void;
+  /** Left out where the surrounding player has its own way out (a storybook). */
+  close?: () => void;
+  againLabel?: string;
 }) {
   const root = useRef<HTMLElement>(null);
   const speaking = useRef<HTMLAudioElement | null>(null);
@@ -102,11 +105,13 @@ export function CheckCard({
         {reply && (
           <div className={styles.actions}>
             <button type="button" className={styles.action} onClick={again}>
-              Watch again
+              {againLabel}
             </button>
-            <button type="button" className={`${styles.action} ${styles.actionWarm}`} onClick={close}>
-              Close
-            </button>
+            {close && (
+              <button type="button" className={`${styles.action} ${styles.actionWarm}`} onClick={close}>
+                Close
+              </button>
+            )}
           </div>
         )}
       </div>

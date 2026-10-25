@@ -5,11 +5,12 @@ import { KiteMark } from "@/components/kit/KiteMark";
 import type { CreationEntry } from "@/lib/creations";
 import styles from "./creations.module.css";
 
-type Job = "movie" | "game" | "brandNew";
+type Job = "movie" | "game" | "brandNew" | "story";
 
 const COPY: Record<Job, { title: string; wait: string; driftSeconds: number }> = {
   movie: { title: "Kite is making your movie", wait: "It takes about 15 seconds.", driftSeconds: 8 },
   game: { title: "Kite is making your game", wait: "It takes about 20 seconds.", driftSeconds: 10 },
+  story: { title: "Kite is writing your story", wait: "It takes about 20 seconds.", driftSeconds: 10 },
   brandNew: {
     title: "Kite is building a brand-new game",
     wait: "This one takes a few minutes. You can keep talking to Kite while you wait.",
@@ -30,6 +31,7 @@ const BUILD_STEPS = [
 function phrase(making: Job, step: number, total: number): string {
   if (making === "brandNew") return BUILD_STEPS[Math.min(step, BUILD_STEPS.length - 1)];
   if (making === "game") return "Picking the pieces";
+  if (making === "story") return step === 0 ? "Writing the story" : step < total ? "Reading it aloud" : "Adding the sounds";
   // A movie's step 0 is the storyboard, then one step per narrated line.
   return step === 0 ? "Writing the story" : step < total ? "Recording the voices" : "Putting it all together";
 }
@@ -39,7 +41,7 @@ export function Making({ kind, progress }: { kind: CreationEntry["kind"]; progre
   const step = progress?.step ?? 0;
   const total = progress?.total ?? 1;
   // ponytail: a template game always reports 1 step, a brand-new one reports the studio agent's 8.
-  const making: Job = kind === "movie" ? "movie" : total > 1 ? "brandNew" : "game";
+  const making: Job = kind === "movie" || kind === "story" ? kind : total > 1 ? "brandNew" : "game";
   const copy = COPY[making];
   const elapsed = useSeconds();
   const drift = 0.8 * (1 - Math.exp(-elapsed / copy.driftSeconds));

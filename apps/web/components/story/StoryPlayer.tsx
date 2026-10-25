@@ -5,7 +5,7 @@ import type { Brain } from "@kite/client";
 import { Background } from "@kite/movie/src/backgrounds";
 import { resolveSprite } from "@kite/movie/src/sprites";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import { Answers } from "@/components/creations/Answers";
+import { CheckCard, type Answer } from "@/components/creations/Check";
 import type { Loaded } from "@/components/creations/CreationCard";
 import { KID_ID } from "@/lib/brain";
 import type { CreationEntry } from "@/lib/creations";
@@ -334,6 +334,7 @@ const THANKS = ["That's a kind idea.", "I like how you think.", "That would help
 
 function Ending({ brain, id, book, name, again }: { brain: Brain; id: string; book: Book; name?: string; again: () => void }) {
   const [picked, setPicked] = useState<number>();
+  const [answer, setAnswer] = useState<Answer>({});
   if (book.mode === "bedtime") {
     return (
       <div className={styles.ending}>
@@ -348,8 +349,9 @@ function Ending({ brain, id, book, name, again }: { brain: Brain; id: string; bo
     return (
       <div className={styles.ending}>
         <p className={styles.sub}>The end. Kite has a question for you.</p>
-        <Answers brain={brain} id={id} check={book.check} celebrate={() => playSound("cheer")} />
-        <Again again={again} />
+        {/* The player already reads the question aloud, so the card stays quiet. */}
+        <CheckCard brain={brain} id={id} check={book.check} voice={undefined} answer={answer} setAnswer={setAnswer}
+          celebrate={() => playSound("cheer")} again={again} againLabel="Read it again" />
       </div>
     );
   }

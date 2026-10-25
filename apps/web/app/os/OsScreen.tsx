@@ -50,9 +50,10 @@ const MAKE_PROMPT: Record<MakeKind, string> = {
 };
 // A chip says what the kid would say, so the brain's own turn picks the topic and the goal from the conversation.
 const MAKE_ASK: Record<CreationKind, string> = { movie: "Make that into a movie", game: "Make a game about that" };
-const MAKE_CHIP: Record<CreationKind, { label: string; busy: string; open: string; special: string }> = {
+const MAKE_CHIP: Record<CreationKind | "story", { label: string; busy: string; open: string; special: string }> = {
   movie: { label: "Make it a movie", busy: "Making your movie", open: "Watch your movie", special: "Watch Kite's special version" },
   game: { label: "Make a game", busy: "Making your game", open: "Play your game", special: "Play your brand-new game" },
+  story: { label: "Tell me a story", busy: "Writing your story", open: "Read your story", special: "Read your story" },
 };
 // ponytail: a PDF is chosen and named but never uploaded. Upgrade path: send it with the turn and let the brain
 // pass the text to Claude as a document block, behind the same Content Safety check a photo gets.
@@ -380,7 +381,7 @@ export function OsScreen({ device }: { device: DeviceKind }) {
           .filter((c) => !isOpen(c) && (isFirst(c) || c.status !== "making"))
           .map((c) => (
             <button key={c.id} type="button" className={s.make} onClick={() => openCreation(c)}>
-              <Glyph name={c.kind} size={18} />
+              <Glyph name={c.kind === "story" ? "book" : c.kind} size={18} />
               {isFirst(c) ? MAKE_CHIP[c.kind].open : MAKE_CHIP[c.kind].special}
             </button>
           ))}

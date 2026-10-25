@@ -11,6 +11,7 @@ import { playSound } from "@/lib/sound";
 import { CheckCard, type Answer } from "./Check";
 import { Making, Resting } from "./Making";
 import { SandboxFrame } from "./SandboxFrame";
+import { StoryPlayer } from "@/components/story/StoryPlayer";
 import styles from "./creations.module.css";
 
 export interface CreationCardProps {
@@ -44,13 +45,16 @@ const GameStage = dynamic(() => import("./GameStage"), { ssr: false, loading: ()
 type Stage =
   | { show: "making" }
   | { show: "frame" | "movie" | "game"; data: Loaded }
+  | { show: "story"; data: Loaded }
   | { show: "later"; kind: Creation["kind"] }
   | { show: "error" };
-type Playing = Extract<Stage, { data: Loaded }>;
+type Playing = Extract<Stage, { show: "frame" | "movie" | "game" }>;
 
 function stageOf(creation: CreationEntry, data: Loaded | "error" | undefined): Stage {
   if (creation.status === "making" || data === undefined) return { show: "making" };
   if (data === "error") return { show: "error" };
+  // A storybook brings its own page controls, full screen and question, so it skips the movie and game dialog.
+  if (data.kind === "story") return { show: "story", data };
   if (data.html_url) return { show: "frame", data };
   if (data.storyboard) return { show: "movie", data };
   if (data.game) return { show: "game", data };
@@ -111,7 +115,13 @@ export function CreationCard({ brain, creation }: CreationCardProps) {
             animate={{ opacity: 1, transform: "scale(1)" }}
             transition={SPRING[band]}
           >
-            {"data" in stage ? <Player stage={stage} brain={brain} /> : <NothingToPlay stage={stage} retry={() => setData(undefined)} />}
+            {stage.show === "story" ? (
+              <StoryPlayer brain={brain} creation={creation} data={stage.data} />
+            ) : "data" in stage ? (
+              <Player stage={stage} brain={brain} />
+            ) : (
+              <NothingToPlay stage={stage} retry={() => setData(undefined)} />
+            )}
           </motion.div>
         )}
       </article>
