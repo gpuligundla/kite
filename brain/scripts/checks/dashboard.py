@@ -171,9 +171,18 @@ def check_auth() -> None:
     print("ok bad tokens, other kids, the cookie and the rate limit")
 
 
+def check_sos_without_location() -> None:
+    client, _, bearer = client_with_data()
+    assert client.post(f"/kids/{KID_ID}/sos", json={}, headers=bearer["os"]).status_code == 200, "no location still sends"
+    alerts = client.get(f"/kids/{KID_ID}/dashboard", headers=bearer["parent"]).json()["alerts"]
+    assert any(a["kinds"] == ["sos"] and a["lat"] is None for a in alerts), "the parent sees it, with no map"
+    print("ok an SOS with no location still reaches the parent")
+
+
 def run() -> None:
     check_all()
     check_auth()
+    check_sos_without_location()
 
 
 if __name__ == "__main__":

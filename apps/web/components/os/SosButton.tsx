@@ -6,17 +6,16 @@ import { playSound } from "@/lib/sound";
 import s from "./os.module.css";
 
 const HOLD_MS = 2000;
-// ponytail: the brain's Sos body requires numbers, so 0,0 stands for "location unknown". Send null once it accepts one.
-const UNKNOWN = { lat: 0, lng: 0 };
 
 type Sos = "idle" | "holding" | "sending" | "sent" | "failed";
 
-function whereAmI(): Promise<{ lat: number; lng: number }> {
+/** null when the phone can't get a location; the SOS still goes through. */
+function whereAmI(): Promise<{ lat: number; lng: number } | null> {
   return new Promise((resolve) => {
-    if (!navigator.geolocation) return resolve(UNKNOWN);
+    if (!navigator.geolocation) return resolve(null);
     navigator.geolocation.getCurrentPosition(
       (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => resolve(UNKNOWN),
+      () => resolve(null),
       { timeout: 5000, maximumAge: 60_000 },
     );
   });
@@ -33,7 +32,7 @@ export function SosButton({ brain }: { brain: Brain }) {
     try {
       const at = await whereAmI();
       await brain.sos(at);
-      setLocated(at !== UNKNOWN);
+      setLocated(at !== null);
       playSound("sent");
       setState("sent");
     } catch {

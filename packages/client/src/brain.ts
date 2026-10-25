@@ -74,7 +74,8 @@ export interface Brain {
   teachable(): Promise<Teachable[]>;
   /** The opening line arrives as a clip with no turn, usually before this resolves. */
   startTeach(conceptId: string): Promise<void>;
-  sos(at: { lat: number; lng: number }): Promise<void>;
+  /** `at` is null when the device has no location; the SOS still goes through. */
+  sos(at: { lat: number; lng: number } | null): Promise<void>;
   /** Resolves with the creation id. Progress arrives as creation.* events. */
   makeGame(topic: string, learningGoal: string): Promise<string>;
   /** The brain serves game.html at its root, so a game behind the /brain proxy needs the prefix. */
@@ -154,7 +155,7 @@ export function createBrain(config: BrainConfig): Brain {
       }
     },
     async sos(at) {
-      await request(config, "POST", `${kid}/sos`, { json: at });
+      await request(config, "POST", `${kid}/sos`, { json: at ?? {} });
     },
     async makeGame(topic, learningGoal) {
       const { creation_id } = await request<{ creation_id: string }>(config, "POST", `${kid}/games/custom`, {

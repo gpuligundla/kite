@@ -774,9 +774,9 @@ export interface components {
         /** Sos */
         Sos: {
             /** Lat */
-            lat: number;
+            lat?: number | null;
             /** Lng */
-            lng: number;
+            lng?: number | null;
         };
         /** Storyboard */
         Storyboard: {

@@ -16,8 +16,9 @@ class Me(BaseModel):
 
 
 class Sos(BaseModel):
-    lat: float
-    lng: float
+    # None when the phone couldn't get a location: the SOS still goes through.
+    lat: float | None = None
+    lng: float | None = None
 
 
 @router.post("/kids/{kid_id}/sos", dependencies=[require("os", "handheld")])
