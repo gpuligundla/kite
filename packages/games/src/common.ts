@@ -61,11 +61,10 @@ export function boot(canvas: HTMLCanvasElement, spec: GameSpec, sprites: Sprites
     });
   });
 
-  k.scene("end", (r: GameResult) => {
-    const stars = r.total === 0 ? 3 : Math.max(1, Math.round((3 * r.correct) / r.total));
-    k.add([k.text("Great job!", { size: 64 }), k.color(k.rgb("#2e7d32")), k.pos(W / 2, 150), k.anchor("center")]);
-    k.add([k.text("★".repeat(stars), { size: 96 }), k.color(k.rgb("#f9a825")), k.pos(W / 2, 270), k.anchor("center")]);
-    k.add([k.text(`You got ${r.correct} out of ${r.total}`, { size: 48 }), k.color(k.rgb(INK)), k.pos(W / 2, 400), k.anchor("center")]);
+  // The kid side never shows a score (DESIGN.md), so the end screen celebrates finishing. The result goes to Kite.
+  k.scene("end", () => {
+    k.add([k.text("Great playing!", { size: 64 }), k.color(k.rgb("#2e7d32")), k.pos(W / 2, 220), k.anchor("center")]);
+    k.add([k.text("You finished the game.", { size: 44 }), k.color(k.rgb(INK)), k.pos(W / 2, 330), k.anchor("center")]);
   });
 
   k.onLoad(() => k.go("start"));

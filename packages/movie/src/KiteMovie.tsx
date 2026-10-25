@@ -100,7 +100,7 @@ const SceneView: React.FC<{ scene: Scene; timed: TimelineScene; length: number; 
 const CheckQuestion: React.FC<{ creation: Creation }> = ({ creation }) => {
   const check = creation.storyboard!.check;
   return (
-    <AbsoluteFill style={{ background: "#000a", justifyContent: "center", alignItems: "center", fontFamily: "Arial, sans-serif", color: "#fff", textAlign: "center" }}>
+    <AbsoluteFill style={{ background: "#1d2b53", justifyContent: "center", alignItems: "center", fontFamily: "Arial, sans-serif", color: "#fff", textAlign: "center" }}>
       <div style={{ fontSize: 60, fontWeight: 800, maxWidth: 1000 }}>{check.question}</div>
       <div style={{ marginTop: 30, fontSize: 44, lineHeight: 1.5 }}>
         {check.choices.map((c, i) => (
