@@ -13,7 +13,7 @@ An AI companion that grows up with your kid from 1st to 12th grade, and keeps th
 ## Try it out
 
 - Code: [pending: public GitHub repo URL]
-- Live app: [pending: deploy URL]
+- Live app: https://kite-web.yellowhill-e665100f.eastus2.azurecontainerapps.io (pair a device first: `scripts/pair-links.sh <that address>`). Android app: https://kite-web.yellowhill-e665100f.eastus2.azurecontainerapps.io/kite.apk
 - Demo video: [pending: backup demo video URL]
 
 ## Inspiration
