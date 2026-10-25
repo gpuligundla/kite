@@ -12,6 +12,8 @@ from kite_brain.voice import CHARACTER_VOICES
 log = logging.getLogger(__name__)
 
 NARRATION_WORD_CAP = 150  # about 50 s at the pace the voices speak; the prompt asks for 80-110
+# Well under the 80 the prompt asks for: below it, the movie is a stub (one Azure board was two lines, about 10 s).
+NARRATION_WORD_FLOOR = 50
 ATTEMPTS = 2
 NO_CONCEPT = "none"  # the brain fills in the concept, so Claude never names one
 GUEST_LINES = 2  # Kite narrates; one favorite character may say this many lines
@@ -46,9 +48,9 @@ def storyboard_request(topic: str, learning_goal: str, kid_view: KidView, grade:
 
 
 def validate(storyboard: Storyboard) -> Storyboard:
-    """Sprites must come from the set (named by their canonical names), narration must fit the cap,
-    and Kite narrates with at most one guest speaker in one voice for GUEST_LINES lines.
-    KeyError or ValueError otherwise."""
+    """Sprites must come from the set (named by their canonical names), narration must fit between the floor and
+    the cap, the check question must be a real one, and Kite narrates with at most one guest speaker in one voice
+    for GUEST_LINES lines. KeyError or ValueError otherwise."""
     for scene in storyboard.scenes:
         for actor in scene.actors:
             actor.sprite = canonical(actor.sprite)
@@ -62,6 +64,12 @@ def validate(storyboard: Storyboard) -> Storyboard:
     words = sum(len(line.text.split()) for scene in storyboard.scenes for line in scene.lines)
     if words > NARRATION_WORD_CAP:
         raise ValueError(f"narration is {words} words, the cap is {NARRATION_WORD_CAP}")
+    if words < NARRATION_WORD_FLOOR:
+        raise ValueError(f"narration is {words} words; tell the whole idea in 80 to 110 words across the scenes")
+    check = storyboard.check
+    choices = [c.strip().casefold() for c in check.choices]
+    if len(check.question.split()) < 3 or any(len(c) < 2 for c in choices) or len(set(choices)) < len(choices):
+        raise ValueError("the check question must be a real question with distinct choices written out in words")
     return storyboard
 
 

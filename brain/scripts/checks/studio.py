@@ -24,7 +24,7 @@ from kite_brain.routers import creations
 from kite_brain.seed import KID_ID, seed
 from kite_brain.studio import game, movie, store
 from kite_brain.studio.sprites import sprite_names, sprite_svg, svg_data_url
-from kite_brain.studio.storyboard import GUEST_LINES, storyboard_request, write_storyboard
+from kite_brain.studio.storyboard import GUEST_LINES, storyboard_request, validate, write_storyboard
 from kite_brain.turn.pipeline import TurnInput, _Turn, act_on_tool_call
 from kite_brain.voice import CHARACTER_VOICES, EXPRESSIVE, allowed_voice_ids, character_spec, current_voices, voice_for
 from scripts.checks.audiences import drain
@@ -330,6 +330,25 @@ def check_music_bed() -> None:
     assert cancelled == [TOPIC], "a bed still composing is cancelled once the movie is made"
 
 
+def check_thin_board_is_asked_again() -> None:
+    # On Azure a solar-system board came back as one scene of two lines with the check question "x" and the choices
+    # "a" and "b". The studio agent animated it faithfully: a ten-second movie that ended on an empty question card.
+    stub = board().model_copy(update={"scenes": board().scenes[:1]})
+    placeholder = board().model_copy(update={"check": board().check.model_copy(update={"question": "x", "choices": ["a", "b"]})})
+    for why, bad in (("a one-scene stub", stub), ("a placeholder question", placeholder)):
+        try:
+            validate(bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"{why} must be rejected")
+    thin = stub.model_copy(update={"check": placeholder.check})
+    deps, _ = deps_for(Studio(thin, board()))
+    got = asyncio.run(write_storyboard(deps, TOPIC, GOAL, KidView(interests=[], characters=[], moments=[], deep_topics=[]), 3))
+    assert len(got.scenes) == 3 and len(deps.llm.parses) == 2, "a thin board is asked again"
+    assert "rejected" in deps.llm.parses[1][0].messages[-1]["content"], "and the retry says why"
+
+
 def check_board_that_breaks_the_schema_is_asked_again() -> None:
     # Structured output doesn't enforce limits like five scenes, so a rare board fails Pydantic in parse. On Azure
     # one did, and with no retry the kid got the cached sky movie for a question about phones.
@@ -619,7 +638,7 @@ def run() -> None:
     for check in (
         check_progress_then_ready, check_video_render, check_deadline_falls_back, check_errors_fall_back,
         check_storyboard_takes_the_kid_view_only, check_voices_are_allowlisted, check_kite_narrates, check_one_guest_at_most,
-        check_music_bed, check_board_that_breaks_the_schema_is_asked_again, check_unknown_sprite_rejected,
+        check_music_bed, check_board_that_breaks_the_schema_is_asked_again, check_thin_board_is_asked_again, check_unknown_sprite_rejected,
         check_game, check_reads_need_no_token, check_endpoints_are_for_kid_devices,
         check_answer_and_result_record_evidence, check_concept_comes_from_the_brain, check_tool_call_starts_the_right_job,
         check_showcase_seeds_once,
