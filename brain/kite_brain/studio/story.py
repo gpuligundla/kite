@@ -68,7 +68,8 @@ PURPOSES = {
     "Show it warmly and never preach: no moral stated at the end.",
 }
 BEDTIME = (
-    "This is a bedtime story: slow, cozy and quiet. Only calm events and soft sounds (no bangs or crashes), and it "
+    "This is a bedtime story: slow, cozy and quiet. Only calm events and soft sounds (crickets, a gentle breeze, a "
+    "sleepy yawn; no bangs or crashes), and it "
     "winds down to the hero falling asleep. Use [softly] or [whispers] often."
 )
 ENDINGS = {
@@ -95,7 +96,7 @@ Rules:
 - Kite narrates: every line has speaker "Kite" and voice "kite". Kite is heard, never seen: no actor plays Kite.
 - One character in the story may speak aloud, as speaker under that character's name, in one of these voices: {voices}. They say at most {guest_lines} short lines, all in that one voice. No other speakers.
 - Bring the telling to life with audio tags in square brackets where they help, such as [whispers], [laughs], [gasps], [excited] or [softly]. At most one tag per sentence.
-- Up to 2 sound effects per page, only where a sound helps the story (a splash, a creaky door, an owl hooting). Each has a short prompt that describes only the sound (no music, no speech), the index of the line on its page it plays with, the one word in that line it lands on, and seconds between 1 and 3.
+- Sound effects bring the story to life: give at least half the pages one (2 at most), on a moment the listener would hear (a splash, a creaky door, an owl hooting). Each has a short prompt that describes only the sound (no music, no speech), the index of the line on its page it plays with, the one word in that line it lands on, and seconds between 1 and 3.
 - Be kind and calm. Nothing scary, cruel or violent, and nothing about the child's personal details.
 {ending}"""
 
@@ -300,9 +301,10 @@ async def _make(
     started = time.monotonic()
     music = asyncio.create_task(music_bed(topic, grade, MUSIC_S, MOODS["bedtime" if mode == "bedtime" else purpose]))
     try:
+        known = store.load_meta(creation_id).concept_id
         kid_view, concept = await asyncio.gather(
             _kid_view(deps, kid_id, grade),
-            store.resolve_concept(deps, topic, learning_goal) if purpose == "learn" else asyncio.sleep(0),
+            store.resolve_concept(deps, topic, learning_goal) if purpose == "learn" and not known else asyncio.sleep(0, known),
         )
         book = await write_story(deps, topic, learning_goal, kid_view, grade, mode, purpose)
         if not await store.strings_are_safe(deps, readable_text(book)):
@@ -359,12 +361,15 @@ async def build_story(
 
 async def start_story(
     deps: Deps, kid_id: str, topic: str, learning_goal: str, grade: Grade, *,
-    mode: StoryMode = "story", purpose: StoryPurpose = "learn", read_only: bool = False,
+    mode: StoryMode = "story", purpose: StoryPurpose = "learn", read_only: bool = False, concept_id: str | None = None,
 ) -> str:
-    """A pending creation under an unguessable id, announced as step 0 of 1. build_story runs in the background."""
+    """A pending creation under an unguessable id, announced as step 0 of 1. build_story runs in the background.
+    `concept_id` is the concept the asking turn was about: a learn story teaches it when given, since the
+    turn's decision is a surer match than looking the topic up again."""
     creation_id = store.new_id()
     store.save(Creation(id=creation_id, kind="story", status="pending"))
-    store.save_meta(creation_id, store.Meta(kid_id=kid_id, grade=grade, read_only=read_only))
+    concept = concept_id if purpose == "learn" else None
+    store.save_meta(creation_id, store.Meta(kid_id=kid_id, grade=grade, read_only=read_only, concept_id=concept))
     _progress(deps, kid_id, creation_id, 0, 1)
     store.spawn(build_story(deps, kid_id, creation_id, topic, learning_goal, grade, mode, purpose))
     return creation_id

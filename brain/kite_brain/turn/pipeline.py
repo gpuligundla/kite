@@ -193,7 +193,7 @@ def act_on_tool_call(call: ToolCall, turn_id: str, turn: _Turn | None = None) ->
     if call.name == "tell_story":
         spawn(start_story(
             deps, kid_id, call.topic, call.learning_goal, turn.grade, mode="bedtime" if call.bedtime else "story",
-            purpose=call.purpose, read_only=turn.read_only,
+            purpose=call.purpose, read_only=turn.read_only, concept_id=turn.concept_id,
         ))
         return None
     start = start_movie if call.name == "make_movie" else start_game

@@ -312,24 +312,37 @@ def check_tool_is_offered_and_acted_on() -> None:
     for words in ("tell me a story about X", "tell me a bedtime story about X", "only when the child's latest message asks"):
         assert words in tool["description"], words
 
-    async def act(call, **inp):
+    async def act(call, concept, **inp):
         stand = Studio(book())
         deps, bus = deps_for(stand)
         turn = _Turn(TurnInput(kid_id=KID_ID, device="os", mode="talk", text="x", **inp), deps, "t1")
         turn.load_kid()
+        turn.concept_id = concept  # what the turn's own decision found it was about
         assert act_on_tool_call(call, "t1", turn) is None, "a story speaks no extra line"
         await store.settle()
         return stand, bus
 
+    def made_in(folder):
+        [made] = [creation_in(folder, p.name) for p in folder.iterdir() if p.name != "sfx-cache"]
+        return made, json.loads((folder / made.id / "meta.json").read_text())
+
     with (patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())) as folder,
           patch.object(story, "music_bed", no_music), patch.object(story, "sound_effect", no_sound)):
-        stand, bus = asyncio.run(act(ToolCall("tell_story", "the stars", "", purpose="feelings", bedtime=True), as_of_grade=1))
-        [made] = [creation_in(folder, p.name) for p in folder.iterdir() if p.name != "sfx-cache"]
+        call = ToolCall("tell_story", "the stars", "", purpose="feelings", bedtime=True)
+        stand, bus = asyncio.run(act(call, "light_rainbow", as_of_grade=1))
+        made, meta = made_in(folder)
         assert made.kind == "story" and made.storybook.mode == "bedtime" and made.storybook.purpose == "feelings"
         assert story.BEDTIME in stand.parses[0][0].system and "grade 1" in stand.parses[0][0].context
-        meta = json.loads((folder / made.id / "meta.json").read_text())
         assert meta["read_only"] is True and meta["grade"] == 1, "a time-travel turn's story is read-only"
+        assert meta["concept_id"] is None, "a feelings story teaches no concept, whatever the turn was about"
         assert asyncio.run(drain(bus, "os"))[-1].kind == "story"
+
+    with (patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())) as folder,
+          patch.object(story, "music_bed", no_music), patch.object(story, "sound_effect", no_sound)):
+        asyncio.run(act(ToolCall("tell_story", "rainbows", "Light bends into colors.", purpose="learn"), "light_rainbow"))
+        made, meta = made_in(folder)
+        assert meta["concept_id"] == "light_rainbow" and made.storybook.check.concept_id == "light_rainbow", \
+            "a learn story asked for by voice teaches the turn's concept"
 
     # By voice: the tool runs only inside Claude's answer, which route() allows. A family that sends a topic to
     # the grown-ups gets no story, while the default policy lets the same ask through.
