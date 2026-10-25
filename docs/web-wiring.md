@@ -35,6 +35,14 @@ Pass `sprites` exactly as the brain sends it (slug to raw `<svg>` markup). The p
 The check question (`creation.storyboard.check`) shows after the last scene. Send the kid's pick with
 `POST /creations/{id}/answer {choice}` (os or handheld token) and get back `{correct, correct_index, recorded}`.
 
+### Director's cut
+
+After a template movie is ready, the brain asks the Foundry studio agent (Claude Code on Opus 5.5) for a
+hand-animated version of the same story. It arrives minutes later as its own creation (kind `movie`, with
+`html_url` and no `storyboard`), carrying the real narration and a soft music bed. `CreationCard` plays any
+creation with `html_url` in `<iframe sandbox="allow-scripts">` behind a play button, labelled "Kite's special
+version". A director's cut that doesn't finish leaves no card; the template movie stays.
+
 ## Template games (Task 27)
 
 On `creation.ready` with `kind: "game"`, fetch `GET /creations/{id}` and mount `creation.game`:

@@ -308,3 +308,17 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   - the "taught" event can't reach the kid (that one is by design: the kid celebrates the teaching, not the grade)
 
   Claude fixed the first two in the shared layer and proved the reconnect by killing a brain under an open parent page.
+
+## 2026-10-24 ~22:10 EDT: Session 1, Opus 5.5 directs the movies and builds the games
+
+- **The human watched the volcano movie and said it didn't look good, then pointed Claude at two posts:** one about Opus 5.5's visual design, one listing a video-making toolchain.
+  - Claude explained the cause plainly: the model only wrote JSON, and a fixed template placed stickers. The fix was to let the model design the frames.
+  - Claude took what fit a kids' product from the list: HTML motion graphics, a critic that reads screenshots, flowing narration, word-timed captions, and a music bed. It left out clip downloads and image or video generation models.
+- **A helper built a "director's cut".** Claude Code on Opus 5.5, inside the Foundry hosted agent, hand-animates the narration as one GSAP page.
+  - The volcano cut drew the science: rock layers, a magma chamber, a density panel, a buoyancy analogy, gas escaping a crack.
+  - Its play-test checks timing against the narration, then makes Opus look at its own frames and revise.
+  - When Claude spotted the guide character covering a label, that became a play-test failure, not a note.
+- **Games got the same treatment at the human's request.** Opus 5.5 builds with Phaser and GSAP and must pass a solvability gate.
+  - The gate came from a bug the creations helper found: the earlier Sonnet game couldn't be finished after round 3.
+- **On the deployed agent, the first live director's cut ran out of time.** The cloud sandbox is slower than the laptop, so Claude raised the budget and redeployed.
+- **The live brand-new game worked the first time:** a night sky that turns blue as the kid answers questions about Rayleigh scattering.
