@@ -1,0 +1,58 @@
+.page { padding: var(--space-5) var(--space-4) var(--space-7); font-size: var(--kid-text); }
+.column { width: min(100%, 760px); margin: 0 auto; display: grid; gap: var(--space-6); }
+
+.back {
+  justify-self: start; display: inline-flex; align-items: center;
+  min-height: var(--target); padding: 0 var(--space-5);
+  border-radius: var(--radius-kid); background: var(--paper);
+  font-weight: 700; text-decoration: none;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.back:active { transform: scale(0.97); }
+
+.top { display: grid; justify-items: center; gap: var(--space-3); text-align: center; }
+.mark svg { width: var(--kite-size); height: auto; }
+.h1 { font-size: calc(var(--kid-text) * 1.6); text-wrap: balance; }
+.lead { color: var(--ink-soft); max-width: 40ch; text-wrap: balance; }
+
+.sections { display: grid; gap: var(--space-6); }
+.section { display: grid; gap: var(--space-3); animation: rise var(--dur-panel) var(--ease-out) backwards; }
+.section:nth-child(2) { animation-delay: 60ms; }
+.section:nth-child(3) { animation-delay: 120ms; }
+.section:nth-child(4) { animation-delay: 180ms; }
+.h2 { font-size: calc(var(--kid-text) * 1.1); }
+.empty { color: var(--ink-soft); }
+
+.chips, .names, .moments { list-style: none; margin: 0; padding: 0; }
+.chips, .names { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.chips li { padding: 0.25em 0.85em; border-radius: 999px; background: var(--paper); }
+/* Favorite characters are the kid's own cast: bigger, in the highlight color. */
+.names li {
+  padding: 0.3em 1em; border-radius: var(--radius-kid);
+  background: var(--kite-yellow);
+  font-family: var(--font-display), system-ui, sans-serif; font-weight: 700; font-size: 1.15em;
+}
+.moments { padding: var(--space-1) var(--space-5); border-radius: var(--radius-kid); background: var(--paper); }
+.moments li { padding: var(--space-3) 0; }
+.moments li + li { border-top: 1px solid var(--line); }
+.more {
+  justify-self: start; min-height: var(--target); padding: 0 var(--space-5);
+  border: 0; border-radius: var(--radius-kid); background: var(--paper);
+  font-weight: 700; cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.more:active { transform: scale(0.97); }
+
+.forget {
+  display: grid; gap: var(--space-2); padding: var(--space-5);
+  border-radius: var(--radius-kid);
+  background: color-mix(in srgb, var(--sky-deep) 45%, var(--paper));
+}
+.say {
+  font-family: var(--font-display), system-ui, sans-serif; font-weight: 700; white-space: nowrap;
+  padding: 0.05em 0.45em; border-radius: 0.6em; background: var(--paper);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+}
