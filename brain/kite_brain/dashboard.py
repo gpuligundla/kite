@@ -93,10 +93,13 @@ def dashboard_view(deps: Deps, kid_id: str, grade: Grade) -> DashboardView:
         if isinstance(e.payload, Moment):
             name = deps.catalog.get(e.payload.concept_id).kid_name
             moments.setdefault(e.grade, []).append(e.payload.text(name))
+    curiosity = maps.curiosity_map(evts, until)
+    skills = maps.skills_map(evts, deps.catalog, grade)
     return DashboardView(
         profile=maps.profile_view(evts),
-        curiosity=maps.curiosity_map(evts, until),
-        skills=maps.skills_map(evts, deps.catalog, grade),
+        curiosity=curiosity,
+        skills=skills,
+        strengths=maps.strength_topics(skills, curiosity, deps.catalog, grade),
         cards=_cards(deps, kid_id, grade),
         alerts=_alerts(deps, kid_id, until),
         moments_by_grade=moments,

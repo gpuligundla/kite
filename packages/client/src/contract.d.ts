@@ -615,6 +615,11 @@ export interface components {
             how_she_learns: {
                 [key: string]: number;
             } | null;
+            /**
+             * Strengths
+             * @default null
+             */
+            strengths: string[] | null;
         };
         /** GameItem */
         GameItem: {

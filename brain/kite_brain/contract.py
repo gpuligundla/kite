@@ -290,6 +290,8 @@ class DashboardView(BaseModel):
     moments_by_grade: dict[int, list[str]]
     policy: dict[str, PolicyAction]
     how_she_learns: dict[str, float] | None = None
+    # Strength topics (spec 6) at this grade: the same rule the demo's shape check uses.
+    strengths: list[str] | None = None
 
 
 # ---- Studio -----------------------------------------------------------------

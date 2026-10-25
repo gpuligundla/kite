@@ -94,6 +94,7 @@ def check_all() -> None:
     assert full["moments_by_grade"]["1"] == ["Figured out How we see things, with Rexy"] or "Rexy" in full["moments_by_grade"]["1"][0]
     assert {c["topic"] for c in full["cards"]} == {"light", "gravity"} and full["cards"][0]["summary"] == "a summary"
     assert full["how_she_learns"] == {"teach_back": 1.0}, f"how_she_learns: {full['how_she_learns']}"
+    assert isinstance(full["strengths"], list), "the dashboard names its strength topics"
     print("ok can-teach concepts are listed; cards decrypt; how she learns is present")
 
     g3 = client.get(f"/kids/{KID_ID}/dashboard?grade=3", headers=bearer["parent"]).json()
