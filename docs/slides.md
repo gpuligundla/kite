@@ -108,7 +108,7 @@ Ten slides. The live demo in [`run-of-show.md`](run-of-show.md) carries the pitc
 **On the slide:**
 
 - Claude Code on Opus 5.5 as lead engineer, with helper agents in their own worktrees
-- All 169 commits through `fd6cc8c` carry a Claude co-author trailer, from Opus 5.5, Fable 5.1, and Sonnet 5.5
+- All 181 commits through `978b65d` carry a Claude co-author trailer, from Opus 5.5, Fable 5.1, and Sonnet 5.5
 - Four models reviewed the design and found a privacy hole in Claude's own draft
 - AI inside the product: Haiku agents played Maya, and Claude Code on Opus 5.5 builds her games and director's cuts
 - Every decision, timestamped: `COLLAB_LOG.md`

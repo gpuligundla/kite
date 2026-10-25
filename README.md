@@ -9,7 +9,13 @@ We built Kite for HarborHack 2026 ("Agent In The Loop"). Every record in this re
 - The record of how two humans and several AI agents built it is in [`COLLAB_LOG.md`](COLLAB_LOG.md).
 - The Devpost write-up is in [`docs/devpost.md`](docs/devpost.md), and the live demo script is in [`docs/run-of-show.md`](docs/run-of-show.md).
 
-<<SCREENSHOTS>>
+| Kite OS at grade 2: the noon sky | Kite OS at grade 11: the aurora night |
+|---|---|
+| ![Kite OS desktop at grade 2, with apps, a Today column, and Ask Kite in the dock](docs/screenshots/kite-os-grade-2.png) | ![The same desktop at grade 11, under a night sky](docs/screenshots/kite-os-grade-11.png) |
+| **Parent console** | **Counselor console** |
+| ![The parent console's Overview tab, with the honeycomb strengths and an alert](docs/screenshots/parent-console.png) | ![The counselor console's Reports tab, with a disclosure, its case steps, and its context](docs/screenshots/counselor-console.png) |
+
+<p align="center"><img src="docs/screenshots/handheld.png" alt="The handheld launcher: a clock, the next class, location, approved contacts, SOS, and the walkie-talkie talk button" width="260"></p>
 
 ## The four screens
 
@@ -322,7 +328,9 @@ The real data has dinosaurs as a strength at grades 4, 6, and 8 to 11. In grade 
 
 ## How it was built
 
-<<BUILT>>
+Two humans built Kite with Claude Code (Opus 5.5) as the lead engineer, helper agents in separate git worktrees, and a review panel on four models. All 181 commits on the `brain` branch through `978b65d` carry a Claude co-author trailer: 172 from Opus 5.5, 6 from Fable 5.1, and 3 from Sonnet 5.5. To recount at any commit, run `git log --format='%(trailers:key=Co-Authored-By,valueonly)' | sort | uniq -c`.
+
+AI agents also run inside the product. Claude Haiku persona agents played Maya's childhood. Claude Code on Opus 5.5, inside an Azure sandbox, writes the director's cuts and the brand-new games and play-tests its own work.
 
 The AI changed the design as well as writing the code. Claude saw that an abuse alert sent to a parent can endanger the kid when the parent is the abuser, so those alerts now go to the counselor. Four reviewers on different models found that Claude's own first design let the parent stream see abuse turns, and Claude rewrote it. The humans overruled Claude too. They rejected its plain Node stack for a real monorepo with a Python brain. They told it the kid screen had to be an operating system shell, not one app, and that the first design was too pale. When they dropped the unit-test suite, Claude argued to keep the safety checks, because the claims made on stage depend on them.
 
