@@ -16,13 +16,14 @@ ALL_ALERTS = ("ok", "alert_bullying", "alert_stranger", "alert_abuse", "alert_se
 TOPICS = ("death", "religion", "bodies", "war", "divorce", "none")
 
 
-def decisions(alerts=None, topic="none", about_me=0.0) -> Decisions:
+def decisions(alerts=None, topic="none", about_me=0.0, attack=0.0) -> Decisions:
     safety = {label: 0.0 for label in ALL_ALERTS} | {f"alert_{k}": p for k, p in (alerts or {}).items()}
     return Decisions(
         {
             "safety": safety,
             "sensitive_topic": {t: float(t == topic) for t in TOPICS},
             "about_me": {"yes": about_me, "no": 1 - about_me},
+            "jailbreak": {"other": 1 - attack, "about_kite": 0.0, "attack": attack},
         },
         "decision1",
     )
@@ -59,6 +60,14 @@ ROWS = [
         False,
     ),
     ("jailbreak", dict(decisions=OK, safety=SafetyResult(set(), jailbreak=True)), dict(route="fallback"), True),
+    ("decision-1 jailbreak .95", dict(decisions=decisions(attack=0.95), safety=CLEAN), dict(route="fallback"), True),
+    ("just under the jailbreak threshold", dict(decisions=decisions(attack=0.94), safety=CLEAN), dict(route="answer"), False),
+    (
+        "alert beats a jailbreak",
+        dict(decisions=decisions({"self_harm": 0.5}, attack=1.0), safety=SafetyResult(set(), jailbreak=True)),
+        dict(route="alert", alert_to="parent"),
+        False,
+    ),
     ("content safety down", dict(decisions=OK, safety=None), dict(route="fallback"), True),
     ("near live quiz in teach mode", dict(decisions=OK, safety=CLEAN, homework=NEAR_QUIZ, mode="teach"), dict(route="pause", homework_mode="pause"), True),
     (

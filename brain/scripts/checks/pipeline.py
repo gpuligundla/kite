@@ -134,6 +134,27 @@ def check_both_decide_paths_down_is_fallback() -> None:
     assert all(rows(deps, t) == 0 for t in ("session_turn", "learning_event", "alert")), "no writes"
 
 
+def check_decision_jailbreak_is_fallback() -> None:
+    """Prompt Shields saw nothing (the stand-in's check_input), and Decision-1's jailbreak question caught it."""
+    decisions = make_decisions()
+    decisions.answers["jailbreak"]["attack"] = 1.0
+    stand = StandIns(decide=decisions)
+    asked = []
+    answer = stand.decide
+
+    async def recording(context, questions):
+        asked.extend(q.name for q in questions)
+        return await answer(context, questions)
+
+    stand.decide = recording
+    deps, bus = deps_for(stand)
+    seen = turn(deps, bus, stand, "jb1")
+    assert "jailbreak" in asked, f"every turn asks the jailbreak question: {asked}"
+    assert next(e for e in seen["parent"] if e.type == "routed").route == "fallback"
+    assert seen["os"][-1].text == FALLBACK and stand.llm_calls == 0, "fallback line, no LLM call"
+    assert rows(deps, "session_turn") == 0, "nothing written"
+
+
 def check_output_flag_stops_and_falls_back() -> None:
     stand = StandIns(decide=make_decisions(), answer="Hello there. This one is BAD. Never spoken.", flag_output="BAD")
     deps, bus = deps_for(stand)
@@ -250,7 +271,8 @@ def run() -> None:
     use_sample_voices()
     for check in (
         check_abuse_turn_invisible_to_parent, check_time_travel_writes_nothing,
-        check_both_decide_paths_down_is_fallback, check_output_flag_stops_and_falls_back, check_unheard,
+        check_both_decide_paths_down_is_fallback, check_decision_jailbreak_is_fallback,
+        check_output_flag_stops_and_falls_back, check_unheard,
         check_answer_path, check_no_text_in_logs, check_api,
     ):
         check()

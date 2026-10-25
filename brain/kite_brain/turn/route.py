@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from kite_brain.config import ABOUT_ME_THRESHOLD, ALERT_THRESHOLD, FORGET_THRESHOLD
+from kite_brain.config import ABOUT_ME_THRESHOLD, ALERT_THRESHOLD, FORGET_THRESHOLD, JAILBREAK_THRESHOLD
 from kite_brain.contract import AlertKind, HomeworkMode, Mode, PolicyAction, RouteName
 from kite_brain.decide import Decisions, alert_kinds, top
 from kite_brain.deps import SafetyResult
@@ -86,6 +86,8 @@ def route(
         return plan("alert", audience=to, alert_to=to, alert_kinds=sorted(kinds), reply=reply, situation="alert")
 
     if decisions is None or safety is None or safety.jailbreak or not recall_ok:
+        return plan("fallback", reply=FALLBACK)
+    if decisions.answers.get("jailbreak", {}).get("attack", 0.0) >= JAILBREAK_THRESHOLD:
         return plan("fallback", reply=FALLBACK)
 
     if decisions.answers.get("forget_request", {}).get("yes", 0.0) >= FORGET_THRESHOLD:

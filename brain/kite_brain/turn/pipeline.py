@@ -34,7 +34,8 @@ from kite_brain.policy import (
     HOMEWORK_LINES, about_me_context, band_for, collab_log, fk_grade, system_prompt, turn_context,
 )
 from kite_brain.questions import (
-    ABOUT_KITE, ABOUT_ME, FORGET_REQUEST, INITIATIVE, SAFETY, SENSITIVE_TOPIC, concept_question, teach_point_questions,
+    ABOUT_KITE, ABOUT_ME, FORGET_REQUEST, INITIATIVE, JAILBREAK, SAFETY, SENSITIVE_TOPIC, concept_question,
+    teach_point_questions,
 )
 from kite_brain.studio.game import start_game
 from kite_brain.studio.movie import start_movie
@@ -133,7 +134,7 @@ def _candidates(turn: _Turn, vec: np.ndarray | None) -> list[str]:
 
 
 async def _decide(turn: _Turn, text: str, candidates: list[str]) -> Decisions | None:
-    questions = [SAFETY, SENSITIVE_TOPIC, INITIATIVE, ABOUT_ME, ABOUT_KITE, FORGET_REQUEST]
+    questions = [SAFETY, SENSITIVE_TOPIC, INITIATIVE, ABOUT_ME, ABOUT_KITE, FORGET_REQUEST, JAILBREAK]
     if candidates:
         questions.append(concept_question(candidates, {c: turn.deps.catalog.get(c).name for c in candidates}))
     if turn.inp.mode == "teach" and turn.inp.concept_id:
