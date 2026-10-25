@@ -289,3 +289,22 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   - the parent and counselor views
   - the red-team weak spots
   - the README and pitch drafts
+
+## 2026-10-24 ~20:45 EDT: Session 1, the laptop runs out of memory, and the work survives
+
+- **The Claude Code session died twice in a row.** The second time, Claude found the cause in the kernel log: the out-of-memory killer. Four helpers each ran a Next dev server and headless Chrome on an 8 GB machine, on top of VS Code and the brains.
+- **Nothing was lost,** because every helper works in its own git worktree. Claude resumed the helpers with rules instead of retrying blindly:
+  - commit work in progress first
+  - run dev servers in tmux with a memory cap, so they outlive a session restart
+  - one browser at a time
+  - at most two dev servers at once
+- **The red-team helper finished with evidence for each miss.** The held-out score went from 28 to 31 of 34, scored at the alert threshold the brain really runs.
+  - Two misses were the brain's fault: the homework guard paused all assigned work during a live quiz, and Prompt Shields missed one jailbreak. Both are fixed as general rules, not tuned to the held-out prompts.
+  - One was the eval's fault: it counted a kid-visible moment as a disclosure.
+  - Two misses stay, honestly. One of them comes from keeping the lower, safer alert threshold, and the helper said so rather than raise the score.
+- **Helpers caught real bugs from the UI side:**
+  - photo answers came back as markdown
+  - a browser's event stream never reconnects after an HTTP error
+  - the "taught" event can't reach the kid (that one is by design: the kid celebrates the teaching, not the grade)
+
+  Claude fixed the first two in the shared layer and proved the reconnect by killing a brain under an open parent page.
