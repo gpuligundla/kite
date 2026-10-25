@@ -30,7 +30,11 @@ const HELLO: Record<Band, (name: string) => [string, string]> = {
 };
 const GRADE_NAME = (g: number) => (g === 0 ? "K" : String(g));
 // A chip says what the kid would say, so the brain's own turn picks the topic and the goal from the conversation.
-const MAKE_ASK: Record<CreationKind, string> = { movie: "Make that into a movie", game: "Make a game about that" };
+// "That" is the latest answer, so a chip under an older one names its question.
+const MAKE_ASK: Record<CreationKind, (question: string | null) => string> = {
+  movie: (q) => (q ? `Make a movie about this: ${q}` : "Make that into a movie"),
+  game: (q) => (q ? `Make a game about this: ${q}` : "Make a game about that"),
+};
 // Allows for the brain's clock running a little ahead of this one.
 const REPLAY_SLACK_MS = 3000;
 
@@ -154,7 +158,8 @@ export function OsScreen({ device }: { device: DeviceKind }) {
     const key = `${t.id}:${kind}`;
     setMaking((m) => new Set(m).add(key));
     hush();
-    if (await ask({ text: MAKE_ASK[kind] })) return;
+    const latest = brain.talk.getState().turns.filter((x) => x.id !== NO_TURN).at(-1)?.id === t.id;
+    if (await ask({ text: MAKE_ASK[kind](latest ? null : (t.heard ?? null)) })) return;
     setMaking((m) => {
       const next = new Set(m);
       next.delete(key);

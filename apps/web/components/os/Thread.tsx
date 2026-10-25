@@ -93,7 +93,7 @@ export function Thread({ brain, band, device, turns, earlier, creations, anchors
           const canMake = makeChips && t.done?.route === "answer" && t.heard && first;
           const below = creations.filter((c) => anchors[c.id] === t.id);
           return (
-            <section key={t.id} className={s.turn} aria-label="One question and Kite's answer">
+            <section key={t.id} className={s.turn} data-turn={t.id} aria-label="One question and Kite's answer">
               {/* The reading level sits across from the question, so it shows with the answer's first line and never
                   pushes the answer down when it arrives. */}
               <div className={s.askRow}>

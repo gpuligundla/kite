@@ -49,19 +49,31 @@ try {
     assert.match(await strengths().innerText(), /Strengths[\s\S]*Dinosaurs[\s\S]*Getting there/, "grade 8");
   });
 
-  const turns = () => kid.locator('section[aria-label="One question and Kite\'s answer"]');
   // Talking comes first on the kid screen; the text box waits behind "Type instead", remembered per device.
   async function typing() {
     if (!(await kid.getByRole("textbox").isVisible())) await kid.getByRole("button", { name: "Type instead" }).click();
   }
+  // The screen keeps the newest 24 turns, and a long-running brain replays earlier ones on load, so a turn is found
+  // by its id, never by its position.
+  async function newTurn(act) {
+    const latest = () => kid.evaluate(() => [...document.querySelectorAll("section[data-turn]")].at(-1)?.dataset.turn ?? null);
+    const before = await latest();
+    await act();
+    await kid.waitForFunction(
+      (prev) => ([...document.querySelectorAll("section[data-turn]")].at(-1)?.dataset.turn ?? null) !== prev,
+      before,
+      { timeout: 20_000 },
+    );
+    return kid.locator(`section[data-turn="${await latest()}"]`);
+  }
   async function ask(grade, text) {
     await kid.locator('input[type="range"]').fill(String(grade));
     await kid.waitForTimeout(600);
-    const before = await turns().count();
     await typing();
-    await kid.getByRole("textbox").fill(text);
-    await kid.keyboard.press("Enter");
-    const turn = turns().nth(before);
+    const turn = await newTurn(async () => {
+      await kid.getByRole("textbox").fill(text);
+      await kid.keyboard.press("Enter");
+    });
     await turn.getByText(/^FK \d+\.\d$/).waitFor({ timeout: 25_000 });
     return { turn, answer: (await turn.locator("div[aria-live]").textContent())?.trim() ?? "" };
   }
@@ -80,14 +92,14 @@ try {
   });
 
   await step("a spoken question gets a spoken answer", async () => {
-    const before = await turns().count();
     const spoke = kid.locator('svg[aria-label="Kite, talking"]').waitFor({ timeout: 40_000 });
     const diamond = await kid.getByRole("button", { name: "Hold to talk" }).boundingBox();
-    await kid.mouse.move(diamond.x + diamond.width / 2, diamond.y + diamond.height / 2);
-    await kid.mouse.down();
-    await kid.waitForTimeout(SPOKEN_MS);
-    await kid.mouse.up();
-    const turn = turns().nth(before);
+    const turn = await newTurn(async () => {
+      await kid.mouse.move(diamond.x + diamond.width / 2, diamond.y + diamond.height / 2);
+      await kid.mouse.down();
+      await kid.waitForTimeout(SPOKEN_MS);
+      await kid.mouse.up();
+    });
     await turn.getByText(/volcano/i).first().waitFor({ timeout: 20_000 });
     await turn.getByText(/^FK \d+\.\d$/).waitFor({ timeout: 25_000 });
     await spoke;
@@ -108,10 +120,9 @@ try {
   });
 
   await step("make it a movie: the player is ready within 45 s", async () => {
-    // The chip asks the way she would ("Make that into a movie"), and the movie shows under that new turn.
-    const before = await turns().count();
-    await first.turn.getByRole("button", { name: "Make it a movie" }).click();
-    await turns().nth(before).locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
+    // The chip asks the way she would, and the movie shows under that new turn.
+    const asked = await newTurn(() => first.turn.getByRole("button", { name: "Make it a movie" }).click());
+    await asked.locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
   });
 
   await step("SOS reaches the grown-up view live within 2 s", async () => {
