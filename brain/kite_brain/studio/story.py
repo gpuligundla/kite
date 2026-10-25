@@ -26,7 +26,7 @@ from elevenlabs import AsyncElevenLabs
 from kite_brain import studio_pro
 from kite_brain.config import get_settings
 from kite_brain.contract import (
-    Creation, CreationProgressEvent, CreationReadyEvent, Grade, KidView, Reflection, SoundCue, StoryMode, StoryPurpose,
+    Creation, CreationProgressEvent, CreationReadyEvent, Grade, KidView, Palette, Reflection, SoundCue, StoryMode, StoryPurpose,
     Storybook, Word,
 )
 from kite_brain.deps import Deps, LlmRequest
@@ -101,6 +101,10 @@ Rules:
 {ending}"""
 
 
+# The bedtime book's scenes: the player's own night colours (story.module.css), dark enough for a dimmed room.
+NIGHT = Palette(sky="#1a2452", ground="#24345e", time_of_day="night")
+
+
 def ending(mode: StoryMode, purpose: StoryPurpose) -> str:
     """Which closing question a story asks: Storybook keeps only the one that fits."""
     if mode == "story" and purpose == "learn":
@@ -139,6 +143,8 @@ def validate(book: Storybook, mode: StoryMode, purpose: StoryPurpose) -> Storybo
         page.sounds = [cue for cue in page.sounds if cue.line < len(page.lines) and cue.prompt.strip()]
         for cue in page.sounds:
             cue.seconds = min(max(cue.seconds, SFX_SECONDS[0]), SFX_SECONDS[1])
+        if mode == "bedtime":  # every page is night, whatever palette Claude picked, so the book matches its dim frame
+            page.palette = NIGHT
     guests = [line for page in book.pages for line in page.lines if line.voice != "kite"]
     cast = {(line.speaker.casefold(), line.voice) for line in guests}
     if len(cast) > 1 or len(guests) > GUEST_LINES:

@@ -282,6 +282,8 @@ def check_bedtime_and_purposes() -> None:
                 told[mode, purpose] = asyncio.run(make(mode, purpose))
         for (mode, purpose), cid in told.items():
             creation, meta = creation_in(folder, cid), json.loads((folder / cid / "meta.json").read_text())
+            nights = {page.palette.time_of_day for page in creation.storybook.pages}
+            assert (nights == {"night"}) == (mode == "bedtime"), f"{mode} {purpose}: bedtime pages are night, day pages keep theirs"
             asks = {"check", "reflection"} & set(creation.audio)
             r = client.post(f"/creations/{cid}/answer", json={"choice": 0}, headers=bearer["os"])
             if (mode, purpose) == ("story", "learn"):
