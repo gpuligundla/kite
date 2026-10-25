@@ -1,7 +1,8 @@
 // The demo path, end to end in two browser profiles, against a running web app and brain (plan Task 31).
 // Run before every rehearsal:
 //   OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs [http://localhost:3000]
-// Makes real model calls: four answers (one spoken through a fake microphone), one teach-back and one movie.
+// Makes real model calls: four answers (one spoken through a fake microphone), one teach-back and one movie. The
+// live-quiz step costs a turn but no answer: the homework guard pauses Kite before any model writes one.
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -80,9 +81,11 @@ try {
   }
 
   let first;
+  // Kite OS opens on the desktop. Kite is one app in the launcher; inside it, talking is the big tile.
+  const launcher = kid.getByRole("navigation", { name: "Apps" });
   await step("a grade-2 question gets a spoken answer with a reading level", async () => {
-    // /os opens on the home tiles, greeting her by name; talking is the big tile.
     await kid.getByText(/Maya/).first().waitFor({ timeout: 15_000 });
+    await launcher.getByRole("button", { name: "Kite", exact: true }).click();
     await kid.getByRole("button", { name: /Talk with Kite/ }).click();
     // Start fresh, as on stage: earlier turns of the same question would make Kite answer "you asked this before".
     await kid.getByRole("button", { name: "New topic" }).click();
@@ -139,6 +142,19 @@ try {
     await kid.getByText("Thanks for teaching me!").waitFor({ timeout: 45_000 });
     assert.equal(await kid.getByText(/got_it|partly|not_yet|can_teach/).count(), 0);
     await kid.getByRole("button", { name: "Stop teaching" }).click().catch(() => {});
+  });
+
+  await step("Ask Kite on the live quiz, from Classroom: Kite pauses", async () => {
+    await kid.getByRole("button", { name: "Close Kite" }).click();
+    await launcher.getByRole("button", { name: "Classroom", exact: true }).click();
+    await kid.getByRole("button", { name: /Science/ }).first().click();
+    await kid.getByRole("button", { name: /Water cycle quiz/ }).first().click();
+    await kid.getByText("Kite is paused for this quiz").first().waitFor({ timeout: 5000 });
+    await kid.getByRole("button", { name: "Ask Kite about this" }).first().click();
+    const panel = kid.getByRole("dialog", { name: "Ask Kite" });
+    const turn = await newTurn(() => panel.getByRole("button", { name: /What is evaporation/ }).click());
+    await turn.getByText(/quiz right now/).waitFor({ timeout: 25_000 });
+    await panel.getByRole("button", { name: "Close Ask Kite" }).click();
   });
 
   await step("SOS reaches the grown-up view live within 2 s", async () => {

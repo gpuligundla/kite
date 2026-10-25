@@ -9,8 +9,8 @@ from kite_brain.crypto import FamilyKeys, aad, new_key, open_sealed, seal
 from kite_brain.contract import KiteEvent, LearningPayload
 from kite_brain.db import connect, init_db
 from scripts.checks import (
-    about_kite, audiences, counselor, dashboard, decide, evals, forget, fresh_start, homework, ledger, memory, past_chats,
-    pipeline, route, story, studio, studio_pro, teach, trust, voice,
+    about_kite, audiences, classroom, counselor, dashboard, decide, evals, forget, fresh_start, homework, ledger, memory,
+    past_chats, pipeline, route, story, studio, studio_pro, teach, trust, voice,
 )
 
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     check_contract()
     for area in (
         audiences, decide, ledger, memory, route, voice, pipeline, homework, teach, evals, studio_pro, about_kite, trust,
-        dashboard, counselor, forget, fresh_start, past_chats, studio, story,
+        dashboard, counselor, forget, fresh_start, past_chats, studio, story, classroom,
     ):
         area.run()
     print("ok")

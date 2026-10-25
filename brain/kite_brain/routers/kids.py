@@ -7,15 +7,19 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from kite_brain import studio_pro
 from kite_brain.auth import require
 from kite_brain.config import UPLOAD_CAP_BYTES
-from kite_brain.contract import AlertEvent, KidView
+from kite_brain.contract import AlertEvent, Creation, CreationKind, KidView
+from kite_brain.crypto import aad, open_sealed
 from kite_brain.memory import ledger
 from kite_brain.memory.recall import PastChat, past_chats, remembered
+from kite_brain.studio import store
 from kite_brain.turn.pipeline import forget_time_travel, start_teach, teachable_concepts, teaching_now
 
 log = logging.getLogger(__name__)
 router = APIRouter()
+HTML_TITLE = re.compile(r"<title>([^<]{1,120})</title>")
 
 
 class Me(BaseModel):
@@ -135,3 +139,57 @@ async def hear(kid_id: str, body: Spoken, request: Request) -> Heard:
         log.warning("hear: stt failed (%s)", type(e).__name__)
         text = ""
     return Heard(text=re.sub(r"\s+", " ", text).strip())
+
+
+class ContactName(BaseModel):
+    """A name only: the kid's phone shows who it may call, and the numbers stay on the grown-up side."""
+
+    id: str
+    name: str
+
+
+@router.get("/kids/{kid_id}/approved-contacts", dependencies=[require("os", "handheld")])
+async def approved_contacts(kid_id: str, request: Request) -> list[ContactName]:
+    """The people the grown-ups approved, by name. The phone numbers are never decrypted here."""
+    deps = request.app.state.deps
+    key = deps.keys.for_kid(kid_id)
+    rows = deps.conn.execute("SELECT id, name FROM contact WHERE kid_id = ? ORDER BY id", (kid_id,)).fetchall()
+    name = lambda r: open_sealed(key, r["name"], aad("contact", kid_id, r["id"])).decode()  # noqa: E731
+    return [ContactName(id=r["id"], name=name(r)) for r in rows]
+
+
+class MadeThing(BaseModel):
+    id: str
+    kind: CreationKind
+    title: str
+
+
+def _title(folder, creation) -> str:
+    for part in (creation.storyboard, creation.storybook, creation.game):
+        if part is not None:
+            return part.title
+    for page in sorted(folder.glob("*.html")):
+        if found := HTML_TITLE.search(page.read_text(errors="ignore")[:4000]):
+            return found.group(1).strip()
+    return "Something you made"
+
+
+@router.get("/kids/{kid_id}/creations", dependencies=[require("os", "handheld")])
+async def my_creations(kid_id: str, request: Request) -> list[MadeThing]:
+    """Movies, games and stories she can open, newest first, for the My creations app. One still being made, or a
+    fallback with nothing to play, is left out, and so is one Kite made for another kid. One with no maker on record
+    (the showcase, a studio-agent game) is shown: right for the one-family demo, and the same store the parent's movie
+    list reads."""
+    found = []
+    for path in studio_pro.CREATIONS_DIR.glob("*/creation.json"):
+        try:
+            creation = Creation.model_validate_json(path.read_text())
+        except ValueError:
+            continue
+        meta = store.load_meta(creation.id)
+        playable = creation.storyboard or creation.storybook or creation.game or creation.html_url
+        if not playable or (meta is not None and meta.kid_id != kid_id):
+            continue
+        made = MadeThing(id=creation.id, kind=creation.kind, title=_title(path.parent, creation))
+        found.append((path.stat().st_mtime, made))
+    return [made for _, made in sorted(found, key=lambda pair: -pair[0])]
