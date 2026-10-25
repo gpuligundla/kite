@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import { ParentScreen } from "./ParentScreen";
 
 export default function ParentPage() {
-  return <ParentScreen />;
+  return (
+    <Suspense>
+      <ParentScreen />
+    </Suspense>
+  );
 }
