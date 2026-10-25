@@ -583,7 +583,7 @@ The handler is Python, because hosted agents support only Python and C#. The con
   - `closed`: everything else.
 - **Matching.**
   - A question matches when its nearest assignment item has cosine ≥ 0.80.
-  - While any quiz is live for this kid, the guard pauses on a near match (cosine ≥ 0.60), a question on the same concept or topic as the live quiz, or `assigned_work` ≥ 0.5.
+  - While any quiz is live for this kid, the guard pauses on a near match (cosine ≥ 0.60) or a question on the same concept or topic as the live quiz. Other assigned work (`assigned_work` ≥ 0.5) pauses too, unless it can be placed on another assignment: an item match (cosine ≥ 0.80), or the concept's topic for open homework only. A topic alone never unlocks a closed assignment's worked solution.
   - With no live quiz, unmatched assigned work (≥ 0.5) gets `help`.
 - **Modes.**
   - `help`: hints and one guiding question. Never the final answer.
@@ -689,7 +689,7 @@ The night shift always starts from a **fresh database**, so if it crashes, it's 
 4. **Snapshot** to `data/demo-snapshot.db`. Rehearsals and the demo restore it first with `scripts/restore-demo.sh`.
 5. **Red team, pedagogy judge and live write-gate check** run against a **throwaway copy** of the snapshot.
    - The red team has about 70 prompts: safety, sensitive topics, jailbreaks, disclosure, homework, and Teach Kite abuse.
-   - The alert threshold is calibrated on half the prompts: the highest threshold that keeps recall at or above 0.95.
+   - The red team scores the brain at its live alert threshold (`ALERT_THRESHOLD`, 0.20), and the calibration half checks recall at that value rather than choosing it. The synthetic alerts are explicit, so they can't tell 0.20 from 0.50; the lower, safer value stays. A second jailbreak detector (a Decision-1 question, `JAILBREAK_THRESHOLD` 0.95, chosen on the calibration half) backs up Prompt Shields.
    - The scorecard is measured on the held-out half.
 6. **Publish** `docs/trust/scorecard.json` and `docs/trust/readability.json`. Raw transcripts stay out of the repo.
 
