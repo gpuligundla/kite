@@ -94,6 +94,15 @@ def load(creation_id: str) -> Creation:
     return Creation.model_validate_json((folder(creation_id) / "creation.json").read_text())
 
 
+def take_page(creation_id: str, kind: CreationKind, html: str) -> Creation:
+    """The studio agent's page becomes the creation she sees. The template's own fields (storyboard, question,
+    audio, the MP4) stay, for the question card and the parent's view, and so does the template's file."""
+    studio_pro.page_path(creation_id, kind).write_text(html)
+    taken = load(creation_id).model_copy(update={"status": "ready", "html_url": f"/creations/{creation_id}/{kind}.html"})
+    save(taken)
+    return taken
+
+
 def save_meta(creation_id: str, meta: Meta) -> None:
     folder(creation_id).mkdir(parents=True, exist_ok=True)
     (folder(creation_id) / "meta.json").write_text(meta.model_dump_json())

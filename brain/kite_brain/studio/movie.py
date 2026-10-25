@@ -31,7 +31,6 @@ log = logging.getLogger(__name__)
 MOVIE_DEADLINE_S = 45.0
 RENDER_TIMEOUT_S = 300.0
 NARRATION_PARALLEL = 3
-MUSIC_PAD_S = 8.0  # the director's cut adds a title beat, scene gaps and an outro around the narration
 TEMPLATE_MUSIC_S = 60.0  # longer than a template movie, composed in about 8 s; the player loops it anyway
 VIDEO_NAME = "movie.mp4"
 FALLBACK_DIR = Path(__file__).with_name("fallback")
@@ -153,7 +152,8 @@ def use_fallback(creation_id: str) -> Creation:
 
 
 async def build_movie(deps: Deps, kid_id: str, creation_id: str, topic: str, learning_goal: str, grade: Grade) -> Creation:
-    """Never raises. The movie is ready when its narration is, else the fallback plays."""
+    """Never raises. The movie is ready when its narration is, else the fallback plays. With the studio agent on,
+    the director's cut is the movie she sees, and the template is its soundtrack and stand-in."""
     try:
         creation = await asyncio.wait_for(
             _make(deps, kid_id, creation_id, topic, learning_goal, grade), MOVIE_DEADLINE_S
@@ -161,11 +161,12 @@ async def build_movie(deps: Deps, kid_id: str, creation_id: str, topic: str, lea
     except Exception as e:  # includes the deadline's TimeoutError
         log.warning("movie %s falls back: %s", creation_id, type(e).__name__)
         creation = use_fallback(creation_id)
-    store.publish(deps, kid_id, CreationReadyEvent, "movie", creation_id=creation_id, status=creation.status)
     if creation.status == "ready":
         store.spawn(render_video(deps, kid_id, creation_id))
-        start_directors_cut(deps, kid_id, creation, topic, learning_goal, grade)
-    elif creation.video_url:
+        if studio_pro.directing():
+            creation = await direct(deps, kid_id, creation, topic, learning_goal, grade)
+    store.publish(deps, kid_id, CreationReadyEvent, "movie", creation_id=creation_id, status=creation.status)
+    if creation.status != "ready" and creation.video_url:
         store.publish(deps, kid_id, CreationVideoEvent, "movie", creation_id=creation_id, video_url=creation.video_url)
     return creation
 
@@ -197,39 +198,22 @@ async def render_video(deps: Deps, kid_id: str, creation_id: str) -> None:
     store.publish(deps, kid_id, CreationVideoEvent, "movie", creation_id=creation_id, video_url=url)
 
 
-def start_directors_cut(
+async def direct(
     deps: Deps, kid_id: str, movie: Creation, topic: str, learning_goal: str, grade: Grade, *, agent: studio_pro.StudioAgent | None = None
-) -> str | None:
-    """A second movie creation: the studio agent hand-animates this movie's narration as one page,
-    and the brain adds the narration's MP3s and a music bed composed while the agent works. A
-    ready cut carries the template's storyboard, spoken check question and evidence trail, so its
-    question card scores like the template's. The template stays her movie unless the cut is
-    ready. None when no studio agent is configured."""
-    if agent is None and not get_settings().STUDIO_AGENT_ENDPOINT:
-        return None
-    creation_id = studio_pro.start_page(deps, kid_id, "movie")
-    store.save_meta(creation_id, store.load_meta(movie.id))
-    narration = {key: store.folder(movie.id) / movie.audio[key] for key in movie.timings}
-    question = {"check": "check.mp3"} if "check" in movie.audio else {}
-    seconds = sum(max((w.end for w in words), default=0) for words in movie.timings.values()) + MUSIC_PAD_S
-    music = asyncio.create_task(music_bed(topic, grade, seconds))
-
-    def finish(html: str) -> str:
-        """The narration, and the music if it came in time. A movie without music still plays."""
-        files = dict(narration)
-        if music.done() and (bed := music.result()):
-            (path := store.folder(creation_id) / "music.mp3").write_bytes(bed)
-            files["music"] = path
-        music.cancel()
-        if question:
-            shutil.copy(store.folder(movie.id) / movie.audio["check"], store.folder(creation_id) / "check.mp3")
-        return studio_pro.inject(html, "KITE_AUDIO", files)
-
-    store.spawn(studio_pro.build_page(
-        deps, kid_id, creation_id, "movie", _directors_cut_request(deps, kid_id, creation_id, movie, topic, learning_goal, grade),
-        finish, agent=agent, ready_fields={"storyboard": movie.storyboard, "audio": question},
-    ))
-    return creation_id
+) -> Creation:
+    """Kite's director's cut is the movie she sees. The studio agent hand-animates the template's narration as one
+    page under the same creation, and the brain adds the narration's MP3s and the template's music bed. The
+    template is its soundtrack and its question, and her movie if the cut doesn't come back. Returns the one she
+    gets. Never raises."""
+    folder = store.folder(movie.id)
+    files = {key: folder / movie.audio[key] for key in movie.timings}
+    if "music" in movie.audio:  # the template's bed, so a cut costs no second composition
+        files["music"] = folder / movie.audio["music"]
+    html = await studio_pro.make_page(
+        deps, kid_id, movie.id, "movie", _directors_cut_request(deps, kid_id, movie.id, movie, topic, learning_goal, grade),
+        lambda page: studio_pro.inject(page, "KITE_AUDIO", files), agent=agent,
+    )
+    return store.take_page(movie.id, "movie", html) if html else movie
 
 
 async def _directors_cut_request(

@@ -169,93 +169,91 @@ MOVIE = """<!doctype html><html><body><div id="stage"><p>Magma rises</p></div>
 
 
 def run_cut(agent, timeout_s=studio_pro.STUDIO_AGENT_TIMEOUT_S, music=b"music"):
-    """The template movie job with its director's cut on and no MP4 render.
-    Returns (template id, cut id, folder, the cut's events by device, every event by device)."""
+    """The movie job with the studio agent on and no MP4 render. Returns (creation id, folder, its events by device)."""
     use_sample_voices()
 
     async def music_bed(topic, grade, seconds):
-        assert seconds > 10, "the bed covers the whole movie"
         return music
 
-    patches = {
-        "start_directors_cut": partial(movie.start_directors_cut, agent=agent), "music_bed": music_bed,
-        "RENDER_SCRIPT": Path(tempfile.mkdtemp()) / "absent.mjs",
-    }
-    with patch.object(studio_pro, "STUDIO_AGENT_TIMEOUT_S", timeout_s):
-        _, template, folder, seen = run_job(Studio(board()), movie.start_movie, movie=patches)
-    [cut] = {e.creation_id for e in seen["os"]} - {template}
-    return template, cut, folder, {kind: [e for e in seen[kind] if e.creation_id == cut] for kind in ("os", "parent")}, seen
+    patches = {"direct": partial(movie.direct, agent=agent), "music_bed": music_bed, "RENDER_SCRIPT": Path(tempfile.mkdtemp()) / "absent.mjs"}
+    with patch.object(studio_pro, "STUDIO_AGENT_TIMEOUT_S", timeout_s), patch.object(studio_pro, "directing", lambda agent=None: True):
+        _, cid, folder, seen = run_job(Studio(board()), movie.start_movie, movie=patches)
+    return cid, folder, seen
 
 
-def check_directors_cut_gets_the_narration_and_no_network() -> None:
+def check_directed_movie_is_the_cut_with_the_template_inside() -> None:
     agent = StandInAgent(ready(MOVIE))
-    template_id, cut, folder, events, seen = run_cut(agent)
-    template = creation_in(folder, template_id)
-    assert template.status == "ready" and template.html_url is None, "the template stays her movie"
-    made = creation_in(folder, cut)
-    assert made.kind == "movie" and made.status == "ready" and made.html_url == f"/creations/{cut}/movie.html", made
-    page = (folder / cut / "movie.html").read_text()
+    cid, folder, seen = run_cut(agent)
+    made = creation_in(folder, cid)
+    assert made.kind == "movie" and made.status == "ready" and made.html_url == f"/creations/{cid}/movie.html", made
+    assert made.storyboard is not None and made.storyboard.title == board().title, "the template's storyboard stays"
+    assert made.audio["check"] == "check.mp3" and made.audio["music"] == "music.mp3", "and its question and bed"
+    page = (folder / cid / "movie.html").read_text()
     audio = json.loads(re.search(r'<script data-kit="KITE_AUDIO">window\.KITE_AUDIO = (\{.*?\});</script>', page).group(1))
     url = lambda data: "data:audio/mpeg;base64," + base64.b64encode(data).decode()  # noqa: E731
-    music = audio.pop("music")
-    assert set(audio) == set(template.timings) and set(audio.values()) == {url(b"mp3")}, "every narration line, inlined"
-    assert music == url(b"music"), "and the music bed"
-    assert template.audio["music"] == "music.mp3" and template.audio["check"] == "check.mp3", "the template has its own bed and question"
-    assert made.storyboard == template.storyboard and made.audio == {"check": "check.mp3"}, "the cut carries the template's question"
-    assert (folder / cut / "check.mp3").read_bytes() == b"mp3", "and the spoken question beside it"
-    assert json.loads((folder / cut / "meta.json").read_text()) == json.loads((folder / template_id / "meta.json").read_text()), (
-        "the cut scores like the template"
-    )
-    _, quiet, quiet_folder, _, _ = run_cut(StandInAgent(ready(MOVIE)), music=None)
+    assert audio.pop("music") == url(b"music"), "the template's music bed, not a second composition"
+    assert set(audio) == set(made.timings) and set(audio.values()) == {url(b"mp3")}, "every narration line, inlined"
+    quiet, quiet_folder, _ = run_cut(StandInAgent(ready(MOVIE)), music=None)
     assert "music" not in json.loads(re.search(r"window\.KITE_AUDIO = (\{.*?\});", (quiet_folder / quiet / "movie.html").read_text()).group(1)), (
         "no music bed still makes a movie"
     )
     [req] = agent.requests
     assert set(req) == {"kind", "creation_id", "topic", "learning_goal", "grade", "kid_view", "storyboard", "timings"}, req
-    assert req["kind"] == "movie" and req["creation_id"] == cut and req["grade"] == 11
-    assert req["storyboard"] == template.storyboard.model_dump(mode="json") and set(req["timings"]) == set(template.timings)
-    kid = events["os"]
-    assert types(kid) == ["creation.progress"] * 3 + ["creation.ready"] and kid[-1].status == "ready" and kid[-1].kind == "movie", types(kid)
-    assert types(events["parent"]) == types(kid) and not seen["counselor"], "the parent gets a copy, never the counselor"
+    assert req["kind"] == "movie" and req["creation_id"] == cid and req["grade"] == 11
+    assert req["storyboard"] == made.storyboard.model_dump(mode="json") and set(req["timings"]) == set(made.timings)
+    kid = [e for e in seen["os"] if e.creation_id == cid]
+    assert [e.type for e in kid].count("creation.ready") == 1 and kid[-1].type == "creation.ready" and kid[-1].status == "ready", types(kid)
+    assert any(e.type == "creation.progress" and e.steps_total == studio_pro.STEPS_TOTAL for e in kid), "the screen sees the agent at work"
+    assert types([e for e in seen["parent"] if e.creation_id == cid]) == types(kid) and not seen["counselor"], "a copy for the parent only"
     app = FastAPI()
     app.include_router(games.router)
     client = TestClient(app)
     with patch.object(studio_pro, "CREATIONS_DIR", folder):
-        r = client.get(f"/creations/{cut}/movie.html")
+        r = client.get(f"/creations/{cid}/movie.html")
         assert r.status_code == 200 and r.text == page, r.status_code
         assert r.headers["content-security-policy"] == games.CSP and games.CSP.startswith("default-src 'none'"), "no network"
-        assert client.get(f"/creations/{cut}/game.html").status_code == 404, "a movie has no game page"
-        assert client.get(f"/creations/{cut}/creation.html").status_code == 404, "only game and movie pages are served"
+        assert client.get(f"/creations/{cid}/game.html").status_code == 404, "a movie has no game page"
     kid_client, deps, bearer = client_for()
     with patch.object(studio_pro, "CREATIONS_DIR", folder):
-        body = kid_client.get(f"/creations/{cut}").json()
-        assert body["html_url"] == made.html_url and body["storyboard"]["check"] == template.storyboard.check.model_dump(), body
-        assert body["audio"] == {"check": f"/creations/{cut}/files/check.mp3"} and kid_client.get(body["audio"]["check"]).content == b"mp3"
-        store.save_meta(cut, store.load_meta(cut).model_copy(update={"concept_id": SKY_CONCEPT}))
-        r = kid_client.post(f"/creations/{cut}/answer", json={"choice": template.storyboard.check.correct_index}, headers=bearer["os"])
+        body = kid_client.get(f"/creations/{cid}").json()
+        assert body["html_url"] == made.html_url and body["storyboard"]["check"] == made.storyboard.check.model_dump(), body
+        assert kid_client.get(body["audio"]["check"]).content == b"mp3", "the spoken question beside it"
+        store.save_meta(cid, store.load_meta(cid).model_copy(update={"concept_id": SKY_CONCEPT}))
+        r = kid_client.post(f"/creations/{cid}/answer", json={"choice": made.storyboard.check.correct_index}, headers=bearer["os"])
         assert r.status_code == 200 and r.json()["correct"] is True and r.json()["recorded"] is True, r.text
         [row] = evidence_rows(deps)
         assert row.concept_id == SKY_CONCEPT and row.payload.source == "check_question", "the cut's answer is evidence"
-    _, _, fallen_folder, _, _ = run_cut(StandInAgent(error=RuntimeError("502")))
-    [fallen] = [c for c in (creation_in(fallen_folder, p.name) for p in fallen_folder.iterdir()) if c.status == "fallback"]
-    assert fallen.storyboard is None and not fallen.audio, "a cut that fell back stays off the screen"
 
 
-def check_directors_cut_failures_keep_the_template() -> None:
+def check_directed_movie_failures_play_the_template() -> None:
     for why, agent, timeout_s in (
         ("an agent error", StandInAgent(error=RuntimeError("502")), studio_pro.STUDIO_AGENT_TIMEOUT_S),
         ("an agent that gave up", StandInAgent(PageResult("failed", None, Playtest(False, ["SAME_FRAMES"]))), studio_pro.STUDIO_AGENT_TIMEOUT_S),
         ("a page with no audio slot", StandInAgent(ready()), studio_pro.STUDIO_AGENT_TIMEOUT_S),
         ("a timeout", StandInAgent(ready(MOVIE), delay_s=0.5), 0.05),
     ):
-        template_id, cut, folder, events, seen = run_cut(agent, timeout_s)
-        made = creation_in(folder, cut)
-        assert made.status == "fallback" and made.html_url is None and not (folder / cut / "movie.html").exists(), why
-        assert creation_in(folder, template_id).status == "ready", f"{why}: the template still plays"
-        for kind, cut_events in events.items():
-            last = cut_events[-1]
-            assert last.type == "creation.ready" and last.status == "fallback" and last.kind == "movie", f"{why}: {kind} hears fallback"
+        cid, folder, seen = run_cut(agent, timeout_s)
+        made = creation_in(folder, cid)
+        assert made.status == "ready" and made.html_url is None and made.storyboard, f"{why}: the template is her movie"
+        assert not (folder / cid / "movie.html").exists(), why
+        for kind in ("os", "parent"):
+            last = [e for e in seen[kind] if e.creation_id == cid][-1]
+            assert last.type == "creation.ready" and last.status == "ready", f"{why}: {kind} hears the template is ready"
         assert not seen["counselor"], why
+
+
+def check_directed_game_is_the_agents_page() -> None:
+    from scripts.checks.studio import CATCH  # noqa: PLC0415
+    for why, agent, html in (("a page", StandInAgent(ready()), True), ("an agent error", StandInAgent(error=RuntimeError("502")), False)):
+        with patch.object(studio_pro, "directing", lambda agent=None: True):
+            _, cid, folder, seen = run_job(Studio(CATCH), game.start_game, game={"build_brand_new": partial(game.build_brand_new, agent=agent)})
+        made = creation_in(folder, cid)
+        assert made.status == "ready" and made.game is not None, f"{why}: the template game stays as the stand-in"
+        if html:
+            assert made.html_url == f"/creations/{cid}/game.html" and with_sounds((folder / cid / "game.html").read_text()), why
+        else:
+            assert made.html_url is None and not (folder / cid / "game.html").exists(), f"{why}: the template game plays"
+        assert [e.type for e in seen["os"] if e.creation_id == cid].count("creation.ready") == 1, f"{why}: one ready, at the end"
 
 
 def check_kits_play_test_under_the_served_policy() -> None:
@@ -265,10 +263,9 @@ def check_kits_play_test_under_the_served_policy() -> None:
 
 
 def check_no_endpoint_no_directors_cut() -> None:
-    with patch.object(movie, "get_settings", lambda: SimpleNamespace(STUDIO_AGENT_ENDPOINT="")):
-        assert movie.start_directors_cut(None, KID_ID, None, TOPIC, GOAL, 11) is None
-    with patch.object(game, "get_settings", lambda: SimpleNamespace(STUDIO_AGENT_ENDPOINT="")):
-        assert game.start_brand_new_game(None, KID_ID, TOPIC, GOAL) is None, "no agent, no brand-new game"
+    with patch.object(studio_pro, "get_settings", lambda: SimpleNamespace(STUDIO_AGENT_ENDPOINT="")):
+        assert not studio_pro.directing(), "no endpoint: the template is the movie and the game"
+        assert studio_pro.directing(StandInAgent()), "a stand-in agent directs"
 
 
 def run() -> None:
@@ -278,8 +275,9 @@ def run() -> None:
     check_agent_failure_is_fallback()
     check_timeout_is_fallback()
     check_endpoint_is_for_kid_devices()
-    check_directors_cut_gets_the_narration_and_no_network()
-    check_directors_cut_failures_keep_the_template()
+    check_directed_movie_is_the_cut_with_the_template_inside()
+    check_directed_movie_failures_play_the_template()
+    check_directed_game_is_the_agents_page()
     check_no_endpoint_no_directors_cut()
     check_kits_play_test_under_the_served_policy()
 

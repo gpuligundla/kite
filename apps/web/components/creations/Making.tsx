@@ -5,18 +5,34 @@ import { KiteMark } from "@/components/kit/KiteMark";
 import type { CreationEntry } from "@/lib/creations";
 import styles from "./creations.module.css";
 
-type Job = "movie" | "game" | "brandNew" | "story";
+type Job = "movie" | "directing" | "game" | "brandNew" | "story";
 
 const COPY: Record<Job, { title: string; wait: string; driftSeconds: number }> = {
   movie: { title: "Kite is making your movie", wait: "It takes about 15 seconds.", driftSeconds: 8 },
+  directing: {
+    title: "Kite is directing your movie",
+    wait: "Kite animates every scene by hand, so this takes about 10 minutes. You can keep talking to Kite while you wait.",
+    driftSeconds: 120,
+  },
   game: { title: "Kite is making your game", wait: "It takes about 20 seconds.", driftSeconds: 10 },
   story: { title: "Kite is writing your story", wait: "It takes about 20 seconds.", driftSeconds: 10 },
   brandNew: {
     title: "Kite is building a brand-new game",
-    wait: "This one takes a few minutes. You can keep talking to Kite while you wait.",
+    wait: "This one takes about 10 minutes. You can keep talking to Kite while you wait.",
     driftSeconds: 60,
   },
 };
+const DIRECT_STEPS = [
+  "Reading the story",
+  "Sketching the scenes",
+  "Drawing the characters",
+  "Animating scene by scene",
+  "Timing it to the voices",
+  "Watching it back",
+  "Fixing the tricky bits",
+  "Almost ready",
+];
+const AGENT_STEPS = 99;
 const BUILD_STEPS = [
   "Dreaming up the game",
   "Drawing the pieces",
@@ -30,6 +46,7 @@ const BUILD_STEPS = [
 
 function phrase(making: Job, step: number, total: number): string {
   if (making === "brandNew") return BUILD_STEPS[Math.min(step, BUILD_STEPS.length - 1)];
+  if (making === "directing") return DIRECT_STEPS[Math.min(Math.floor(step / 2), DIRECT_STEPS.length - 1)];
   if (making === "game") return "Picking the pieces";
   if (making === "story") return step === 0 ? "Writing the story" : step < total ? "Reading it aloud" : "Adding the sounds";
   // A movie's step 0 is the storyboard, then one step per narrated line.
@@ -40,8 +57,10 @@ function phrase(making: Job, step: number, total: number): string {
 export function Making({ kind, progress }: { kind: CreationEntry["kind"]; progress?: CreationEntry["progress"] }) {
   const step = progress?.step ?? 0;
   const total = progress?.total ?? 1;
-  // ponytail: a template game always reports 1 step, a brand-new one reports the studio agent's 8.
-  const making: Job = kind === "movie" || kind === "story" ? kind : total > 1 ? "brandNew" : "game";
+  // The studio agent always reports AGENT_STEPS (studio_pro.STEPS_TOTAL), a total no template reaches: a template
+  // game reports 1 step, and a template movie one per narrated line.
+  const agent = total === AGENT_STEPS;
+  const making: Job = kind === "story" ? "story" : kind === "movie" ? (agent ? "directing" : "movie") : agent || total > 1 ? "brandNew" : "game";
   const copy = COPY[making];
   const elapsed = useSeconds();
   const drift = 0.8 * (1 - Math.exp(-elapsed / copy.driftSeconds));

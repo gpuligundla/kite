@@ -105,8 +105,8 @@ def run_job(stand, start, *, setup=None, read_only=False, grade=11, **patches):
         await store.settle()
         return creation_id
 
-    # No director's cut, music or MP4 unless a check asks for one: a configured endpoint must never be called from here.
-    quiet = {"start_directors_cut": lambda *a, **k: None, "music_bed": no_music, "RENDER_SCRIPT": Path("absent.mjs")}
+    # No music or MP4 unless a check asks for one. No director's cut either: check_safety blanks the agent endpoint.
+    quiet = {"music_bed": no_music, "RENDER_SCRIPT": Path("absent.mjs")}
     patches = patches | {"movie": quiet | patches.get("movie", {})}
     with ExitStack() as stack:
         stack.enter_context(patch.object(studio_pro, "CREATIONS_DIR", folder))
@@ -571,7 +571,6 @@ def check_tool_call_starts_the_right_job() -> None:
 
     with (
         patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())),
-        patch.object(movie, "start_directors_cut", lambda *a, **k: None),
         patch.object(movie, "music_bed", no_music),
     ):
         folder = studio_pro.CREATIONS_DIR
@@ -587,14 +586,9 @@ def check_tool_call_starts_the_right_job() -> None:
         assert {e.turn_id for e in kid} == {"t1"}, "every event names the turn that asked"
         assert {e.audience for e in asyncio.run(drain(bus, "parent"))} == {"parent"}, "and the grown-up copy"
 
-    brand_new = []
-    with (
-        patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())),
-        patch.object(game, "start_brand_new_game", lambda *a: brand_new.append(a[1:])),
-    ):
+    with patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())):
         folder = studio_pro.CREATIONS_DIR
         deps, bus, stand = asyncio.run(go(ToolCall("make_game", TOPIC, GOAL), as_of_grade=3))
-        assert brand_new == [(KID_ID, TOPIC, GOAL)], "every game also asks the studio agent for a brand-new one"
         [made] = [creation_in(folder, p.name) for p in folder.iterdir()]
         assert made.kind == "game" and stand.parses[0][1] is GameSpec and made.status == "fallback", made
         meta = json.loads((folder / made.id / "meta.json").read_text())

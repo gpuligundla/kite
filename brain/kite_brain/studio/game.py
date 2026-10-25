@@ -6,7 +6,6 @@ import asyncio
 import logging
 
 from kite_brain import studio_pro
-from kite_brain.config import get_settings
 from kite_brain.contract import (
     Creation, CreationProgressEvent, CreationReadyEvent, GameItem, GameSpec, Grade, KidView,
 )
@@ -116,7 +115,8 @@ async def _make(deps: Deps, kid_id: str, topic: str, learning_goal: str, grade: 
 
 
 async def build_game(deps: Deps, kid_id: str, creation_id: str, topic: str, learning_goal: str, grade: Grade) -> Creation:
-    """Never raises. The game is ready when its spec is, else the sky game plays."""
+    """Never raises. The game is ready when its spec is, else the sky game stands in. With the studio agent on,
+    its brand-new game is the one she plays, and the template waits as its stand-in."""
     try:
         spec, concept = await asyncio.wait_for(_make(deps, kid_id, topic, learning_goal, grade), GAME_DEADLINE_S)
         status = "ready"
@@ -127,17 +127,20 @@ async def build_game(deps: Deps, kid_id: str, creation_id: str, topic: str, lear
     store.save(creation)
     meta = store.load_meta(creation_id)
     store.save_meta(creation_id, meta.model_copy(update={"concept_id": concept}))
-    store.publish(deps, kid_id, CreationReadyEvent, "game", creation_id=creation_id, status=status)
-    start_brand_new_game(deps, kid_id, topic, learning_goal)
+    if studio_pro.directing():
+        creation = await build_brand_new(deps, kid_id, creation, topic, learning_goal)
+    store.publish(deps, kid_id, CreationReadyEvent, "game", creation_id=creation_id, status=creation.status)
     return creation
 
 
-def start_brand_new_game(deps: Deps, kid_id: str, topic: str, learning_goal: str) -> str | None:
-    """Kite's own version of every game, as every movie gets a director's cut: the studio agent (Claude Code on
-    Opus 5.5) builds a brand-new game about the same topic while the template plays, and her card offers it when
-    it's ready. If the template fell back to the sky game, this is the one about her topic. None with no agent."""
-    if not get_settings().STUDIO_AGENT_ENDPOINT:
-        return None
-    creation_id = studio_pro.start_page(deps, kid_id, "game")
-    store.spawn(studio_pro.build_custom_game(deps, kid_id, creation_id, topic, learning_goal))
-    return creation_id
+async def build_brand_new(
+    deps: Deps, kid_id: str, template: Creation, topic: str, learning_goal: str, *, agent: studio_pro.StudioAgent | None = None
+) -> Creation:
+    """Kite's own game is the one she plays: the studio agent (Claude Code on Opus 5.5) builds a brand-new game
+    about her topic under the same creation. The template waits as its stand-in, and plays if the page doesn't
+    come back. If the template fell back to the sky game, the agent's game is the one about her topic."""
+    html = await studio_pro.make_page(
+        deps, kid_id, template.id, "game", studio_pro.request_for(deps, kid_id, template.id, topic, learning_goal),
+        lambda page: studio_pro.inject(page, "KITE_SOUNDS", studio_pro.GAME_SOUNDS), agent=agent,
+    )
+    return store.take_page(template.id, "game", html) if html else template

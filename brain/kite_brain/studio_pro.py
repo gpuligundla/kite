@@ -30,7 +30,9 @@ from kite_brain.memory.recall import recall
 log = logging.getLogger(__name__)
 
 CREATIONS_DIR = Path("data/creations")
-STEPS_TOTAL = 14  # the agent's turn cap; each progress line it streams counts as one step
+# Each progress line the agent streams counts as one step, out of a total no template reaches (a movie reports one
+# step per narrated line), so a screen can tell the agent at work from a template being made.
+STEPS_TOTAL = 99
 INVOCATIONS_SCOPE = "https://ai.azure.com/.default"
 SAFETY_CHUNK = 5000  # Content Safety takes 10k characters a call
 # The kid UI's own sounds (apps/web/public/sounds), for kite.sound() in a brand-new game.
@@ -192,10 +194,9 @@ def publish(deps: Deps, kid_id: str, cls, kind: CreationKind, **fields) -> None:
 
 
 def start_page(deps: Deps, kid_id: str, kind: CreationKind) -> str:
-    """A pending creation under an unguessable id, announced as step 0. build_page does the work."""
+    """A pending creation under an unguessable id. build_page announces it as step 0 and does the work."""
     creation_id = secrets.token_hex(16)
     save(creation_id, kind, "pending")
-    publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=0, steps_total=STEPS_TOTAL)
     return creation_id
 
 
@@ -209,29 +210,45 @@ def inject(html: str, name: str, files: dict[str, Path]) -> str:
     return html.replace(slot, f'<script data-kit="{name}">window.{name} = {json.dumps(urls)};</script>', 1)
 
 
-async def build_page(
+async def make_page(
     deps: Deps, kid_id: str, creation_id: str, kind: CreationKind, request: Awaitable[dict],
-    finish: Callable[[str], str] = lambda html: html, *, agent: StudioAgent | None = None, ready_fields: dict | None = None,
-) -> Creation:
-    """Ask the studio agent for the page, screen its text, finish it (the brain's own media go in
-    here) and save it, with `ready_fields` on the Creation when it is ready. Never raises: any
-    failure, flag or timeout saves a fallback."""
+    finish: Callable[[str], str] = lambda html: html, *, agent: StudioAgent | None = None,
+) -> str | None:
+    """Ask the studio agent for the page, screen its text and finish it (the brain's own media go in here). The
+    finished HTML, or None after any failure, flag or timeout. Never raises. Progress goes out as the agent works,
+    starting at step 0 of STEPS_TOTAL, which is how a screen tells the agent's work from a template's."""
     agent = agent or default_agent()
     steps = itertools.count(1)
 
     def progress(_text: str) -> None:  # the agent's words stay in the sandbox; only the count goes out
         publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=min(next(steps), STEPS_TOTAL), steps_total=STEPS_TOTAL)
 
-    html = None
+    publish(deps, kid_id, CreationProgressEvent, kind, creation_id=creation_id, step=0, steps_total=STEPS_TOTAL)
     try:
         result = await asyncio.wait_for(agent.build(await request, progress), STUDIO_AGENT_TIMEOUT_S)
         if result.status == "ready" and result.html and await text_is_safe(deps, result.html):
-            html = finish(result.html)
+            return finish(result.html)
     except Exception as e:
         log.warning("studio %s %s falls back: %s", kind, creation_id, type(e).__name__)
-    creation = save(creation_id, kind, "ready", html, **(ready_fields or {})) if html else save(creation_id, kind, "fallback")
+    return None
+
+
+async def build_page(
+    deps: Deps, kid_id: str, creation_id: str, kind: CreationKind, request: Awaitable[dict],
+    finish: Callable[[str], str] = lambda html: html, *, agent: StudioAgent | None = None,
+) -> Creation:
+    """A creation that is only the agent's page (a brand-new game she asked for by name): saved ready when the page
+    is, else saved as a fallback with nothing to play."""
+    html = await make_page(deps, kid_id, creation_id, kind, request, finish, agent=agent)
+    creation = save(creation_id, kind, "ready", html) if html else save(creation_id, kind, "fallback")
     publish(deps, kid_id, CreationReadyEvent, kind, creation_id=creation_id, status=creation.status)
     return creation
+
+
+def directing(agent: "StudioAgent | None" = None) -> bool:
+    """Whether Kite's studio agent makes the movie or game she sees, with the template as its stand-in."""
+    return agent is not None or bool(get_settings().STUDIO_AGENT_ENDPOINT)
+
 
 
 async def request_for(deps: Deps, kid_id: str, creation_id: str, topic: str, learning_goal: str) -> dict:

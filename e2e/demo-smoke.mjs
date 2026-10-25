@@ -116,11 +116,13 @@ try {
     spoken = turn;
   });
 
-  await step("make it a movie: the player is ready within 45 s", async () => {
+  await step("make it a movie: Kite is directing it (or plays it) within 45 s", async () => {
     // The chip on the answer card says what she would ("Make that into a movie"); the movie rises in a sheet over the
-    // stage until she closes it.
+    // stage until she closes it. With the studio agent on, the template comes first, and then Kite's director's cut
+    // takes about 10 minutes, so the sheet says Kite is directing. Without one, the template movie plays.
     await newTurn(() => spoken.getByRole("button", { name: "Make it a movie" }).click());
-    await kid.locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
+    const creation = kid.locator("[data-creation]");
+    await creation.getByText(/Watch to the end|Kite is directing your movie/).first().waitFor({ timeout: 45_000 });
     // Close the sheet so the stage is clear for Teach Kite. Kite can have started a second creation on its own, so
     // close what's open, letting each sheet finish leaving before counting again.
     const close = kid.getByRole("button", { name: "Close", exact: true });
