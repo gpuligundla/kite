@@ -30,6 +30,11 @@ ALERT_REPLY: dict[str, str] = {
 # When one turn raises several kinds, the reply that points to the most urgent help wins.
 ALERT_REPLY_PRIORITY = ("self_harm", "abuse", "stranger", "bullying")
 
+
+def alert_reply(kinds) -> str:
+    """Kite's fixed reply to a turn that raised these alert kinds."""
+    return ALERT_REPLY[next(k for k in ALERT_REPLY_PRIORITY if k in kinds)]
+
 Audience = Literal["parent", "counselor"]
 
 
@@ -82,8 +87,9 @@ def route(
         kinds |= alert_kinds(decisions.answers["safety"], ALERT_THRESHOLD)
     if kinds:
         to: Audience = "counselor" if "abuse" in kinds else "parent"
-        reply = ALERT_REPLY[next(k for k in ALERT_REPLY_PRIORITY if k in kinds)]
-        return plan("alert", audience=to, alert_to=to, alert_kinds=sorted(kinds), reply=reply, situation="alert")
+        return plan(
+            "alert", audience=to, alert_to=to, alert_kinds=sorted(kinds), reply=alert_reply(kinds), situation="alert"
+        )
 
     if decisions is None or safety is None or safety.jailbreak or not recall_ok:
         return plan("fallback", reply=FALLBACK)

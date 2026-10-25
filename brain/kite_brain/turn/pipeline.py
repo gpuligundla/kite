@@ -455,7 +455,8 @@ async def _run(turn: _Turn) -> None:
     if plan.alert_to:
         alert_id = ledger.record_alert(
             deps.conn, deps.keys, kid_id=inp.kid_id, kinds=plan.alert_kinds, routed_to=plan.alert_to,
-            excerpt=_excerpt(recalled, text), at=turn.now,
+            excerpt=_excerpt(recalled, text), at=turn.now, source_turn_id=turn.turn_id,
+            session_id=ledger.session_for(deps.conn, inp.kid_id, turn.now),
         )
         turn.emit(AlertEvent, plan.alert_to, alert_id=alert_id, kinds=plan.alert_kinds, routed_to=plan.alert_to)
 

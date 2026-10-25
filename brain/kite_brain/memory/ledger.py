@@ -10,7 +10,7 @@ from pydantic import TypeAdapter
 from ulid import ULID
 
 from kite_brain.catalog import Catalog
-from kite_brain.contract import AlertKind, Grade, LearningPayload
+from kite_brain.contract import AlertKind, CaseStatus, Grade, LearningPayload
 from kite_brain.crypto import FamilyKeys, aad, open_sealed, seal
 
 SESSION_GAP = timedelta(minutes=30)
@@ -126,19 +126,37 @@ def record_alert(
     excerpt: str,
     at: datetime,
     location: dict[str, float] | None = None,
+    source_turn_id: str | None = None,
+    session_id: str | None = None,
 ) -> str:
-    """The safety record. Written even for read-only turns; kept for a year of real time."""
+    """The safety record. Written even for read-only turns; kept for a year of real time. A turn's alert
+    carries the turn and its session, which is how the counselor's context finds the turns before it."""
     alert_id = str(ULID())
     key, a = keys.for_kid(kid_id), aad("alert", kid_id, alert_id)
     conn.execute(
-        "INSERT INTO alert(id, kid_id, kinds, routed_to, at, expires_at, excerpt, location)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO alert(id, kid_id, kinds, routed_to, at, expires_at, excerpt, location, source_turn_id,"
+        " session_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (alert_id, kid_id, json.dumps(kinds), routed_to, iso(at),
          iso(datetime.now(timezone.utc) + ALERT_TTL), seal(key, excerpt.encode(), a),
-         seal(key, json.dumps(location).encode(), a) if location else None),
+         seal(key, json.dumps(location).encode(), a) if location else None, source_turn_id, session_id),
     )
     conn.commit()
     return alert_id
+
+
+def record_case_change(
+    conn: sqlite3.Connection, keys: FamilyKeys, *, kid_id: str, alert_id: str, status: CaseStatus,
+    note: str | None, at: datetime,
+) -> str:
+    """One step in a counselor report's case. The caller checks the alert is this kid's counselor alert."""
+    change_id = str(ULID())
+    sealed = seal(keys.for_kid(kid_id), note.encode(), aad("alert_case", kid_id, change_id)) if note else None
+    conn.execute(
+        "INSERT INTO alert_case(id, alert_id, kid_id, status, at, note) VALUES (?, ?, ?, ?, ?, ?)",
+        (change_id, alert_id, kid_id, status, iso(at), sealed),
+    )
+    conn.commit()
+    return change_id
 
 
 def forget_turn(conn: sqlite3.Connection, kid_id: str, turn_id: str) -> int:

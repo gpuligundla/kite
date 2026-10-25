@@ -75,7 +75,7 @@ def check_forget_turn() -> None:
          seal_row(keys, "big_question_card", "c9", "q")),
     )
     conn.execute(
-        "INSERT INTO alert VALUES ('a9', ?, '[\"bullying\"]', 'parent', ?, ?, ?, NULL)",
+        "INSERT INTO alert VALUES ('a9', ?, '[\"bullying\"]', 'parent', ?, ?, ?, NULL, 't9', 's1')",
         (KID_ID, T0.isoformat(), far, seal_row(keys, "alert", "a9", "x")),
     )
     assert ledger.forget_turn(conn, KID_ID, "t9") == 1, "one event belonged to t9"

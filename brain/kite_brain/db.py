@@ -18,3 +18,9 @@ def connect(path: str) -> sqlite3.Connection:
 
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA.read_text())
+    # Databases made before these columns existed (the demo snapshot) gain them here.
+    have = {r[1] for r in conn.execute("PRAGMA table_info(alert)")}
+    for column in ("source_turn_id", "session_id"):
+        if column not in have:
+            conn.execute(f"ALTER TABLE alert ADD COLUMN {column} TEXT")
+    conn.commit()
