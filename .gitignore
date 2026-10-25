@@ -8,3 +8,8 @@ __pycache__/
 .pytest_cache/
 dist/
 apps/web/public/kite.apk
+
+# Submission and stage material: kept on the presenters' machines, not in the public repo.
+docs/devpost.md
+docs/slides.md
+docs/run-of-show.md
