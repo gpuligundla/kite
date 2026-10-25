@@ -10,7 +10,7 @@ Each device signs in through `/setup?token=…`, which stores one httpOnly `kite
 - **Parent profile.** The parent dashboard at `/parent`, signed in with the `parent` token. The dashboard grade starts at 7.
 - **Phone.** The web app's handheld mode in the phone's browser, signed in with the `handheld` token.
 
-Two presenters run the demo. The driver works the laptop and speaks. The second presenter holds the phone and plays Maya's voice when the driver asks a question out loud. [team: who drives and who holds the phone]
+Two presenters run the demo. The driver works the laptop, asks Kite every question, and speaks. The second presenter holds the phone for SOS and speaks as Maya in the Teach Kite reserve moment. [team: who drives and who holds the phone]
 
 Never promise Kite's exact words. Its answers are generated live. Point at what the screen shows instead: the voice, the reading-level badge, the cards, and the alerts.
 
@@ -87,7 +87,9 @@ Teach Kite is the reserve moment. If any live moment drops out early, use the ti
 
 **Point at.** The captions highlight each word as it's spoken. The art is SVG sprites. The question at the end is how a movie turns into learning evidence.
 
-**Say.** "No image model. These are SVG sprites animated in the browser. The same movie renders to an MP4 for her parents' dashboard. When Maya answers that question, Kite counts it as something she showed she knows."
+**Say.** "No image model. These are SVG sprites animated in the browser. The same movie renders to an MP4 for her parents' dashboard. At her real grade, Maya's answer to that question counts as something she showed she knows."
+
+A movie or game started from a time-travel turn still plays, but the brain doesn't record its check answer or game score. Don't claim this answer counts.
 
 **If it fails.** If the cached movie is playing, say "That's Kite's cached movie. When a new one isn't ready in 45 seconds, Kite falls back on its own." If nothing plays, move on.
 

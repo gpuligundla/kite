@@ -202,7 +202,7 @@ The real data has dinosaurs as a strength at grades 4, 6, and 8 to 11. In grade 
 
 ## How it was built
 
-Two humans built Kite with Claude Code (Opus 5.5) as the lead engineer, helper agents on Fable 5.1 and Sonnet 5.5 in separate git worktrees, and a review panel on four models. All 66 commits through `eb6229d` carry a Claude co-author trailer. AI agents also run inside the product. Claude Haiku persona agents played Maya's childhood, and Claude Code inside an Azure sandbox writes brand-new games.
+Two humans built Kite with Claude Code (Opus 5.5) as the lead engineer, helper agents in separate git worktrees, and a review panel on four models. All 66 commits through `eb6229d` carry a Claude co-author trailer: 57 from Opus 5.5, 6 from Fable 5.1, and 3 from Sonnet 5.5. AI agents also run inside the product. Claude Haiku persona agents played Maya's childhood, and Claude Code inside an Azure sandbox writes brand-new games.
 
 The AI changed the design as well as writing the code. Claude saw that an abuse alert sent to a parent can endanger the kid when the parent is the abuser, so those alerts now go to the counselor. Four reviewers on different models found that Claude's own first design let the parent stream see abuse turns, and Claude rewrote it. The humans overruled Claude too. They rejected its plain Node stack for a real monorepo with a Python brain. When they dropped the unit-test suite, Claude argued to keep the safety checks, because the claims made on stage depend on them.
 
