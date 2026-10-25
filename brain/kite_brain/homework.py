@@ -169,10 +169,13 @@ async def homework_signal(
         matched = next((a for a, _ in rest if assigned and topic and a.topic == topic and status(a, now) == "open"), None)
 
     if live:
+        # A live quiz pauses Kite only for what is on it: a question close to one of its own, or its own concept.
+        # Everything else gets the help it would get anyway, schoolwork included. Pausing the quiz's whole topic, or
+        # any schoolwork that matched nothing, stopped most of a science question bank during every quiz.
         nearest, cosine = _nearest(live, query_vec)
-        same = next((a for a, _ in live if concept_id and (a.concept_id == concept_id or a.topic == topic)), None)
-        if cosine >= NEAR_QUIZ_COSINE or same or (assigned and not matched):
-            quiz = nearest if cosine >= NEAR_QUIZ_COSINE else same or live[0][0]
+        same = next((a for a, _ in live if concept_id and a.concept_id == concept_id), None)
+        if cosine >= NEAR_QUIZ_COSINE or same:
+            quiz = nearest if cosine >= NEAR_QUIZ_COSINE else same
             return HomeworkSignal("exam_live", quiz.title, True)
 
     if matched:

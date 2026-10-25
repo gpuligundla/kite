@@ -132,16 +132,20 @@ def check_signals() -> None:
     assert signal(deps, at_cosine(live_item, 0.6)).near_live_quiz, "0.60 itself pauses"
 
     assert signal(deps, None, "water_cycle_basic").near_live_quiz, "the same concept as the live quiz pauses"
-    assert signal(deps, None, "water_energy").near_live_quiz, "the same topic pauses"
+    assert signal(deps, None, "water_energy").status is None, "another concept in the quiz's topic is not the quiz"
     assert signal(deps, None, "light_see").status is None, "another topic does not"
-    assert signal(deps, None, None, 0.5).near_live_quiz, "assigned work during a live quiz pauses"
+    unnamed = signal(deps, None, None, 0.5)
+    assert (unnamed.status, unnamed.near_live_quiz) == ("open", False), "schoolwork that names nothing of the quiz gets hints"
     assert signal(deps, None, None, 0.49).status is None
     hw_during_quiz = signal(deps, axis(open_item), None, 0.9)
     assert (hw_during_quiz.status, hw_during_quiz.near_live_quiz) == ("open", False), "a homework match is help during a live quiz"
     by_topic = signal(deps, at_cosine(open_item, 0.5), "ap_perimeter", 0.9)
     assert (by_topic.status, by_topic.title) == ("open", "Area and perimeter practice"), "assigned work on the homework's topic is help"
     assert signal(deps, at_cosine(open_item, 0.5), "ap_perimeter", 0.3).status is None, "the topic without assigned work is not homework"
-    assert signal(deps, None, "light_see", 0.9).near_live_quiz, "a closed quiz's topic is not enough to explain, so it pauses"
+    closed_topic = signal(deps, None, "light_see", 0.9)
+    assert (closed_topic.status, closed_topic.near_live_quiz) == ("open", False), (
+        "a closed quiz's topic is not enough for its worked solution: hints"
+    )
 
     open_match = signal(deps, axis(open_item))
     assert (open_match.status, open_match.title, open_match.near_live_quiz) == ("open", "Area and perimeter practice", False)
@@ -200,7 +204,7 @@ def check_pipeline() -> None:
     stand, deps, _, seen = ask("My teacher gave us a worksheet", now=later, assigned=0.9)
     assert routed(seen).homework_mode == "help" and routed(seen).assignment_title is None, "unmatched assigned work is help"
     stand, deps, _, seen = ask("My teacher gave us a worksheet", assigned=0.9)
-    assert routed(seen).route == "pause" and stand.llm_calls == 0, "assigned work during a live quiz pauses"
+    assert routed(seen).homework_mode == "help" and stand.llm_calls == 1, "a worksheet during a live quiz is still help"
 
 
 def check_startup_upserts() -> None:
