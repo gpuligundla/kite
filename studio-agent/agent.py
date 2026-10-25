@@ -35,9 +35,10 @@ from claude_agent_sdk import (
 HERE = Path(__file__).resolve().parent
 TOOLS = ["Read", "Write", "Edit", "Bash"]
 # The cloud sandbox has 2 vCPUs: a director's cut that took 5.7 min locally ran out at 420 s there, and Opus
-# writes a whole page in one 3-5 minute turn before the critic pass.
+# writes a whole page in one 3-5 minute turn before the critic pass. A game with its critic pass took 755 s in
+# the cloud and 11 min locally, so the budget is 15 min; the kid plays a template game meanwhile.
 MAX_TURNS = 18
-RUN_TIMEOUT_S = 660
+RUN_TIMEOUT_S = 900
 PLAYTEST_TIMEOUT_S = 120
 FOUNDRY_SCOPE = "https://ai.azure.com/.default"
 KID_VIEW_FIELDS = ("interests", "characters", "moments", "deep_topics")
