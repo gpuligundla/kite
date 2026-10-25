@@ -24,7 +24,7 @@ from kite_brain.deps import Deps, SafetyResult, ToolCall
 from kite_brain.llm import TOOLS
 from kite_brain.seed import KID_ID, seed
 from kite_brain.studio import store
-from kite_brain.studio_pro import GameResult, Playtest
+from kite_brain.studio_pro import PageResult, Playtest
 from kite_brain.turn import pipeline
 from kite_brain.turn.pipeline import TEACH_NOT_MET, TurnInput, run_turn, teaching_now
 from kite_brain.turn.route import FALLBACK, UNHEARD, teach_start_line
@@ -297,7 +297,8 @@ class ReadyAgent:
     async def build(self, request, progress):
         self.requests.append(request)
         progress("Write game.html")
-        return GameResult("ready", "<!doctype html><title>Moon jump</title><p>Jump to the moon!</p>", Playtest(True, []))
+        page = '<!doctype html><title>Moon jump</title><script data-kit="KITE_SOUNDS">window.KITE_SOUNDS = {};</script><p>Jump to the moon!</p>'
+        return PageResult("ready", page, Playtest(True, []))
 
 
 def settled_turn(deps, bus, turn_id, **fields):

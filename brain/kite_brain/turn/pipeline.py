@@ -41,7 +41,7 @@ from kite_brain.questions import (
 from kite_brain.studio.game import start_game
 from kite_brain.studio.movie import start_movie
 from kite_brain.studio.store import spawn
-from kite_brain.studio_pro import build_custom_game, start_custom_game
+from kite_brain.studio_pro import build_custom_game, start_page
 from kite_brain.turn.route import FALLBACK, RoutePlan, route, teach_start_line
 from kite_brain.turn.speak import END, SentenceSplitter, audio_b64, drain, speak_sentences
 from kite_brain.turn.teach import TeachGrade, earlier_attempts, grade_teach, merge_attempts, teach_feedback_context
@@ -186,7 +186,7 @@ def act_on_tool_call(call: ToolCall, turn_id: str, turn: _Turn | None = None) ->
     if call.name == "teach_kite":
         return _teach_by_voice(turn, call.topic)
     if call.name == "build_new_game":  # as POST /kids/{kid}/games/custom does
-        creation_id = start_custom_game(deps, kid_id, call.topic, call.learning_goal)
+        creation_id = start_page(deps, kid_id, "game")
         spawn(build_custom_game(deps, kid_id, creation_id, call.topic, call.learning_goal))
         return None
     start = start_movie if call.name == "make_movie" else start_game

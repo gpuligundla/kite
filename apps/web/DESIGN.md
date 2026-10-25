@@ -33,7 +33,7 @@ On the grown-up side, kite colors appear only as data colors and actions. Never 
 - Avoid all-caps labels, eyebrow labels over headings, and single-word color accents in headlines.
 
 **Layout.**
-- The kid screen is centered around Kite, with a dock at the bottom for talking and typing.
+- The kid screen is centered around Kite and voice-first: the hold-to-talk diamond leads the dock, and typing waits behind a "Type instead" toggle each device remembers.
 - The grown-up view is left-aligned, with hierarchy shown by size and order, not boxes. Line length stays under 80 characters.
 
 ## The kid screen grows up with the grade band
