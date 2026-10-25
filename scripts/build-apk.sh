@@ -2,7 +2,10 @@
 # Builds Kite's Android app: a Trusted Web Activity that opens the deployed handheld launcher full screen in
 # Chrome, so the mic and camera work as they do on the web. It can also be picked as the phone's home app.
 #
-#   scripts/build-apk.sh https://<kite-web host>      # writes dist/kite.apk
+#   scripts/build-apk.sh https://<kite-web host>      # writes dist/kite.apk, and apps/web/public/kite.apk
+#
+# The web app serves the second copy at https://<kite-web host>/kite.apk once it's redeployed, so a phone can
+# download it from the same site it pairs with. Both copies are gitignored build output.
 #
 # Needs, in ~/.kite-android (outside the repo):
 #   jdk/ (JDK 17), sdk/ (Android SDK: platform 35, build-tools 34, plus a tools -> cmdline-tools/latest link),
@@ -71,4 +74,5 @@ UNSIGNED="$WORK/app/build/outputs/apk/release/app-release-unsigned.apk"
 "$BT/apksigner" sign --ks "$T/kite-release.jks" --ks-key-alias kite \
   --ks-pass env:BUBBLEWRAP_KEYSTORE_PASSWORD --key-pass env:BUBBLEWRAP_KEY_PASSWORD --out "$OUT/kite.apk" "$WORK/aligned.apk"
 "$BT/apksigner" verify "$OUT/kite.apk"
+cp "$OUT/kite.apk" apps/web/public/kite.apk
 echo "== $OUT/kite.apk ($(du -h "$OUT/kite.apk" | cut -f1))"

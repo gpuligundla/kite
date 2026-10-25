@@ -7,3 +7,4 @@ brain/evals/out/
 __pycache__/
 .pytest_cache/
 dist/
+apps/web/public/kite.apk
