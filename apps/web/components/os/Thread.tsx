@@ -22,7 +22,8 @@ export interface ThreadProps {
   /** `${turn id}:${kind}` for each chip already pressed. */
   making: ReadonlySet<string>;
   onMake: (turn: TurnView, kind: CreationKind) => void;
-  /** Off during Teach Kite, when the kid is explaining rather than asking for things. */
+  /** Off during Teach Kite, when the kid is explaining rather than asking for things. Otherwise the chips sit under
+   *  the latest turn only, since what they say ("Make that into a movie") points at the last thing said. */
   makeChips: boolean;
   empty: ReactNode;
 }
@@ -90,7 +91,7 @@ export function Thread({ brain, band, device, turns, earlier, creations, anchors
           // The wire doesn't say which device asked. A live turn not posted here came from the kid's other device.
           const asker: DeviceKind | null = t.mine ? device : earlier.has(t.id) ? null : device === "os" ? "handheld" : "os";
           const first = t.sentences[0]?.text;
-          const canMake = makeChips && t.done?.route === "answer" && t.heard && first;
+          const canMake = makeChips && t === shown.at(-1) && t.done?.route === "answer" && t.heard && first;
           const below = creations.filter((c) => anchors[c.id] === t.id);
           return (
             <section key={t.id} className={s.turn} data-turn={t.id} aria-label="One question and Kite's answer">

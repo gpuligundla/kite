@@ -91,6 +91,7 @@ try {
     assert.ok(tenth.answer.length > first.answer.length, `${tenth.answer.length} vs ${first.answer.length} chars`);
   });
 
+  let spoken;
   await step("a spoken question gets a spoken answer", async () => {
     const spoke = kid.locator('svg[aria-label="Kite, talking"]').waitFor({ timeout: 40_000 });
     const diamond = await kid.getByRole("button", { name: "Hold to talk" }).boundingBox();
@@ -103,6 +104,13 @@ try {
     await turn.getByText(/volcano/i).first().waitFor({ timeout: 20_000 });
     await turn.getByText(/^FK \d+\.\d$/).waitFor({ timeout: 25_000 });
     await spoke;
+    spoken = turn;
+  });
+
+  await step("make it a movie: the player is ready within 45 s", async () => {
+    // The chip under the latest answer says what she would ("Make that into a movie"); the movie shows under that turn.
+    const asked = await newTurn(() => spoken.getByRole("button", { name: "Make it a movie" }).click());
+    await asked.locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
   });
 
   await step("Teach Kite listens and thanks her, with no grade shown", async () => {
@@ -117,12 +125,6 @@ try {
     await kid.getByText("Thanks for teaching me!").waitFor({ timeout: 45_000 });
     assert.equal(await kid.getByText(/got_it|partly|not_yet|can_teach/).count(), 0);
     await kid.getByRole("button", { name: "Stop teaching" }).click().catch(() => {});
-  });
-
-  await step("make it a movie: the player is ready within 45 s", async () => {
-    // The chip asks the way she would, and the movie shows under that new turn.
-    const asked = await newTurn(() => first.turn.getByRole("button", { name: "Make it a movie" }).click());
-    await asked.locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
   });
 
   await step("SOS reaches the grown-up view live within 2 s", async () => {

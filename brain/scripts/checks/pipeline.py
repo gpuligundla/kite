@@ -392,6 +392,8 @@ def check_time_travel_follow_ups() -> None:
     stand.heard = "what is lava?"
     turn(deps, bus, stand, "now1")
     assert "volcanoes" not in stand.requests[2].context, "a turn at her own grade never sees time travel"
+    turn(deps, bus, stand, "tt10", as_of_grade=10)
+    assert "volcanoes" not in stand.requests[3].context, "nor does another grade's time travel"
 
     stand.heard, stand.decide_result = "forget that", about("none", forget=0.9)
     turn(deps, bus, stand, "tt3", as_of_grade=2)

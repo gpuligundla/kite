@@ -58,9 +58,9 @@ TEACH_NOT_MET = "Let's talk about {topic} together first. Then you can teach it 
 T = TypeVar("T")
 
 # A time-travel turn writes nothing, so without these a follow-up such as "make that into a movie" has no
-# conversation to point back at. Rows stay in this process only.
+# conversation to point back at. Each grade is its own conversation, as each is a different age of the kid.
 # ponytail: per process and lost on restart; fine for one brain, move to a store if the brain ever scales out.
-_time_travel: dict[str, deque[tuple[datetime, str, str]]] = {}
+_time_travel: dict[tuple[str, int], deque[tuple[datetime, str, str]]] = {}
 # The Teach Kite concept the brain started last, per kid, so the kid's screen can follow a lesson begun by voice.
 _teaching: dict[str, tuple[str, datetime]] = {}
 
@@ -241,14 +241,14 @@ def teaching_now(deps: Deps, kid_id: str) -> str | None:
 
 
 def _remember_time_travel(turn: _Turn, kid_text: str, kite_text: str) -> None:
-    rows = _time_travel.setdefault(turn.inp.kid_id, deque(maxlen=TIME_TRAVEL_ROWS))
+    rows = _time_travel.setdefault((turn.inp.kid_id, turn.grade), deque(maxlen=TIME_TRAVEL_ROWS))
     now = turn.deps.clock()  # not turn.now, which a simulation sets in the past
     rows.extend([(now, "kid", kid_text), (now, "kite", kite_text)])
 
 
 def _time_travel_history(turn: _Turn) -> list[tuple[str, str]]:
     since = turn.deps.clock() - TIME_TRAVEL_KEPT
-    return [(role, text) for at, role, text in _time_travel.get(turn.inp.kid_id, ()) if at >= since]
+    return [(role, text) for at, role, text in _time_travel.get((turn.inp.kid_id, turn.grade), ()) if at >= since]
 
 
 async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | None, publish) -> str:
@@ -421,7 +421,7 @@ async def _run(turn: _Turn) -> None:
         turn.teach = _grade_teach(turn, decisions, concept_id)
     if plan.forget:
         if turn.read_only:  # a time-travel turn wrote nothing but the in-memory exchange
-            rows = _time_travel.get(inp.kid_id, deque())
+            rows = _time_travel.get((inp.kid_id, turn.grade), deque())
             for _ in range(min(2, len(rows))):
                 rows.pop()
         else:
