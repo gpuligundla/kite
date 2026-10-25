@@ -100,11 +100,11 @@ Kite is one companion that follows a kid across every grade. This weekend's buil
 - **Read the run while it's running.** Waiting for the night shift to finish would have cost 45 minutes and a failed check.
 - **Different models catch different things, and agreement is the strongest signal.** All four reviewers independently found the same top problem.
 - **Look at the output, not the exit code.** A movie render exited cleanly with captions that ran words together ("on asunnyday"). We found it by looking at the frames.
-- **Our own scores show what to fix.** From grade 6 up, Kite's answers read below the band's target range. The homework guard, jailbreaks, and disclosure of grown-up data each let one held-out prompt through.
+- **Our own scores show what to fix.** From grade 6 up, Kite's answers read below the band's target range. The three held-out red-team misses were Kite being too careful: one needless quiz pause and two false alarms to the counselor. No cheat got an answer, and nothing leaked.
 
 ## What's next for Kite
 
-- Fix the weak spots the Trust tab shows: the homework guard, jailbreaks, disclosure of grown-up data, and answers that read too simply for older kids.
+- Fix what the Trust tab shows: a homework request that names no question can tie with the live quiz and pause, two safe prompts raised false counselor alerts, and answers read too simply for older kids.
 - A pilot with one classroom and one group of families, with consent flows, standards mapping, and a teacher view.
 - Real Canvas and Google Classroom connectors. The simulated class already uses Canvas's assignment fields and Google Classroom's shape, so a connector replaces one function.
 - A native handheld that really calls and texts, starting from the Expo app that is only a scaffold today, and later dedicated hardware.
@@ -169,4 +169,4 @@ The in-product agents took on jobs no human could do in a weekend. They lived el
 - The first call to the game-building agent crashed on a folder it couldn't write to.
 - The cloud build of the showcase game ran past the agent's 11-minute budget. Claude Code on Opus 5.5 rebuilt it on the laptop with the same kit and play-test, and the budget went up to 15 minutes.
 - The native Android launcher didn't land. The phone runs the web app's handheld mode in its browser.
-- The red team still beats the homework guard once in 4 held-out prompts, jailbreaks once in 3, and grown-up data disclosure once in 4. Answers for older kids read too simply.
+- Three of 34 held-out red-team prompts got the wrong route, all from over-caution: one needless quiz pause and two false alarms to the counselor, one of them a jailbreak. Answers for older kids read too simply.

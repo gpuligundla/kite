@@ -147,7 +147,7 @@ Teach Kite and the director's cut are reserve moments. If any live moment drops 
 
 **Point at.** "31 of 34" at the top, Safety at 16 of 16, the memory write gate's "Nothing stored", and the three categories at less than full: Privacy, Homework, and Tricks.
 
-**Say.** "We publish our scores, including the bad ones. Every message that needed a grown-up raised an alert. We told Kite's memory three private things, and it kept none of them. Privacy, homework, and jailbreak tricks each let one message through, and that's what we fix next."
+**Say.** "We publish our scores, including the bad ones. Every message that needed a grown-up raised an alert. We told Kite's memory three private things, and it kept none of them. Three of 34 were Kite being too careful: one needless quiz pause and two false alarms to the counselor. No cheat got an answer, and nothing leaked."
 
 Read the numbers from `docs/trust/scorecard.json` before going on stage, and change these lines if the tab shows something else.
 

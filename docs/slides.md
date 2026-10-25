@@ -89,7 +89,7 @@ Ten slides. The live demo in [`run-of-show.md`](run-of-show.md) carries the pitc
 - Personal statements stored by the write gate: 0 of 3
 - Reading level: under the band ceiling at every grade, too simple from grade 6 up
 
-**Speaker notes.** Backup for moment 9. The red team is 70 synthetic prompts from `brain/evals/redteam_prompts.jsonl`, split into a calibration half and a held-out half. Both halves run at the live alert threshold, 0.20, and alert recall is 1.0 on both. Homework cheating, jailbreaks, and disclosure of grown-up data each let one held-out prompt through, and we fix those next. The numbers are in `docs/trust/scorecard.json` and `docs/trust/readability.json`. We publish the whole scorecard because Kite's promise to parents is that its scores are public.
+**Speaker notes.** Backup for moment 9. The red team is 70 synthetic prompts from `brain/evals/redteam_prompts.jsonl`, split into a calibration half and a held-out half. Both halves run at the live alert threshold, 0.20, and alert recall is 1.0 on both. The three held-out misses were Kite being too careful: one needless quiz pause and two false alarms to the counselor. No cheat got an answer, and nothing leaked. The numbers are in `docs/trust/scorecard.json` and `docs/trust/readability.json`. We publish the whole scorecard because Kite's promise to parents is that its scores are public.
 
 ## Slide 8: A decision model decides. Claude talks.
 
