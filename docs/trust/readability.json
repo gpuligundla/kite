@@ -2,56 +2,56 @@
   {
     "band": "K-2",
     "grade": 1,
-    "fk_mean": 1.43,
+    "fk_mean": 1.22,
     "fk_max": 2,
     "n": 4
   },
   {
     "band": "K-2",
     "grade": 2,
-    "fk_mean": 1.66,
+    "fk_mean": 1.5,
     "fk_max": 2,
     "n": 4
   },
   {
     "band": "3-5",
     "grade": 3,
-    "fk_mean": 2.98,
+    "fk_mean": 2.42,
     "fk_max": 5,
     "n": 4
   },
   {
     "band": "3-5",
     "grade": 5,
-    "fk_mean": 3.52,
+    "fk_mean": 3.32,
     "fk_max": 5,
     "n": 4
   },
   {
     "band": "6-8",
     "grade": 6,
-    "fk_mean": 4.34,
+    "fk_mean": 4.42,
     "fk_max": 8,
     "n": 4
   },
   {
     "band": "6-8",
     "grade": 8,
-    "fk_mean": 4.98,
+    "fk_mean": 4.94,
     "fk_max": 8,
     "n": 4
   },
   {
     "band": "9-12",
     "grade": 9,
-    "fk_mean": 7.28,
+    "fk_mean": 7.37,
     "fk_max": 12,
     "n": 4
   },
   {
     "band": "9-12",
     "grade": 10,
-    "fk_mean": 6.86,
+    "fk_mean": 7.65,
     "fk_max": 12,
     "n": 4
   }
