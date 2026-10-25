@@ -6,3 +6,4 @@ brain/evals/out/
 .audit/
 __pycache__/
 .pytest_cache/
+dist/
