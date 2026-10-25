@@ -199,6 +199,15 @@ class StyleFact(BaseModel):
 
 ProfileFact = Annotated[InterestFact | CharacterFact | StyleFact, Field(discriminator="fact_kind")]
 
+# Concept names are sentence-cased titles ("The math of the blue sky"). Inside a moment they start lowercase,
+# except the few that start with a proper noun.
+_PROPER_STARTS = ("DNA", "Earth's", "Newton's", "Pythagorean", "Rayleigh")
+
+
+def _mid_sentence(name: str) -> str:
+    return name if name.startswith(_PROPER_STARTS) else name[:1].lower() + name[1:]
+
+
 _MOMENT_TEMPLATES = {
     "answer": "Figured out {name}",
     "movie": "Watched a movie about {name}",
@@ -214,7 +223,7 @@ class Moment(BaseModel):
     source: Literal["answer", "movie", "game", "teach_back"]
 
     def text(self, concept_name: str) -> str:
-        line = _MOMENT_TEMPLATES[self.source].format(name=concept_name)
+        line = _MOMENT_TEMPLATES[self.source].format(name=_mid_sentence(concept_name))
         return f"{line}, with {self.character}" if self.character else line
 
 

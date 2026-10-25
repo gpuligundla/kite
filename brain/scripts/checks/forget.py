@@ -4,6 +4,7 @@ Run from brain/: uv run python -m scripts.checks.forget"""
 import asyncio
 import re
 
+from kite_brain.contract import Moment
 from kite_brain.seed import KID_ID
 from kite_brain.turn.route import FORGOT
 from scripts.checks.audiences import drain
@@ -14,7 +15,7 @@ from scripts.checks.pipeline import make_decisions
 from scripts.checks.voice import use_sample_voices
 
 SKILL_WORDS = re.compile(r"skills|frontier|can_teach|got_it|not_yet|learning\b", re.I)
-SKY, DINO = (f"Figured out {CATALOG.get(c).kid_name}" for c in ("light_see", "dino_what"))
+SKY, DINO = (Moment(concept_id=c, source="answer").text(CATALOG.get(c).kid_name) for c in ("light_see", "dino_what"))
 
 
 def decisions(forget=0.0, alerts=None):
