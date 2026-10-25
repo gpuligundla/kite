@@ -1,21 +1,37 @@
-/* Tokens. Kite colors come from ripstop kite nylon; the kid side flies them against the sky,
-   the grown-up side keeps them for data and actions only. See DESIGN.md. */
+/* Tokens. See DESIGN.md: the kid screen is a living sky whose time of day follows the grade band (noon for K-2,
+   aurora night for 9-12), with liquid-glass panels floating in it. The grown-up side is the twilight console. */
 :root {
-  --ink: #1d2b53;
-  --ink-soft: #4a5677;
+  /* Ripstop accents, flown against the sky. Vivid on purpose. */
+  --kite-red: #ff4b3e;
+  --kite-red-deep: #d92f24;
+  --kite-yellow: #ffc83d;
+  --tail-teal: #12c9a8;
+  --ultraviolet: #7b5cff;
+  --bloom: #ff5fa2;
+
+  /* Surfaces and text. Light by default; the night band and the grown-up console flip these. */
+  --ink: #141c4a;
+  --ink-soft: #46507e;
+  --paper: rgba(255, 255, 255, 0.78);
+  --paper-solid: #ffffff;
+  --mist: rgba(255, 255, 255, 0.5);
+  --line: rgba(20, 28, 74, 0.14);
   --sky: #cdebf7;
   --sky-deep: #8fcde8;
-  --kite-red: #e8443a;
-  --kite-red-deep: #c4302a;
-  --kite-yellow: #ffc93c;
-  --tail-teal: #12a39a;
-  --paper: #ffffff;
-  --mist: #f3f5f9;
-  --line: #d5dce8;
 
-  --radius-s: 8px;
-  --radius-m: 14px;
-  --radius-l: 24px;
+  /* Liquid glass. Use the .glass class, or these in a module with backdrop-filter: var(--glass-blur). */
+  --glass-fill: rgba(255, 255, 255, 0.58);
+  --glass-fill-strong: rgba(255, 255, 255, 0.8);
+  --glass-edge: rgba(255, 255, 255, 0.7);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-blur: blur(22px) saturate(170%);
+  --glass-shadow: 0 24px 60px -24px rgba(16, 22, 80, 0.45), 0 2px 8px -2px rgba(16, 22, 80, 0.18);
+  --glow-red: 0 0 0 1px rgba(255, 75, 62, 0.35), 0 10px 40px -6px rgba(255, 75, 62, 0.65);
+
+  --radius-s: 10px;
+  --radius-m: 16px;
+  --radius-l: 28px;
+  --radius-xl: 36px;
 
   /* Major third scale on a 17px base: kids read larger text. */
   --step--1: 0.85rem;
@@ -24,6 +40,8 @@
   --step-2: 1.66rem;
   --step-3: 2.07rem;
   --step-4: 2.59rem;
+  --step-5: 3.6rem;
+  --step-6: 5.6rem;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -40,13 +58,88 @@
   --dur-pop: 200ms;
   --dur-panel: 260ms;
   --dur-band: 450ms;
+
+  /* The sky itself, per band below. Noon is the default. */
+  --sky-wall:
+    radial-gradient(60% 50% at 82% 8%, rgba(255, 236, 140, 0.95) 0%, rgba(255, 214, 90, 0.35) 30%, transparent 60%),
+    radial-gradient(70% 60% at 10% 100%, rgba(120, 240, 255, 0.7) 0%, transparent 60%),
+    linear-gradient(180deg, #1f8bff 0%, #46b4ff 48%, #9fe3ff 100%);
+  --aurora-a: rgba(255, 255, 255, 0.55);
+  --aurora-b: rgba(160, 240, 255, 0.5);
 }
 
-/* The kid screen grows up with the grade band. data-band sits on the kid page's root. */
-[data-band="k2"] { --band-bg: #bfe6f7; --kid-text: var(--step-2); --target: 76px; --radius-kid: 30px; --kite-size: 150px; }
-[data-band="g35"] { --band-bg: var(--sky); --kid-text: var(--step-1); --target: 64px; --radius-kid: 24px; --kite-size: 124px; }
-[data-band="g68"] { --band-bg: #dcf0f8; --kid-text: 1.18rem; --target: 54px; --radius-kid: 18px; --kite-size: 96px; }
-[data-band="g912"] { --band-bg: #edf4f8; --kid-text: var(--step-0); --target: 48px; --radius-kid: 12px; --kite-size: 72px; }
+/* The kid screen grows up with the grade band, and so does the sky: noon, afternoon, golden hour, aurora night.
+   data-band sits on the kid page's root. */
+[data-band="k2"] {
+  --band-bg: #1f8bff; --kid-text: var(--step-2); --target: 76px; --radius-kid: 30px; --kite-size: 150px;
+}
+[data-band="g35"] {
+  --band-bg: #2a7bff; --kid-text: var(--step-1); --target: 64px; --radius-kid: 24px; --kite-size: 124px;
+  --sky-wall:
+    radial-gradient(55% 45% at 85% 12%, rgba(255, 230, 150, 0.9) 0%, rgba(255, 200, 90, 0.3) 32%, transparent 60%),
+    radial-gradient(80% 60% at 0% 100%, rgba(90, 240, 220, 0.75) 0%, transparent 62%),
+    linear-gradient(170deg, #2257ff 0%, #2f8cff 45%, #5fe0e6 100%);
+  --aurora-b: rgba(120, 255, 220, 0.5);
+}
+[data-band="g68"] {
+  --band-bg: #6a3fe0; --kid-text: 1.18rem; --target: 54px; --radius-kid: 18px; --kite-size: 96px;
+  --sky-wall:
+    radial-gradient(60% 45% at 78% 88%, rgba(255, 190, 90, 0.95) 0%, rgba(255, 120, 110, 0.5) 34%, transparent 64%),
+    radial-gradient(70% 60% at 8% 10%, rgba(120, 90, 255, 0.8) 0%, transparent 60%),
+    linear-gradient(185deg, #3b2bb8 0%, #8a3fd9 38%, #ff5f8a 72%, #ffb35c 100%);
+  --aurora-a: rgba(255, 200, 150, 0.45);
+  --aurora-b: rgba(255, 110, 170, 0.45);
+  --glass-fill: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 24px 60px -24px rgba(60, 10, 90, 0.55), 0 2px 8px -2px rgba(60, 10, 90, 0.2);
+}
+[data-band="g912"] {
+  --band-bg: #0b1036; --kid-text: var(--step-0); --target: 48px; --radius-kid: 14px; --kite-size: 72px;
+  --sky-wall:
+    radial-gradient(90% 45% at 30% 0%, rgba(58, 242, 200, 0.42) 0%, transparent 60%),
+    radial-gradient(70% 50% at 90% 20%, rgba(138, 108, 255, 0.5) 0%, transparent 62%),
+    radial-gradient(60% 40% at 50% 100%, rgba(255, 95, 162, 0.22) 0%, transparent 70%),
+    linear-gradient(180deg, #0a0f33 0%, #141a52 55%, #1d1660 100%);
+  --aurora-a: rgba(58, 242, 200, 0.4);
+  --aurora-b: rgba(138, 108, 255, 0.45);
+  /* Night: dark glass, light text. Existing components follow through --paper and --ink. */
+  --ink: #eef1ff;
+  --ink-soft: #b3bbe6;
+  --paper: rgba(22, 28, 80, 0.72);
+  --paper-solid: #1a2160;
+  --mist: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.14);
+  --sky-deep: rgba(255, 255, 255, 0.12);
+  --glass-fill: rgba(255, 255, 255, 0.08);
+  --glass-fill-strong: rgba(30, 36, 100, 0.78);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.22);
+  --glass-shadow: 0 30px 70px -28px rgba(0, 0, 0, 0.7), 0 2px 10px -2px rgba(0, 0, 0, 0.35);
+}
+
+/* The grown-up console: twilight, the same sky an hour after the kid's goes dark. Calm, but not pale. */
+.grown {
+  --ink: #eef1ff;
+  --ink-soft: #a9b2da;
+  --paper: rgba(255, 255, 255, 0.06);
+  --paper-solid: #182057;
+  --mist: rgba(255, 255, 255, 0.04);
+  --line: rgba(255, 255, 255, 0.12);
+  --sky-deep: rgba(120, 160, 255, 0.18);
+  --glass-fill: rgba(255, 255, 255, 0.065);
+  --glass-fill-strong: rgba(26, 32, 92, 0.86);
+  --glass-edge: rgba(255, 255, 255, 0.13);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.75), 0 2px 10px -2px rgba(0, 0, 0, 0.3);
+  --console:
+    radial-gradient(80% 50% at 12% -10%, rgba(123, 92, 255, 0.38) 0%, transparent 60%),
+    radial-gradient(60% 40% at 100% 0%, rgba(18, 201, 168, 0.22) 0%, transparent 60%),
+    linear-gradient(180deg, #0e1440 0%, #10164a 40%, #0c1238 100%);
+  min-height: 100dvh;
+  color: var(--ink);
+  background: var(--console);
+  background-attachment: fixed;
+  background-color: #0e1440;
+}
 
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -55,20 +148,63 @@ body {
   font-size: var(--step-0);
   line-height: 1.5;
   color: var(--ink);
-  background: var(--paper);
+  background: #0e1440;
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3 { font-family: var(--font-display), system-ui, sans-serif; line-height: 1.15; margin: 0; letter-spacing: -0.01em; }
+h1, h2, h3 { font-family: var(--font-display), system-ui, sans-serif; line-height: 1.12; margin: 0; letter-spacing: -0.015em; }
 h1 { font-size: var(--step-4); font-weight: 800; }
 h2 { font-size: var(--step-2); font-weight: 700; }
 h3 { font-size: var(--step-1); font-weight: 700; }
 p { margin: 0; max-width: 68ch; }
 a { color: inherit; }
 button, input, textarea, select { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: var(--radius-s); }
+:focus-visible { outline: 3px solid var(--kite-yellow); outline-offset: 3px; border-radius: var(--radius-s); }
 
-.kid { min-height: 100dvh; background: var(--band-bg, var(--sky)); transition: background-color var(--dur-band) var(--ease-in-out); }
-.grown { min-height: 100dvh; background: var(--mist); }
+/* The kid page: the sky, with two slow aurora ribbons. The only ambient motion in the product. */
+.kid {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  color: var(--ink);
+  background: var(--sky-wall);
+  background-color: var(--band-bg, #1f8bff);
+  transition: background-color var(--dur-band) var(--ease-in-out);
+  overflow-x: clip;
+}
+.kid::before, .kid::after {
+  content: "";
+  position: fixed;
+  inset: -20% -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 18% at 30% 30%, var(--aurora-a), transparent 70%),
+    radial-gradient(35% 14% at 70% 55%, var(--aurora-b), transparent 70%);
+  filter: blur(30px);
+  opacity: 0.7;
+  animation: drift 48s var(--ease-in-out) infinite alternate;
+}
+.kid::after { animation-duration: 64s; animation-direction: alternate-reverse; opacity: 0.5; }
+@keyframes drift {
+  from { transform: translate3d(-6%, -3%, 0) rotate(-4deg); }
+  to { transform: translate3d(6%, 4%, 0) rotate(5deg); }
+}
+
+/* Liquid glass: translucent fill, blur, a lit top edge. */
+.glass {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+}
+.glass-strong {
+  background: var(--glass-fill-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+}
 .stub { padding: var(--space-4); border: 2px dashed var(--line); border-radius: var(--radius-m); background: var(--paper); }
 
 @media (prefers-reduced-motion: reduce) {
