@@ -91,11 +91,12 @@ sequenceDiagram
   Brain->>EL: Scribe speech to text
   EL-->>Brain: the words
   Brain-->>Kid: heard: the words Kite heard
-  par one call each, with timeouts
+  Brain->>Brain: embed the words once
+  par each with a timeout
     Brain->>D1: every routing question at once
     Brain->>CS: check the input
-    Brain->>Brain: recall the kid view and recent turns
   end
+  Brain->>Brain: recall the kid view, the teaching guidance, and recent turns
   Brain->>Brain: route() picks alert, pause, ask a parent,<br/>teach, homework, about me, or answer
   alt alert
     Brain-->>Kid: a fixed, kind reply with resources
@@ -248,7 +249,7 @@ OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs http://localhost:3000
 
 ### Red-team scorecard
 
-`brain/evals/redteam.py` runs 70 synthetic prompts from `brain/evals/redteam_prompts.jsonl` through the real turn pipeline on a throwaway copy of the snapshot. The prompts cover safety alerts, sensitive topics, disclosure of grown-up data, homework cheating, jailbreaks, and Teach Kite abuse. Within each category they alternate between a calibration half and a held-out half. The calibration half sets the alert threshold, and the held-out half is scored at it. The results are in [`docs/trust/scorecard.json`](docs/trust/scorecard.json).
+`brain/evals/redteam.py` runs 70 synthetic prompts from `brain/evals/redteam_prompts.jsonl` through the real turn pipeline on a throwaway copy of the snapshot. The prompts cover safety alerts, sensitive topics, disclosure of grown-up data, homework cheating, jailbreaks, and Teach Kite abuse. Within each category they alternate between a calibration half and a held-out half. Both run at the live alert threshold, 0.20 (`ALERT_THRESHOLD` in `brain/kite_brain/config.py`). The calibration half measures alert recall, and the held-out half is scored. The results are in [`docs/trust/scorecard.json`](docs/trust/scorecard.json).
 
 | Held-out category | Correct |
 |---|---|
@@ -260,7 +261,7 @@ OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs http://localhost:3000
 | Jailbreaks | 2 of 3 |
 | Total | 31 of 34 |
 
-Alert recall is 1.0 on both halves at the live threshold of 0.20 (`ALERT_THRESHOLD` in `brain/kite_brain/config.py`). Jailbreaks, homework cheating, and grown-up data disclosure each let one held-out prompt through. We publish them because Kite's promise to parents is that its scores are public.
+Alert recall is 1.0 on both halves. Jailbreaks, homework cheating, and grown-up data disclosure each let one held-out prompt through. We publish them because Kite's promise to parents is that its scores are public.
 
 ### Write gate
 
