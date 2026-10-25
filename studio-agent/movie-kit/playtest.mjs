@@ -2,7 +2,7 @@
 // Usage: node playtest.mjs [movie.html]   Writes dist/movie.html and shots/*.png next to the source,
 // prints a JSON verdict {passed, errors, out, shots, duration, narration} and exits 1 on failure.
 // Error codes, so the agent can fix the right thing: KIT_FORGED, MOVIE_ERROR, NO_READY, BAD_DURATION,
-// SAME_FRAMES, SEEK_UNSTABLE, NO_PLAY, NETWORK.
+// SAME_FRAMES, SEEK_UNSTABLE, NO_GUIDE, TEXT_COVERED, TEXT_CLIPPED, NO_PLAY, NETWORK.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { chromium } from "playwright";
@@ -73,16 +73,19 @@ setTimeout(() => {
 }, 90000);
 
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-await page.route("**/*", (route) => {
-  if (route.request().url() === PAGE) return route.fulfill({ contentType: "text/html", body: html, headers: { "Content-Security-Policy": CSP } });
-  fail("NETWORK", route.request().url());
-  return route.abort();
-});
-page.on("pageerror", (e) => fail("MOVIE_ERROR", e.message));
-page.on("console", (m) => m.type() === "error" && fail("MOVIE_ERROR", m.text()));
-
-await page.goto(PAGE, { waitUntil: "load" });
+async function open() {
+  const p = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  await p.route("**/*", (route) => {
+    if (route.request().url() === PAGE) return route.fulfill({ contentType: "text/html", body: html, headers: { "Content-Security-Policy": CSP } });
+    fail("NETWORK", route.request().url());
+    return route.abort();
+  });
+  p.on("pageerror", (e) => fail("MOVIE_ERROR", e.message));
+  p.on("console", (m) => m.type() === "error" && fail("MOVIE_ERROR", m.text()));
+  await p.goto(PAGE, { waitUntil: "load" });
+  return p;
+}
+let page = await open();
 const ready = () => page.evaluate(() => (window.__kite ?? []).some((m) => m.type === "kite.ready"));
 const started = Date.now();
 while (!(await ready()) && Date.now() - started < 5000) await page.waitForTimeout(100);
@@ -97,30 +100,35 @@ if (!(Math.abs(info.duration - info.narration) <= 0.1 * info.narration)) {
   fail("BAD_DURATION", `kite.timeline runs ${info.duration?.toFixed(1)} s but the narration runs ${info.narration.toFixed(1)} s; stay within 10%`);
 }
 
-const hidePlay = await page.addStyleTag({ content: "#kite-play{display:none!important}" });
+const hidePlay = { content: "#kite-play{display:none!important}" };
+await page.addStyleTag(hidePlay);
 const frame = async (seconds) => {
   await page.evaluate((s) => window.kite.seek(s), seconds);
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
   return page.screenshot();
 };
-// Visible text in the stage that the guide (#guide) is drawn over: hit tests on a 10 x 3 grid pick
-// the candidates, and pixels confirm them (the text's box changes when the guide is hidden).
-const covered = async () => {
-  const candidates = await hitTest();
-  if (candidates === null) return null;
-  const setVisibility = (v) => page.evaluate((v) => {
-    const style = document.getElementById("guide").style;
-    const was = style.visibility;
-    style.visibility = v;
-    return was;
-  }, v);
+// Visible text that the guide (#guide) is drawn over, and visible text cut off by the stage's edge.
+// Geometry picks the candidates; pixels confirm them: the box changes when the guide, or the cut-off
+// text itself, is hidden.
+const showsIn = async (selector, clip) => {
+  const before = await page.screenshot({ clip });
+  const was = await page.evaluate((s) => {
+    const style = document.querySelector(s).style;
+    const old = style.visibility;
+    style.visibility = "hidden";
+    return old;
+  }, selector);
+  const after = await page.screenshot({ clip });
+  await page.evaluate(([s, old]) => (document.querySelector(s).style.visibility = old), [selector, was]);
+  return !before.equals(after);
+};
+const textProblems = async () => {
+  const found = await hitTest();
+  if (found === null) return null;
   const out = [];
-  for (const { text, clip } of candidates) {
-    const withGuide = await page.screenshot({ clip });
-    const was = await setVisibility("hidden");
-    const without = await page.screenshot({ clip });
-    await setVisibility(was);
-    if (!withGuide.equals(without)) out.push(text);
+  for (const { text, clip } of found.covered) if (await showsIn("#guide", clip)) out.push(["TEXT_COVERED", text, "the guide stands on"]);
+  for (const { text, clip, probe } of found.clipped) {
+    if (await showsIn(`[data-kite-probe="${probe}"]`, clip)) out.push(["TEXT_CLIPPED", text, "the stage edge cuts off"]);
   }
   return out;
 };
@@ -135,7 +143,20 @@ const hitTest = () => page.evaluate(() => {
     return true;
   };
   const owns = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
-  const under = [...document.querySelectorAll("#stage *")].filter((el) => !guide.contains(el) && owns(el) && shown(el)).map((el) => {
+  const texts = [...document.querySelectorAll("#stage *")].filter((el) => !guide.contains(el) && owns(el) && shown(el));
+  const label = (el) => el.textContent.trim().slice(0, 40);
+  const stage = document.getElementById("stage").getBoundingClientRect();
+  document.querySelectorAll("[data-kite-probe]").forEach((el) => el.removeAttribute("data-kite-probe"));
+  const clipped = texts.flatMap((el, probe) => {
+    const r = el.getBoundingClientRect();
+    const past = r.left < stage.left - 2 || r.top < stage.top - 2 || r.right > stage.right + 2 || r.bottom > stage.bottom + 2;
+    const left = Math.max(r.left, stage.left), right = Math.min(r.right, stage.right);
+    const top = Math.max(r.top, stage.top), bottom = Math.min(r.bottom, stage.bottom);
+    if (!past || right - left < 2 || bottom - top < 2) return [];
+    el.setAttribute("data-kite-probe", probe);
+    return [{ text: label(el), probe, clip: { x: left, y: top, width: right - left, height: bottom - top } }];
+  });
+  const under = texts.map((el) => {
     const r = el.getBoundingClientRect();
     const points = [];
     for (let i = 1; i <= 10; i++) {
@@ -148,10 +169,13 @@ const hitTest = () => page.evaluate(() => {
   guide.style.visibility = "hidden";
   const hidden = under.filter(([el, points]) => points.filter(([x, y]) => el.contains(document.elementFromPoint(x, y))).length >= 2);
   guide.style.visibility = was;
-  return hidden.map(([el]) => {
-    const r = el.getBoundingClientRect();
-    return { text: el.textContent.trim().slice(0, 40), clip: { x: r.left, y: r.top, width: r.width, height: r.height } };
-  });
+  return {
+    clipped,
+    covered: hidden.map(([el]) => {
+      const r = el.getBoundingClientRect();
+      return { text: label(el), clip: { x: r.left, y: r.top, width: r.width, height: r.height } };
+    }),
+  };
 });
 const frames = [];
 for (const at of AT) {
@@ -191,30 +215,40 @@ async function changed(a, b) {
 if ((await changed(await frame(AT[1] * info.narration), frames[1])) > 0.002) {
   fail("SEEK_UNSTABLE", "seeking to 35% twice drew two different frames; put every animation on kite.timeline, no CSS animations, timers or per-frame randomness");
 }
+// A kid's movie plays forward from the start, so the text scan runs on a fresh copy, forward only.
+async function reopen() {
+  await page.close();
+  page = await open();
+  await page.waitForFunction(() => (window.__kite ?? []).some((m) => m.type === "kite.ready"), null, { timeout: 5000 });
+}
+await reopen();
+await page.addStyleTag(hidePlay);
 await page.addStyleTag({ content: "#stage, #stage * { pointer-events: auto !important }" }); // so hit tests see every layer
-// The guide may walk past a label; it may not stand on one. Covered for a full second fails.
+// The guide may walk past a label and a label may slide in, but text may not stay covered or cut off.
 const streak = new Map();
 const reported = new Set();
 for (let s = 0.5; s < info.narration; s += 0.5) {
   await page.evaluate((t) => window.kite.seek(t), s);
-  const hidden = await covered();
-  if (hidden === null) {
+  const problems = await textProblems();
+  if (problems === null) {
     fail("NO_GUIDE", 'give the guide character\'s group id="guide"');
     break;
   }
-  for (const text of [...streak.keys()]) if (!hidden.includes(text)) streak.delete(text);
-  for (const text of hidden) {
-    streak.set(text, (streak.get(text) ?? 0) + 1);
-    if (streak.get(text) === 3 && !reported.has(text)) {
-      reported.add(text);
-      fail("TEXT_COVERED", `from ${(s - 1).toFixed(1)} s the guide stands on "${text}"; move one of them`);
+  const keys = problems.map(([code, text]) => `${code} ${text}`);
+  for (const key of [...streak.keys()]) if (!keys.includes(key)) streak.delete(key);
+  for (const [code, text, what] of problems) {
+    const key = `${code} ${text}`;
+    streak.set(key, (streak.get(key) ?? 0) + 1);
+    const samples = code === "TEXT_COVERED" ? 3 : 2; // a second under the guide, half a second cut off
+    if (streak.get(key) === samples && !reported.has(key)) {
+      reported.add(key);
+      fail(code, `from ${(s - (samples - 1) / 2).toFixed(1)} s ${what} "${text}"; move it`);
     }
   }
 }
 
+await reopen();
 await page.evaluate((audio) => Object.assign(window.KITE_AUDIO, audio), Object.fromEntries(info.lines.map(([key, s]) => [key, silence(s)])));
-await page.evaluate(() => window.kite.seek(0));
-await hidePlay.evaluate((tag) => tag.remove());
 await page.click("#kite-play");
 await page.waitForTimeout(1000);
 const t = await page.evaluate(() => window.kite.time());

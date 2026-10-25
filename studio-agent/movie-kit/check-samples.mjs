@@ -15,6 +15,7 @@ const CASES = {
   forged: [good.replace("<body>", '<body><script data-kit="gsap">alert(1)</script>'), "KIT_FORGED"],
   covered: [good.replace('cx="160" cy="470" r="50"', 'cx="1080" cy="245" r="50"'), "TEXT_COVERED"],
   "no-guide": [good.replace('<g id="guide">', "<g>"), "NO_GUIDE"],
+  clipped: [good.replace('x="1080" y="250"', 'x="1270" y="250"'), "TEXT_CLIPPED"],
 };
 
 let ok = true;
