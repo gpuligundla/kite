@@ -146,6 +146,9 @@ function StageView({ stage, brain, celebrate, retry }: { stage: Exclude<Stage, {
       );
     }
     case "later":
+      // A movie with nothing to play is a director's cut that didn't finish; its template movie is already on
+      // screen, so the card just goes away. (A template movie that fails still plays the cached fallback.)
+      if (stage.kind === "movie") return null;
       return (
         <Resting
           title={`Kite couldn't finish this ${stage.kind}`}
