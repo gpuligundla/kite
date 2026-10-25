@@ -255,3 +255,37 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
   - The brain sends art as raw SVG, but both players expected data URLs. The players now convert it themselves, so the web app can pass the brain's map straight through.
 - **Claude looked at the rendered frames instead of trusting the exit code.** The highlighted caption word ran into its neighbors ("on asunnyday"). After a spacing fix, the fallback movie was re-rendered: 32 s, 1280×720, with real Fluent Emoji art.
 - **Claude wrote a wiring note for the human teammate** (`docs/web-wiring.md`) and pushed the branch, so the web app can use the real routes while the night shift is still running.
+
+## 2026-10-24 ~19:25 EDT: Session 1, the night shift fails its last check, and the data is right
+
+- **After an hour of simulation, the demo-shape check failed on one rule:** dinosaurs was not a strength at grade 7.
+- **Claude read the data before touching anything.** Dinosaurs was a strength at grades 4 and 6, and from 8 to 11. In grade 7 Maya met harder ideas (birds are dinosaurs, a timeline slip) and mastered 3 of 6 concepts. The rule asks for 75%.
+- **The human had asked not to rerun the night shift, and Claude didn't need to.** The check and the demo moved to grade 8, where the claim is true. The data stayed as it was, and the remaining steps (snapshot, red team) ran by hand. The dip and recovery became a story beat for the demo.
+
+## 2026-10-24 ~19:40 EDT: Session 1, the first real movie needed four fixes nobody had seen
+
+- **The first live "make a movie" fell back to the cached sky movie.** Claude chased each cause in turn instead of accepting the fallback:
+  1. Claude cast the "professor" voice as an actor, and no professor sprite exists. The prompt now says voices aren't actors, and a retry now shows Claude the storyboard it's fixing.
+  2. Every ElevenLabs voice ID in the config was blank, which would also have silenced every spoken answer. Claude picked nine adult premade voices from the account and tested each one.
+  3. The MP4 renderer's packages weren't installed in the main checkout.
+  4. At grade 11, three- and four-line captions covered the actors. Claude saw it in the rendered frames, not in any log.
+- **Result:** "why volcanoes erupt", starring Rexy. Playable in 18 s, a 55 s MP4, with narration at a healthy level.
+- **The brand-new-game path also passed live.** Through the brain, Claude Code in the Foundry sandbox built a moon-phases game with Rexy standing on Earth. Headless Chromium played it with no errors.
+
+## 2026-10-24 ~20:30 EDT: Session 1, the teammate hands off and five Claude helpers build in parallel
+
+- **The human teammate pushed their shared client and handed off.** Claude merged it, regenerating the generated files instead of hand-merging them.
+- **The human asked for attractive, grade-adaptive kid screens with sound and smooth motion, and for the right skills to be found first.**
+  - Claude searched the skills registry. No kid-UI skill had real adoption. Emil Kowalski's animation skill and the official ElevenLabs sound-effects skill did.
+  - Installing third-party skills was blocked by a permission check. So Claude read their text and wrote the rules into the project's own design brief.
+- **Claude built the shared foundation itself before fanning out:**
+  - a streaming proxy that keeps the event stream alive (proven by holding it 65 s and then delivering an SOS)
+  - a kid screen whose look grows up with the grade band
+  - eight UI sounds made with ElevenLabs sound effects and loudness-matched
+  - a design brief that every helper follows
+- **Then five helpers ran at once,** each in its own git worktree, owning its own folders:
+  - the kid screen
+  - movies and games
+  - the parent and counselor views
+  - the red-team weak spots
+  - the README and pitch drafts
