@@ -20,6 +20,8 @@ type Look = "ready" | "listening" | "thinking";
 
 export interface DockProps {
   device: DeviceKind;
+  /** Only the diamond and its neighbours, no typing: the Ask Kite bar and the phone's walkie-talkie dock. */
+  plain?: boolean;
   band: Band;
   /** Teach Kite takes a long explanation: tap to start, tap to finish. Talking is hold to talk. */
   teaching: boolean;
@@ -35,6 +37,8 @@ export interface DockProps {
   /** The mic opened (Kite stops talking) or closed. */
   onMic: (on: boolean) => void;
   onProblem: (message: string) => void;
+  /** A tap too short to be something said. Without it, she's told to keep holding. */
+  onTap?: () => void;
   /** Beside the diamond, never bigger than it. */
   left: ReactNode;
   right: ReactNode;
@@ -112,6 +116,7 @@ export function Dock(props: DockProps) {
       onMic(false);
       if (refused) return;
       if (audio && (teaching || Date.now() - since >= MIN_HOLD_MS)) onAudio(audio);
+      else if (props.onTap) props.onTap();
       else if (!teaching) onProblem("Keep holding the diamond while you talk.");
     });
   };
@@ -121,7 +126,11 @@ export function Dock(props: DockProps) {
   const keys = useRef({ start, stop, toggle, teaching });
   keys.current = { start, stop, toggle, teaching };
   useEffect(() => {
-    const typingHere = (t: EventTarget | null) => t instanceof HTMLTextAreaElement || (t instanceof HTMLInputElement && t.type !== "range");
+    // Space belongs to the box she types in or the button she is on; anywhere else it is hold to talk.
+    const typingHere = (t: EventTarget | null) =>
+      t instanceof HTMLTextAreaElement ||
+      (t instanceof HTMLInputElement && t.type !== "range") ||
+      ((t instanceof HTMLButtonElement || t instanceof HTMLAnchorElement) && t !== diamondRef.current);
     const down = (e: KeyboardEvent) => {
       if (e.code !== "Space" || typingHere(e.target)) return;
       e.preventDefault();
@@ -177,9 +186,9 @@ export function Dock(props: DockProps) {
     : look === "listening" ? "Listening…" : holdLabel;
 
   return (
-    <div className={s.dock} data-device={device}>
+    <div className={s.dock} data-device={device} data-plain={props.plain === true}>
       {props.attached}
-      {typing && (
+      {typing && !props.plain && (
         <form
           className={s.typeBox}
           onSubmit={(e) => {
@@ -222,13 +231,15 @@ export function Dock(props: DockProps) {
         />
         <div className={s.beside}>{props.right}</div>
       </div>
-      <div className={s.toggleRow}>
-        {props.extras}
-        <button type="button" className={s.typeToggle} data-on={typing} onClick={() => chooseTyping(!typing)}>
-          <Glyph name={typing ? "mic" : "keyboard"} size={20} />
-          {typing ? "Talk instead" : "Type instead"}
-        </button>
-      </div>
+      {!props.plain && (
+        <div className={s.toggleRow}>
+          {props.extras}
+          <button type="button" className={s.typeToggle} data-on={typing} onClick={() => chooseTyping(!typing)}>
+            <Glyph name={typing ? "mic" : "keyboard"} size={20} />
+            {typing ? "Talk instead" : "Type instead"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -266,11 +277,15 @@ function Diamond({ band, look, teaching, action, label, clock, button, start, st
         onContextMenu={(e) => e.preventDefault()}
         {...hold}
       >
-        {/* The kite's diamond swells while it listens, with the band's spring: bouncy for little kids, none for teens. */}
+        {/* The kite's diamond morphs toward a circle and swells while it listens, with the band's spring: bouncy for
+            little kids, none for teens. Reduced motion keeps the shape change and drops the turn and the swell. */}
         <motion.span
           className={s.diamondShape}
           initial={false}
-          animate={{ transform: grown ? "rotate(45deg) scale(1.12)" : "rotate(45deg) scale(1)" }}
+          animate={{
+            transform: grown ? "rotate(90deg) scale(1.12)" : "rotate(45deg) scale(1)",
+            borderRadius: look === "listening" ? "50%" : "26%",
+          }}
           transition={SPRING[band]}
         />
         {clock ? (

@@ -22,7 +22,7 @@ function whereAmI(): Promise<{ lat: number; lng: number } | null> {
 }
 
 /** A 2-second hold sends the kid's location to their grown-ups. Letting go early sends nothing. */
-export function SosButton({ brain }: { brain: Brain }) {
+export function SosButton({ brain, compact = false }: { brain: Brain; compact?: boolean }) {
   const [state, setState] = useState<Sos>("idle");
   const [located, setLocated] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -52,7 +52,7 @@ export function SosButton({ brain }: { brain: Brain }) {
 
   return (
     <>
-      <div className={s.sosWrap}>
+      <div className={s.sosWrap} data-compact={compact} data-active={state === "holding" || state === "sending"}>
         <button
           type="button"
           className={s.sos}

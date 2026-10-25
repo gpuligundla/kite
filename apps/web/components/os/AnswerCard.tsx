@@ -46,7 +46,7 @@ export function AnswerCard({ band, turn: t, asker, saying, chips }: AnswerCardPr
         {t.heard ? (
           <p className={s.asked}>
             <span>{t.done?.route === "teach" ? "You taught: " : "You asked: "}</span>
-            {t.heard}
+            {t.heard.replace(/^About my assignment '.*?': /, "")}
           </p>
         ) : (
           <span />
