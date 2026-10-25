@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainError, type DeviceKind, type Grade, type Teachable, type TurnView } from "@kite/client";
+import { BrainError, NO_TURN, type DeviceKind, type Grade, type Teachable, type TurnView } from "@kite/client";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -29,6 +29,8 @@ const HELLO: Record<Band, (name: string) => [string, string]> = {
   g912: (n) => [`Hey ${n}`, "Ask me anything."],
 };
 const GRADE_NAME = (g: number) => (g === 0 ? "K" : String(g));
+// A chip says what the kid would say, so the brain's own turn picks the topic and the goal from the conversation.
+const MAKE_ASK: Record<CreationKind, string> = { movie: "Make that into a movie", game: "Make a game about that" };
 // Allows for the brain's clock running a little ahead of this one.
 const REPLAY_SLACK_MS = 3000;
 
@@ -78,8 +80,13 @@ export function OsScreen({ device }: { device: DeviceKind }) {
       const turn = e.turn_id ?? (replayed ? undefined : brain.talk.getState().turns.at(-1)?.id);
       if (turn) setAnchors((a) => (a[e.creation_id] ? a : { ...a, [e.creation_id]: turn }));
     }
-    // The Teach Kite opener is the only sentence with no turn.
-    if (e.type === "answer.sentence" && e.turn_id === null) setOpener(e.text);
+    // The Teach Kite opener is the only sentence with no turn. One this screen didn't start came from the kid asking
+    // out loud here, so the screen follows into the lesson the brain began.
+    if (e.type === "answer.sentence" && e.turn_id === null) {
+      setOpener(e.text);
+      const latest = brain.talk.getState().turns.filter((t) => t.id !== NO_TURN).at(-1);
+      if (!replayed && teach.step === "off" && latest?.mine) followTeach();
+    }
     // The stream replays recent events on connect, sometimes without a turn's `heard`. Who asked those turns is
     // unknown, so they get no device label.
     const talkEvent = e.type === "heard" || e.type === "answer.sentence" || e.type === "answer.done";
@@ -138,13 +145,10 @@ export function OsScreen({ device }: { device: DeviceKind }) {
   const make = async (t: TurnView, kind: CreationKind) => {
     const key = `${t.id}:${kind}`;
     setMaking((m) => new Set(m).add(key));
+    hush();
+    setProblem(null);
     try {
-      const { creation_id } = await brain.post<{ creation_id: string }>("/creations", {
-        kind,
-        topic: (t.heard ?? "").slice(0, 200),
-        learning_goal: (t.sentences[0]?.text ?? "").slice(0, 300),
-      });
-      setAnchors((a) => ({ ...a, [creation_id]: t.id }));
+      await brain.say({ text: MAKE_ASK[kind], asOfGrade: grade as Grade });
     } catch {
       setMaking((m) => {
         const next = new Set(m);
@@ -154,6 +158,12 @@ export function OsScreen({ device }: { device: DeviceKind }) {
       showProblem(`Kite couldn't start your ${kind}. Try again in a moment.`);
     }
   };
+
+  const followTeach = () =>
+    brain.get<Teachable | null>(`/kids/${KID_ID}/teach/active`).then(
+      (concept) => concept && setTeach((t) => (t.step === "off" ? { step: "on", concept } : t)),
+      () => showProblem("Kite couldn't start listening. Try Teach Kite again."),
+    );
 
   const startTeaching = async (concept: Teachable) => {
     setTeach({ step: "on", concept });
@@ -194,6 +204,7 @@ export function OsScreen({ device }: { device: DeviceKind }) {
 
   const [hello, nudge] = HELLO[band](me?.name ?? "there");
   const teaching = teach.step === "on";
+  const thinking = talk.turns.some((t) => t.mine && t.id !== NO_TURN && !t.done && t.sentences.length === 0);
   const teachButton = teaching ? (
     <button type="button" className={s.teachButton} data-on="true" onClick={() => setTeach({ step: "off" })}>
       <Glyph name="close" size={20} />
@@ -312,7 +323,9 @@ export function OsScreen({ device }: { device: DeviceKind }) {
         )}
         <Dock
           device={device}
+          band={band}
           teaching={teaching}
+          thinking={thinking}
           onSend={(text) => void ask({ text })}
           onAudio={(audio) => void ask({ audio })}
           onListen={() => {

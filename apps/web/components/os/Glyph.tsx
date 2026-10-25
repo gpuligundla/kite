@@ -11,6 +11,7 @@ const PATHS = {
   teach: "M4 6h16v10H8l-4 4Z M8 10h8 M8 13h5",
   close: "M6 6l12 12 M18 6L6 18",
   deeper: "M12 4v14 M6 12l6 6 6-6",
+  keyboard: "M3 6h18v12H3Z M7 10h.01 M11 10h.01 M15 10h.01 M8 14h8",
 } as const;
 
 export type GlyphName = keyof typeof PATHS;
