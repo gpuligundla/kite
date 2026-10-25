@@ -81,17 +81,19 @@ Teach Kite and the director's cut are reserve moments. If any live moment drops 
 
 ## 4. Make a game, and start a brand-new one (1:25 to 1:45)
 
-**Do.** Under the grade-11 answer, tap **Make a game**. When the game rises over the stage, tap **Build me a brand-new one!** under it. Wait for "Kite is building it." Then tap **Close** on the game. If the hosted agent failed its check (checklist step 3), skip the button, and skip the second and third sentences below.
+**Do.** Under the grade-11 answer, tap **Make a game**. When the game rises over the stage, tap **Build me a brand-new one!** under it. Wait for "Kite is building it." Then tap **Close** on the game. If the hosted agent failed its check (checklist step 3), skip the button and use the second Say line.
 
 **Point at.** The template game, and the line under it that says Kite is building a brand-new one.
 
 **Say.** "A template game, ready in seconds. That button just sent Claude Code on Opus 5.5, in a sandbox on Azure, to write Maya a brand-new game and play-test it. In the cloud that takes about twelve minutes, longer than this whole demo. So in a minute we'll show you one it built earlier."
 
+**Say, if you skipped the button.** "A template game, ready in seconds. Claude Code can also write Maya a brand-new game from scratch, and in a minute we'll show you one it built earlier."
+
 **If it fails.** If the template game takes 20 seconds, Kite plays its cached sky game instead. Keep going. If the button says "Kite couldn't start a new game", say "That's what a kid sees when the agent is busy. She keeps the template game."
 
 ## 5. Make it a movie (1:45 to 2:25)
 
-**Do.** Under the same answer, tap **Make it a movie**. The making card rises over the stage. When the movie plays, let it run for about 10 seconds. Then drag the player's scrubber close to the end, so Kite reads its question aloud.
+**Do.** Under Kite's newest card, tap **Make it a movie**. If the card has no chip, hold the diamond and say "Make it a movie." The making card rises over the stage. When the movie plays, let it run for about 10 seconds. Then drag the player's scrubber close to the end, so Kite reads its question aloud.
 
 **Point at.** While it's making, the kite climbing the progress sky. While it plays, Kite narrating in the same grade-11 voice, the music under it, and the captions. At the end, the question card over the paused movie.
 
