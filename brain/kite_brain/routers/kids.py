@@ -154,7 +154,8 @@ async def approved_contacts(kid_id: str, request: Request) -> list[ContactName]:
     deps = request.app.state.deps
     key = deps.keys.for_kid(kid_id)
     rows = deps.conn.execute("SELECT id, name FROM contact WHERE kid_id = ? ORDER BY id", (kid_id,)).fetchall()
-    return [ContactName(id=r["id"], name=open_sealed(key, r["name"], aad("contact", kid_id, r["id"])).decode()) for r in rows]
+    name = lambda r: open_sealed(key, r["name"], aad("contact", kid_id, r["id"])).decode()  # noqa: E731
+    return [ContactName(id=r["id"], name=name(r)) for r in rows]
 
 
 class MadeThing(BaseModel):
@@ -175,9 +176,10 @@ def _title(folder, creation) -> str:
 
 @router.get("/kids/{kid_id}/creations", dependencies=[require("os", "handheld")])
 async def my_creations(kid_id: str, request: Request) -> list[MadeThing]:
-    """Finished movies, games and stories, newest first, for the My creations app. A creation Kite made for another
-    kid is left out. One with no maker on record (the showcase, a studio-agent game) is shown: right for the one-family
-    demo, and the same store the parent's movie list reads."""
+    """Movies, games and stories she can open, newest first, for the My creations app. One still being made, or a
+    fallback with nothing to play, is left out, and so is one Kite made for another kid. One with no maker on record
+    (the showcase, a studio-agent game) is shown: right for the one-family demo, and the same store the parent's movie
+    list reads."""
     found = []
     for path in studio_pro.CREATIONS_DIR.glob("*/creation.json"):
         try:
@@ -185,7 +187,9 @@ async def my_creations(kid_id: str, request: Request) -> list[MadeThing]:
         except ValueError:
             continue
         meta = store.load_meta(creation.id)
-        if creation.status == "pending" or (meta is not None and meta.kid_id != kid_id):
+        playable = creation.storyboard or creation.storybook or creation.game or creation.html_url
+        if not playable or (meta is not None and meta.kid_id != kid_id):
             continue
-        found.append((path.stat().st_mtime, MadeThing(id=creation.id, kind=creation.kind, title=_title(path.parent, creation))))
+        made = MadeThing(id=creation.id, kind=creation.kind, title=_title(path.parent, creation))
+        found.append((path.stat().st_mtime, made))
     return [made for _, made in sorted(found, key=lambda pair: -pair[0])]

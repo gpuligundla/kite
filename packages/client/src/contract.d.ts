@@ -243,9 +243,10 @@ export interface paths {
         };
         /**
          * My Creations
-         * @description Finished movies, games and stories, newest first, for the My creations app. A creation Kite made for another
-         *     kid is left out. One with no maker on record (the showcase, a studio-agent game) is shown: right for the one-family
-         *     demo, and the same store the parent's movie list reads.
+         * @description Movies, games and stories she can open, newest first, for the My creations app. One still being made, or a
+         *     fallback with nothing to play, is left out, and so is one Kite made for another kid. One with no maker on record
+         *     (the showcase, a studio-agent game) is shown: right for the one-family demo, and the same store the parent's movie
+         *     list reads.
          */
         get: operations["my_creations_kids__kid_id__creations_get"];
         put?: never;

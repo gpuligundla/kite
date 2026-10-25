@@ -38,7 +38,8 @@ def check_classroom_statuses() -> None:
 
     room = get()
     assert room["courses"] == [
-        {"id": "math", "name": "Math", "teacher": "Ms. Okafor"}, {"id": "science", "name": "Science", "teacher": "Mr. Lee"},
+        {"id": "math", "name": "Math", "teacher": "Ms. Okafor"},
+        {"id": "science", "name": "Science", "teacher": "Mr. Lee"},
     ], room["courses"]
     by_title = {a["title"]: a for a in room["assignments"]}
     statuses = {t: a["status"] for t, a in by_title.items()}
@@ -66,13 +67,17 @@ def check_contact_names() -> None:
 
 def check_my_creations() -> None:
     client, _, bearer = client_with_data()
-    game = GameSpec(template="catch", title="Catch the raindrops", instructions="Catch them", concept_id="water_cycle_basic",
-                    items=[GameItem(label="rain", sprite="drop", correct=True), GameItem(label="sun", sprite="sun", correct=False)])
+    items = [GameItem(label="rain", sprite="drop", correct=True), GameItem(label="sun", sprite="sun", correct=False)]
+    game = GameSpec(
+        template="catch", title="Catch the raindrops", instructions="Catch them", concept_id="water_cycle_basic",
+        items=items,
+    )
     with tempfile.TemporaryDirectory() as tmp, patch.object(studio_pro, "CREATIONS_DIR", Path(tmp)):
         made = {
             "mine": Creation(id="mine", kind="game", status="ready", game=game),
             "theirs": Creation(id="theirs", kind="game", status="ready", game=game),
             "making": Creation(id="making", kind="movie", status="pending"),
+            "empty": Creation(id="empty", kind="game", status="fallback"),
             "agent": Creation(id="agent", kind="game", status="ready", html_url="/creations/agent/files/game.html"),
         }
         for cid, creation in made.items():
@@ -86,7 +91,7 @@ def check_my_creations() -> None:
     assert got == [
         {"id": "mine", "kind": "game", "title": "Catch the raindrops"},
         {"id": "agent", "kind": "game", "title": "Rain Racer"},
-    ], f"hers and the showcase's, newest first; never another kid's or one still being made: {got}"
+    ], f"hers and the showcase's, newest first; not another kid's, one being made, or one with nothing to play: {got}"
 
 
 def run() -> None:
