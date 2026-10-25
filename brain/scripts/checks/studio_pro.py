@@ -19,13 +19,13 @@ from kite_brain.api import create_app
 from kite_brain.deps import Deps
 from kite_brain.routers import games
 from kite_brain.seed import KID_ID, seed
-from kite_brain.studio import movie
+from kite_brain.studio import movie, store
 from kite_brain.studio_pro import PageResult, Playtest, build_custom_game, start_page, text_strings
 from scripts.checks.audiences import drain
 from scripts.checks.ledger import CATALOG, NOW, fresh
 from scripts.checks.memory import async_embed
 from scripts.checks.pipeline import StandIns, deps_for, types
-from scripts.checks.studio import Studio, board, creation_in, run_job
+from scripts.checks.studio import SKY_CONCEPT, Studio, board, client_for, creation_in, evidence_rows, run_job
 from scripts.checks.voice import use_sample_voices
 
 TOPIC, GOAL = "light", "The sky looks blue because air scatters blue light."
@@ -198,8 +198,14 @@ def check_directors_cut_gets_the_narration_and_no_network() -> None:
     audio = json.loads(re.search(r'<script data-kit="KITE_AUDIO">window\.KITE_AUDIO = (\{.*?\});</script>', page).group(1))
     url = lambda data: "data:audio/mpeg;base64," + base64.b64encode(data).decode()  # noqa: E731
     music = audio.pop("music")
-    assert set(audio) == set(template.audio) and set(audio.values()) == {url(b"mp3")}, "every narration line, inlined"
+    assert set(audio) == set(template.timings) and set(audio.values()) == {url(b"mp3")}, "every narration line, inlined"
     assert music == url(b"music"), "and the music bed"
+    assert template.audio["music"] == "music.mp3" and template.audio["check"] == "check.mp3", "the template has its own bed and question"
+    assert made.storyboard == template.storyboard and made.audio == {"check": "check.mp3"}, "the cut carries the template's question"
+    assert (folder / cut / "check.mp3").read_bytes() == b"mp3", "and the spoken question beside it"
+    assert json.loads((folder / cut / "meta.json").read_text()) == json.loads((folder / template_id / "meta.json").read_text()), (
+        "the cut scores like the template"
+    )
     _, quiet, quiet_folder, _, _ = run_cut(StandInAgent(ready(MOVIE)), music=None)
     assert "music" not in json.loads(re.search(r"window\.KITE_AUDIO = (\{.*?\});", (quiet_folder / quiet / "movie.html").read_text()).group(1)), (
         "no music bed still makes a movie"
@@ -207,7 +213,7 @@ def check_directors_cut_gets_the_narration_and_no_network() -> None:
     [req] = agent.requests
     assert set(req) == {"kind", "creation_id", "topic", "learning_goal", "grade", "kid_view", "storyboard", "timings"}, req
     assert req["kind"] == "movie" and req["creation_id"] == cut and req["grade"] == 11
-    assert req["storyboard"] == template.storyboard.model_dump(mode="json") and set(req["timings"]) == set(template.audio)
+    assert req["storyboard"] == template.storyboard.model_dump(mode="json") and set(req["timings"]) == set(template.timings)
     kid = events["os"]
     assert types(kid) == ["creation.progress"] * 3 + ["creation.ready"] and kid[-1].status == "ready" and kid[-1].kind == "movie", types(kid)
     assert types(events["parent"]) == types(kid) and not seen["counselor"], "the parent gets a copy, never the counselor"
@@ -220,6 +226,19 @@ def check_directors_cut_gets_the_narration_and_no_network() -> None:
         assert r.headers["content-security-policy"] == games.CSP and games.CSP.startswith("default-src 'none'"), "no network"
         assert client.get(f"/creations/{cut}/game.html").status_code == 404, "a movie has no game page"
         assert client.get(f"/creations/{cut}/creation.html").status_code == 404, "only game and movie pages are served"
+    kid_client, deps, bearer = client_for()
+    with patch.object(studio_pro, "CREATIONS_DIR", folder):
+        body = kid_client.get(f"/creations/{cut}").json()
+        assert body["html_url"] == made.html_url and body["storyboard"]["check"] == template.storyboard.check.model_dump(), body
+        assert body["audio"] == {"check": f"/creations/{cut}/files/check.mp3"} and kid_client.get(body["audio"]["check"]).content == b"mp3"
+        store.save_meta(cut, store.load_meta(cut).model_copy(update={"concept_id": SKY_CONCEPT}))
+        r = kid_client.post(f"/creations/{cut}/answer", json={"choice": template.storyboard.check.correct_index}, headers=bearer["os"])
+        assert r.status_code == 200 and r.json()["correct"] is True and r.json()["recorded"] is True, r.text
+        [row] = evidence_rows(deps)
+        assert row.concept_id == SKY_CONCEPT and row.payload.source == "check_question", "the cut's answer is evidence"
+    _, _, fallen_folder, _, _ = run_cut(StandInAgent(error=RuntimeError("502")))
+    [fallen] = [c for c in (creation_in(fallen_folder, p.name) for p in fallen_folder.iterdir()) if c.status == "fallback"]
+    assert fallen.storyboard is None and not fallen.audio, "a cut that fell back stays off the screen"
 
 
 def check_directors_cut_failures_keep_the_template() -> None:

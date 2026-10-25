@@ -1,8 +1,11 @@
 """Movies (spec section 9): a storyboard, one narrated line at a time, playable at about 20 s, then
 an MP4 rendered in the background. A movie that misses its 45 s deadline or fails along the way
-is replaced by the cached fallback, so the kid always gets a movie.
+is replaced by the cached fallback, so the kid always gets a movie. Kite narrates in the kid's band
+voice and asks the check question aloud; a music bed composed alongside goes under it when it is
+back in time.
 
-On disk, `audio` holds file names beside creation.json ("0-0.mp3", keyed scene-line). The API
+On disk, `audio` holds file names beside creation.json ("0-0.mp3", keyed scene-line, plus
+"check.mp3" and "music.mp3" under "check" and "music" when they came back). The API
 turns them into URLs, and packages/movie's render.mjs reads them from creation.json's folder."""
 
 import asyncio
@@ -13,14 +16,15 @@ from pathlib import Path
 from kite_brain import studio_pro
 from kite_brain.config import get_settings
 from kite_brain.contract import (
-    Creation, CreationProgressEvent, CreationReadyEvent, CreationVideoEvent, Grade, KidView, Word,
+    CheckQuestion, Creation, CreationProgressEvent, CreationReadyEvent, CreationVideoEvent, Grade, KidView, Word,
 )
 from kite_brain.deps import Deps
 from kite_brain.memory.recall import recall
+from kite_brain.policy import band_for
 from kite_brain.studio import store
 from kite_brain.studio.music import music_bed
 from kite_brain.studio.storyboard import NO_CONCEPT, narration_lines, readable_text, write_storyboard
-from kite_brain.voice import character_spec
+from kite_brain.voice import VoiceSpec, character_spec, voice_for
 
 log = logging.getLogger(__name__)
 
@@ -28,6 +32,7 @@ MOVIE_DEADLINE_S = 45.0
 RENDER_TIMEOUT_S = 300.0
 NARRATION_PARALLEL = 3
 MUSIC_PAD_S = 8.0  # the director's cut adds a title beat, scene gaps and an outro around the narration
+TEMPLATE_MUSIC_S = 60.0  # longer than a template movie, composed in about 8 s; the player loops it anyway
 VIDEO_NAME = "movie.mp4"
 FALLBACK_DIR = Path(__file__).with_name("fallback")
 RENDER_SCRIPT = Path(__file__).resolve().parents[3] / "packages" / "movie" / "render.mjs"
@@ -61,39 +66,67 @@ async def _kid_view(deps: Deps, kid_id: str, grade: Grade) -> KidView:
         return KidView(interests=[], characters=[], moments=[], deep_topics=[])
 
 
-async def _narrate(deps: Deps, kid_id: str, creation_id: str, lines: list[tuple[str, str, str]]) -> tuple[dict, dict]:
-    """Every line spoken in its character's voice, three at a time. Progress counts finished lines;
-    step 1 was the storyboard. A failure cancels the rest."""
+def check_text(check: CheckQuestion) -> str:
+    """The check question as Kite asks it: the question, then each choice by its letter."""
+    return " ".join([check.question, *(f"{chr(65 + i)}: {choice.rstrip('.')}." for i, choice in enumerate(check.choices))])
+
+
+async def _narrate(
+    deps: Deps, kid_id: str, creation_id: str, lines: list[tuple[str, str, VoiceSpec]], check: tuple[str, VoiceSpec]
+) -> tuple[dict, dict]:
+    """Every line spoken in its voice, then the check question, three at a time. Progress counts
+    finished lines; step 1 was the storyboard. A failed line cancels the rest; a failed question
+    only leaves the movie without it."""
     audio: dict[str, str] = {}
     timings: dict[str, list[Word]] = {}
     gate = asyncio.Semaphore(NARRATION_PARALLEL)
     total = len(lines) + 1
 
-    async def one(key: str, text: str, voice: str) -> None:
+    async def one(key: str, text: str, voice: VoiceSpec) -> None:
         async with gate:
-            mp3, words = await deps.tts.speak_timed(text, character_spec(voice))
+            mp3, words = await deps.tts.speak_timed(text, voice)
         (store.folder(creation_id) / f"{key}.mp3").write_bytes(mp3)
         audio[key], timings[key] = f"{key}.mp3", words
-        _progress(deps, kid_id, creation_id, 1 + len(audio), total)
+        _progress(deps, kid_id, creation_id, 1 + len(timings), total)
+
+    async def ask(text: str, voice: VoiceSpec) -> None:
+        try:
+            async with gate:
+                mp3, _ = await deps.tts.speak_timed(text, voice)
+        except Exception as e:
+            log.warning("movie %s: check question unspoken (%s)", creation_id, type(e).__name__)
+            return
+        (store.folder(creation_id) / "check.mp3").write_bytes(mp3)
+        audio["check"] = "check.mp3"
 
     store.folder(creation_id).mkdir(parents=True, exist_ok=True)
     async with asyncio.TaskGroup() as group:
         for key, text, voice in lines:
             group.create_task(one(key, text, voice))
+        group.create_task(ask(*check))
     return audio, timings
 
 
 async def _make(deps: Deps, kid_id: str, creation_id: str, topic: str, learning_goal: str, grade: Grade) -> Creation:
-    kid_view = await _kid_view(deps, kid_id, grade)
-    concept = await store.resolve_concept(deps, topic, learning_goal)
-    storyboard = await write_storyboard(deps, topic, learning_goal, kid_view, grade)
-    if not await store.strings_are_safe(deps, readable_text(storyboard)):
-        raise ValueError("the storyboard was flagged")
-    storyboard.check.concept_id = concept or NO_CONCEPT
-    voices = [line.voice for scene in storyboard.scenes for line in scene.lines]
-    lines = [(key, text, voice) for (key, text), voice in zip(narration_lines(storyboard), voices, strict=True)]
-    _progress(deps, kid_id, creation_id, 1, len(lines) + 1)
-    audio, timings = await _narrate(deps, kid_id, creation_id, lines)
+    music = asyncio.create_task(music_bed(topic, grade, TEMPLATE_MUSIC_S))  # composes while Claude writes
+    try:
+        kid_view = await _kid_view(deps, kid_id, grade)
+        concept = await store.resolve_concept(deps, topic, learning_goal)
+        storyboard = await write_storyboard(deps, topic, learning_goal, kid_view, grade)
+        if not await store.strings_are_safe(deps, readable_text(storyboard)):
+            raise ValueError("the storyboard was flagged")
+        storyboard.check.concept_id = concept or NO_CONCEPT
+        kite = voice_for(band_for(grade), "story")
+        voices = [kite if line.voice == "kite" else character_spec(line.voice) for scene in storyboard.scenes for line in scene.lines]
+        lines = [(key, text, voice) for (key, text), voice in zip(narration_lines(storyboard), voices, strict=True)]
+        _progress(deps, kid_id, creation_id, 1, len(lines) + 1)
+        audio, timings = await _narrate(deps, kid_id, creation_id, lines, (check_text(storyboard.check), kite))
+        # Never waits: a bed that is not back yet, or failed, means a movie without music.
+        if music.done() and not music.exception() and (bed := music.result()):
+            (store.folder(creation_id) / "music.mp3").write_bytes(bed)
+            audio["music"] = "music.mp3"
+    finally:
+        music.cancel()
     meta = store.load_meta(creation_id)
     store.save_meta(creation_id, meta.model_copy(update={"concept_id": concept}))
     creation = Creation(id=creation_id, kind="movie", status="ready", storyboard=storyboard, audio=audio, timings=timings)
@@ -168,12 +201,16 @@ def start_directors_cut(
     deps: Deps, kid_id: str, movie: Creation, topic: str, learning_goal: str, grade: Grade, *, agent: studio_pro.StudioAgent | None = None
 ) -> str | None:
     """A second movie creation: the studio agent hand-animates this movie's narration as one page,
-    and the brain adds the narration's MP3s and a music bed composed while the agent works. The
-    template stays her movie unless the cut is ready. None when no studio agent is configured."""
+    and the brain adds the narration's MP3s and a music bed composed while the agent works. A
+    ready cut carries the template's storyboard, spoken check question and evidence trail, so its
+    question card scores like the template's. The template stays her movie unless the cut is
+    ready. None when no studio agent is configured."""
     if agent is None and not get_settings().STUDIO_AGENT_ENDPOINT:
         return None
     creation_id = studio_pro.start_page(deps, kid_id, "movie")
-    narration = {key: store.folder(movie.id) / name for key, name in movie.audio.items()}
+    store.save_meta(creation_id, store.load_meta(movie.id))
+    narration = {key: store.folder(movie.id) / movie.audio[key] for key in movie.timings}
+    question = {"check": "check.mp3"} if "check" in movie.audio else {}
     seconds = sum(max((w.end for w in words), default=0) for words in movie.timings.values()) + MUSIC_PAD_S
     music = asyncio.create_task(music_bed(topic, grade, seconds))
 
@@ -184,11 +221,13 @@ def start_directors_cut(
             (path := store.folder(creation_id) / "music.mp3").write_bytes(bed)
             files["music"] = path
         music.cancel()
+        if question:
+            shutil.copy(store.folder(movie.id) / movie.audio["check"], store.folder(creation_id) / "check.mp3")
         return studio_pro.inject(html, "KITE_AUDIO", files)
 
     store.spawn(studio_pro.build_page(
         deps, kid_id, creation_id, "movie", _directors_cut_request(deps, kid_id, creation_id, movie, topic, learning_goal, grade),
-        finish, agent=agent,
+        finish, agent=agent, ready_fields={"storyboard": movie.storyboard, "audio": question},
     ))
     return creation_id
 

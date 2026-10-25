@@ -16,7 +16,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 import httpx
 from azure.identity import DefaultAzureCredential
@@ -163,14 +163,16 @@ def page_path(creation_id: str, kind: CreationKind) -> Path:
     return CREATIONS_DIR / creation_id / f"{kind}.html"
 
 
-def save(creation_id: str, kind: CreationKind, status: Literal["pending", "ready", "fallback"], html: str | None = None) -> Creation:
+def save(
+    creation_id: str, kind: CreationKind, status: Literal["pending", "ready", "fallback"], html: str | None = None, **fields: Any
+) -> Creation:
     folder = CREATIONS_DIR / creation_id
     folder.mkdir(parents=True, exist_ok=True)
     if html is not None:
         page_path(creation_id, kind).write_text(html)
     creation = Creation(
         id=creation_id, kind=kind, status=status,
-        html_url=f"/creations/{creation_id}/{kind}.html" if html is not None else None,
+        html_url=f"/creations/{creation_id}/{kind}.html" if html is not None else None, **fields,
     )
     (folder / "creation.json").write_text(creation.model_dump_json(indent=2))
     return creation
@@ -202,10 +204,11 @@ def inject(html: str, name: str, files: dict[str, Path]) -> str:
 
 async def build_page(
     deps: Deps, kid_id: str, creation_id: str, kind: CreationKind, request: Awaitable[dict],
-    finish: Callable[[str], str] = lambda html: html, *, agent: StudioAgent | None = None,
+    finish: Callable[[str], str] = lambda html: html, *, agent: StudioAgent | None = None, ready_fields: dict | None = None,
 ) -> Creation:
     """Ask the studio agent for the page, screen its text, finish it (the brain's own media go in
-    here) and save it. Never raises: any failure, flag or timeout saves a fallback."""
+    here) and save it, with `ready_fields` on the Creation when it is ready. Never raises: any
+    failure, flag or timeout saves a fallback."""
     agent = agent or default_agent()
     steps = itertools.count(1)
 
@@ -219,7 +222,7 @@ async def build_page(
             html = finish(result.html)
     except Exception as e:
         log.warning("studio %s %s falls back: %s", kind, creation_id, type(e).__name__)
-    creation = save(creation_id, kind, "ready" if html else "fallback", html)
+    creation = save(creation_id, kind, "ready", html, **(ready_fields or {})) if html else save(creation_id, kind, "fallback")
     _publish(deps, kid_id, CreationReadyEvent, kind, creation_id=creation_id, status=creation.status)
     return creation
 

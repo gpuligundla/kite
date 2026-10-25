@@ -324,7 +324,7 @@ class Actor(BaseModel):
 
 class NarrationLine(BaseModel):
     speaker: str
-    voice: CharacterVoiceName
+    voice: Literal["kite", CharacterVoiceName]  # Kite's own band voice, or a guest character's
     text: str
 
 

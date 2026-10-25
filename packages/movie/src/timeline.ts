@@ -35,11 +35,12 @@ export interface TimelineScene {
 export interface Timeline {
   durationInFrames: number;
   scenes: TimelineScene[];
-  /** Frame where the check question appears: the gap after the last scene. */
+  /** Frame where the player's check-question card appears: the gap after the last scene, which holds to the end. */
   checkFrom: number;
 }
 
-/** Audio and timings are keyed "<sceneIndex>-<lineIndex>", for example "1-0". */
+/** Line audio and timings are keyed "<sceneIndex>-<lineIndex>", for example "1-0". Audio may also hold
+ * "music" (the bed under the movie) and "check" (the spoken question, played by the card). */
 export const lineKey = (scene: number, line: number) => `${scene}-${line}`;
 
 function lineSeconds(words: Word[] | undefined, text: string): number {

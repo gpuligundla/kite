@@ -5,6 +5,7 @@ import asyncio
 import inspect
 import json
 import tempfile
+import time
 from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import patch
@@ -17,13 +18,14 @@ from kite_brain.api import create_app
 from kite_brain.contract import ConceptEvidence, GameItem, GameSpec, InterestFact, KidView, Storyboard, Word
 from kite_brain.deps import Deps, ToolCall
 from kite_brain.memory import ledger, maps
+from kite_brain.policy import band_for
 from kite_brain.routers import creations
 from kite_brain.seed import KID_ID, seed
 from kite_brain.studio import game, movie, store
 from kite_brain.studio.sprites import sprite_names, sprite_svg, svg_data_url
-from kite_brain.studio.storyboard import write_storyboard
+from kite_brain.studio.storyboard import GUEST_LINES, storyboard_request, write_storyboard
 from kite_brain.turn.pipeline import TurnInput, _Turn, act_on_tool_call
-from kite_brain.voice import CHARACTER_VOICES, allowed_voice_ids, character_spec
+from kite_brain.voice import CHARACTER_VOICES, EXPRESSIVE, allowed_voice_ids, character_spec, current_voices, voice_for
 from scripts.checks.audiences import drain
 from scripts.checks.ledger import CATALOG, NOW, add, evidence, fresh
 from scripts.checks.memory import async_embed
@@ -42,17 +44,33 @@ CATCH = GameSpec(
 
 
 def board(**changes) -> Storyboard:
-    return STORYBOARD.model_copy(deep=True, update=changes)
+    """The fallback's storyboard as Claude now writes it: Kite reads every line."""
+    narrated = STORYBOARD.model_copy(deep=True)
+    for line in (line for scene in narrated.scenes for line in scene.lines):
+        line.speaker, line.voice = "Kite", "kite"
+    return narrated.model_copy(update=changes)
+
+
+def guest(narrated: Storyboard, *casting: tuple[str, str]) -> Storyboard:
+    """The first lines handed to (speaker, voice) guests, in order."""
+    lines = [line for scene in narrated.scenes for line in scene.lines]
+    for line, (speaker, voice) in zip(lines, casting):
+        line.speaker, line.voice = speaker, voice
+    return narrated
+
+
+async def no_music(topic, grade, seconds):
+    return None
 
 
 class Studio(StandIns):
     """Claude and ElevenLabs stand-ins. `parse` returns the queued answers in order, then keeps
-    returning the last. `speak_timed` records the voice it was asked for."""
+    returning the last. `speak_timed` records the voice it was asked for, by text."""
 
     def __init__(self, *answers, tts_delay_s=0.0, tts_error=None, **kw):
         super().__init__(**kw)
         self.answers, self.tts_delay_s, self.tts_error = list(answers), tts_delay_s, tts_error
-        self.parses, self.specs = [], []
+        self.parses, self.specs, self.spoken = [], [], {}
 
     async def parse(self, request, model_cls, *, deep=False):
         self.parses.append((request, model_cls, deep))
@@ -63,6 +81,7 @@ class Studio(StandIns):
 
     async def speak_timed(self, text, spec):
         self.specs.append(spec)
+        self.spoken[text] = spec
         await asyncio.sleep(self.tts_delay_s)
         if self.tts_error:
             raise self.tts_error
@@ -73,7 +92,7 @@ def request_text(request) -> str:
     return "\n".join([request.system, request.context, *(m["content"] for m in request.messages)])
 
 
-def run_job(stand, start, *, setup=None, read_only=False, **patches):
+def run_job(stand, start, *, setup=None, read_only=False, grade=11, **patches):
     """Start a creation and wait for its background jobs. Returns (deps, creation id, folder, events by device)."""
     deps, bus = deps_for(stand)
     if setup:
@@ -81,12 +100,13 @@ def run_job(stand, start, *, setup=None, read_only=False, **patches):
     folder = Path(tempfile.mkdtemp())
 
     async def go():
-        creation_id = await start(deps, KID_ID, TOPIC, GOAL, 11, read_only=read_only)
+        creation_id = await start(deps, KID_ID, TOPIC, GOAL, grade, read_only=read_only)
         await store.settle()
         return creation_id
 
-    # No director's cut unless a check asks for one: a configured endpoint must never be called from here.
-    patches = patches | {"movie": {"start_directors_cut": lambda *a, **k: None} | patches.get("movie", {})}
+    # No director's cut, music or MP4 unless a check asks for one: a configured endpoint must never be called from here.
+    quiet = {"start_directors_cut": lambda *a, **k: None, "music_bed": no_music, "RENDER_SCRIPT": Path("absent.mjs")}
+    patches = patches | {"movie": quiet | patches.get("movie", {})}
     with ExitStack() as stack:
         stack.enter_context(patch.object(studio_pro, "CREATIONS_DIR", folder))
         for module in (movie, game):
@@ -111,7 +131,7 @@ def check_progress_then_ready() -> None:
     assert seen["os"][-1].status == "ready" and seen["os"][0].creation_id == cid and len(cid) == 32
     assert types(seen["parent"]) == kid and not seen["counselor"], "the parent gets a copy, never the counselor"
     creation = creation_in(folder, cid)
-    assert creation.status == "ready" and set(creation.audio) == set(creation.timings) and len(creation.audio) == lines
+    assert creation.status == "ready" and set(creation.audio) == set(creation.timings) | {"check"} and len(creation.timings) == lines
     assert all((folder / cid / name).read_bytes() == b"mp3" for name in creation.audio.values()), "narration saved beside the json"
     assert creation.storyboard.check.concept_id == "none", "no vectors, so no concept; Claude's guess is never kept"
     [(request, model_cls, deep)] = stand.parses
@@ -125,7 +145,7 @@ def check_video_render() -> None:
         "import {readFileSync, writeFileSync, existsSync} from 'node:fs'; import {dirname, join} from 'node:path';"
         "const c = JSON.parse(readFileSync(process.argv[2], 'utf8')); const d = dirname(process.argv[2]);"
         "const ok = Object.keys(c.sprites).length > 0 && Object.values(c.audio).every((a) => !a.startsWith('/') && existsSync(join(d, a)))"
-        " && Object.keys(c.audio).every((k) => c.timings[k].length > 0);"
+        " && Object.keys(c.timings).every((k) => c.timings[k].length > 0 && c.audio[k]);"
         "if (!ok) process.exit(2); writeFileSync(join(d, 'movie.mp4'), 'mp4');"
     )
     _, cid, folder, seen = run_job(Studio(board()), movie.start_movie, movie={"RENDER_SCRIPT": script})
@@ -171,7 +191,7 @@ def check_errors_fall_back() -> None:
 
 
 def _with_sprite(sprite: str):
-    scene = STORYBOARD.scenes[0].model_copy(deep=True)
+    scene = board().scenes[0]
     scene.actors[0].sprite = sprite
     return scene
 
@@ -216,6 +236,97 @@ def check_voices_are_allowlisted() -> None:
         pass
     else:
         raise AssertionError("a voice outside the character list must not validate")
+
+
+def lines_of(narrated: Storyboard):
+    return [line for scene in narrated.scenes for line in scene.lines]
+
+
+def check_kite_narrates() -> None:
+    cast = guest(board(), ("Rexy", "explorer"), ("rexy", "explorer"))
+    for grade in (2, 10):
+        stand = Studio(cast)
+        _, cid, folder, _ = run_job(stand, movie.start_movie, grade=grade)
+        kite = voice_for(band_for(grade), "story")
+        assert kite.voice_id == current_voices().bands[band_for(grade).name] and kite.model_id == EXPRESSIVE, "Kite's band voice on v3"
+        for line in lines_of(cast):
+            want = character_spec("explorer") if line.voice == "explorer" else kite
+            assert stand.spoken[line.text] == want, f"grade {grade}: {line.speaker} reads {line.text!r}"
+        question = movie.check_text(cast.check)
+        assert question.startswith(cast.check.question) and "A: Blue light" in question and "C: The sun is a blue star." in question
+        assert stand.spoken[question] == kite, "Kite asks the check question"
+        made = creation_in(folder, cid)
+        assert made.audio["check"] == "check.mp3" and (folder / cid / "check.mp3").read_bytes() == b"mp3"
+        assert "check" not in made.timings, "the question is not a line of the movie"
+    assert voice_for(band_for(2), "story").voice_id != voice_for(band_for(10), "story").voice_id, "each band has its own Kite"
+
+    class Hoarse(Studio):
+        async def speak_timed(self, text, spec):
+            if text == movie.check_text(board().check):
+                raise RuntimeError("quota")
+            return await super().speak_timed(text, spec)
+
+    _, cid, folder, seen = run_job(Hoarse(board()), movie.start_movie)
+    made = creation_in(folder, cid)
+    assert made.status == "ready" and "check" not in made.audio, "an unspoken question still ships the movie"
+    assert seen["os"][-1].status == "ready"
+
+
+def check_one_guest_at_most() -> None:
+    empty = KidView(interests=[], characters=[], moments=[], deep_topics=[])
+    text = storyboard_request(TOPIC, GOAL, empty, 5).system
+    assert 'voice "kite"' in text and f"at most {GUEST_LINES} short lines" in text, "the prompt states the rule"
+    for why, bad in {
+        "two guest voices": guest(board(), ("Rexy", "explorer"), ("Rexy", "professor")),
+        "two guests": guest(board(), ("Rexy", "explorer"), ("Sun", "explorer")),
+        "three guest lines": guest(board(), *[("Rexy", "explorer")] * 3),
+    }.items():
+        deps, _ = deps_for(Studio(bad, board()))
+        got = asyncio.run(write_storyboard(deps, TOPIC, GOAL, empty, 5))
+        assert got == board() and len(deps.llm.parses) == 2, f"{why}: one retry fixes it"
+        assert "rejected" in deps.llm.parses[1][0].messages[-1]["content"], f"{why}: the retry says why"
+        deps, _ = deps_for(Studio(bad))
+        try:
+            asyncio.run(write_storyboard(deps, TOPIC, GOAL, empty, 5))
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"{why} twice must raise")
+    for why, good in {"Kite alone": board(), "one guest, two lines": guest(board(), ("Rexy", "explorer"), ("rexy", "explorer"))}.items():
+        deps, _ = deps_for(Studio(good))
+        assert asyncio.run(write_storyboard(deps, TOPIC, GOAL, empty, 5)) == good and len(deps.llm.parses) == 1, why
+
+
+def check_music_bed() -> None:
+    asked = []
+
+    async def bed(topic, grade, seconds):
+        asked.append((topic, grade, seconds))
+        return b"bed"
+
+    _, cid, folder, _ = run_job(Studio(board()), movie.start_movie, grade=2, movie={"music_bed": bed})
+    made = creation_in(folder, cid)
+    assert made.status == "ready" and made.audio["music"] == "music.mp3" and (folder / cid / "music.mp3").read_bytes() == b"bed"
+    assert asked == [(TOPIC, 2, movie.TEMPLATE_MUSIC_S)] and "music" not in made.timings
+    cancelled = []
+
+    async def slow(topic, grade, seconds):
+        try:
+            await asyncio.sleep(30)
+        except asyncio.CancelledError:
+            cancelled.append(topic)
+            raise
+
+    async def broken(topic, grade, seconds):
+        raise RuntimeError("music quota")
+
+    for why, music in {"a slow bed": slow, "a failed bed": broken, "no bed": no_music}.items():
+        started = time.monotonic()
+        _, cid, folder, seen = run_job(Studio(board(), tts_delay_s=0.05), movie.start_movie, movie={"music_bed": music})
+        made = creation_in(folder, cid)
+        assert made.status == "ready" and "music" not in made.audio and seen["os"][-1].status == "ready", why
+        assert time.monotonic() - started < 5, f"{why} never holds the movie up"
+    assert cancelled == [TOPIC], "a bed still composing is cancelled once the movie is made"
 
 
 def check_unknown_sprite_rejected() -> None:
@@ -443,7 +554,11 @@ def check_tool_call_starts_the_right_job() -> None:
         await store.settle()
         return deps, bus, stand
 
-    with patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())), patch.object(movie, "start_directors_cut", lambda *a, **k: None):
+    with (
+        patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())),
+        patch.object(movie, "start_directors_cut", lambda *a, **k: None),
+        patch.object(movie, "music_bed", no_music),
+    ):
         folder = studio_pro.CREATIONS_DIR
         deps, bus, stand = asyncio.run(go(ToolCall("make_movie", TOPIC, GOAL)))
         made = [creation_in(folder, p.name) for p in folder.iterdir()]
@@ -487,7 +602,8 @@ def run() -> None:
     use_sample_voices()
     for check in (
         check_progress_then_ready, check_video_render, check_deadline_falls_back, check_errors_fall_back,
-        check_storyboard_takes_the_kid_view_only, check_voices_are_allowlisted, check_unknown_sprite_rejected,
+        check_storyboard_takes_the_kid_view_only, check_voices_are_allowlisted, check_kite_narrates, check_one_guest_at_most,
+        check_music_bed, check_unknown_sprite_rejected,
         check_game, check_reads_need_no_token, check_endpoints_are_for_kid_devices,
         check_answer_and_result_record_evidence, check_concept_comes_from_the_brain, check_tool_call_starts_the_right_job,
         check_showcase_seeds_once,

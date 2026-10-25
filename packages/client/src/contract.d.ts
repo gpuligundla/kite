@@ -169,15 +169,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/creations/{creation_id}/game.html": {
+    "/creations/{creation_id}/{kind}.html": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Game Html */
-        get: operations["game_html_creations__creation_id__game_html_get"];
+        /** Page Html */
+        get: operations["page_html_creations__creation_id___kind__html_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -710,7 +710,7 @@ export interface components {
              * Voice
              * @enum {string}
              */
-            voice: "narrator" | "professor" | "explorer" | "storyteller" | "robot_buddy";
+            voice: "kite" | "narrator" | "professor" | "explorer" | "storyteller" | "robot_buddy";
             /** Text */
             text: string;
         };
@@ -1765,12 +1765,13 @@ export interface operations {
             };
         };
     };
-    game_html_creations__creation_id__game_html_get: {
+    page_html_creations__creation_id___kind__html_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 creation_id: string;
+                kind: string;
             };
             cookie?: never;
         };

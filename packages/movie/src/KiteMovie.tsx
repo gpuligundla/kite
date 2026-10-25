@@ -18,6 +18,10 @@ const SPRITE_SIZE = 230;
 const CAMERA_TRAVEL = 140;
 const CAMERA_ZOOM = 0.15;
 const ENTRANCE_FRAMES = 20;
+/** The music bed: the director's cut's level between lines, half that under a voice. */
+const MUSIC_VOLUME = 0.16;
+const MUSIC_UNDER_VOICE = 0.08;
+const DUCK_FRAMES = 8;
 
 /** Absolute and data URLs play as they are. Anything else is a file in the bundle's public dir. */
 const audioSrc = (url: string) => (/^(https?:|data:|blob:|\/)/.test(url) ? url : staticFile(url));
@@ -97,24 +101,21 @@ const SceneView: React.FC<{ scene: Scene; timed: TimelineScene; length: number; 
   );
 };
 
-const CheckQuestion: React.FC<{ creation: Creation }> = ({ creation }) => {
-  const check = creation.storyboard!.check;
-  return (
-    <AbsoluteFill style={{ background: "#1d2b53", justifyContent: "center", alignItems: "center", fontFamily: "Arial, sans-serif", color: "#fff", textAlign: "center" }}>
-      <div style={{ fontSize: 60, fontWeight: 800, maxWidth: 1000 }}>{check.question}</div>
-      <div style={{ marginTop: 30, fontSize: 44, lineHeight: 1.5 }}>
-        {check.choices.map((c, i) => (
-          <div key={i}>{String.fromCharCode(65 + i)}. {c}</div>
-        ))}
-      </div>
-    </AbsoluteFill>
-  );
+/** Volume at an absolute frame: ducked under every line, easing back up in the gaps, fading out at the end. */
+const musicVolume = (timeline: Timeline, fps: number) => {
+  const lines = timeline.scenes.flatMap((s) => s.lines);
+  return (frame: number) => {
+    const away = Math.min(...lines.map((l) => Math.max(l.from - frame, frame - (l.from + l.durationInFrames), 0)));
+    const level = interpolate(away, [0, DUCK_FRAMES], [MUSIC_UNDER_VOICE, MUSIC_VOLUME], { extrapolateRight: "clamp" });
+    return level * interpolate(frame, [timeline.durationInFrames - fps, timeline.durationInFrames], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  };
 };
 
 export const KiteMovie: React.FC<KiteMovieProps> = ({ creation, sprites }) => {
   const { fps } = useVideoConfig();
   const timeline: Timeline = buildTimeline(creation, fps);
   const scenes = creation.storyboard!.scenes;
+  const music = creation.audio.music;
 
   return (
     <AbsoluteFill style={{ background: "#000" }}>
@@ -137,9 +138,7 @@ export const KiteMovie: React.FC<KiteMovieProps> = ({ creation, sprites }) => {
           ) : null;
         }),
       )}
-      <Sequence from={timeline.checkFrom}>
-        <CheckQuestion creation={creation} />
-      </Sequence>
+      {music && <Audio src={audioSrc(music)} loop volume={musicVolume(timeline, fps)} loopVolumeCurveBehavior="extend" />}
     </AbsoluteFill>
   );
 };

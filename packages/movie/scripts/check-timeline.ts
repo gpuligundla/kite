@@ -21,7 +21,7 @@ const creation: Creation = {
     check: { question: "q?", choices: ["a", "b"], correct_index: 0, concept_id: "c" },
   },
   game: null,
-  audio: {},
+  audio: { "0-0": "0-0.mp3", "1-0": "1-0.mp3", music: "music.mp3", check: "check.mp3" },
   timings: {
     "0-0": [{ text: "hello", start: 0, end: 1.5 }, { text: "there", start: 1.5, end: 3.0 }],
     "1-0": [{ text: "bye", start: 0, end: 1.0 }, { text: "now", start: 1.0, end: 2.5 }],
@@ -37,4 +37,5 @@ assert.equal(t.scenes[1].from, 105);
 assert.equal(t.scenes[1].durationInFrames, 75);
 assert.equal(t.durationInFrames, 210);
 assert.deepEqual(t.scenes[1].lines[0].words[1], { text: "now", fromFrame: 105 + 30, toFrame: 105 + 75 });
+assert.deepEqual(t.scenes.flatMap((s) => s.lines.map((l) => l.key)), ["0-0", "1-0"], "music and check are not lines");
 console.log("timeline ok:", t.durationInFrames, "frames");
