@@ -468,6 +468,21 @@ def check_tool_call_starts_the_right_job() -> None:
     act_on_tool_call(ToolCall("make_movie", TOPIC, GOAL), "t2")  # no turn, no job, no error
 
 
+def check_showcase_seeds_once() -> None:
+    showcase = sorted(p.name for p in store.SHOWCASE_DIR.iterdir() if p.is_dir())
+    assert showcase, "the repo keeps showcase creations"
+    with patch.object(studio_pro, "CREATIONS_DIR", Path(tempfile.mkdtemp())) as folder:
+        store.seed_showcase()
+        (folder / showcase[0] / "creation.json").write_text((folder / showcase[0] / "creation.json").read_text())
+        store.seed_showcase()  # a second start leaves what is there alone
+        for cid in showcase:
+            creation = creation_in(folder, cid)
+            page = "game.html" if creation.kind == "game" else "movie.html"
+            assert creation.html_url and (folder / cid / page).stat().st_size > 100_000, f"{cid} plays from its own page"
+            sounds = [json.loads(m.group(3)) for m in store.MEDIA_BLOCK.finditer((folder / cid / page).read_text())]
+            assert sounds and all(sounds), f"{cid}: the sounds kept beside the page are back inside it"
+
+
 def run() -> None:
     use_sample_voices()
     for check in (
@@ -475,6 +490,7 @@ def run() -> None:
         check_storyboard_takes_the_kid_view_only, check_voices_are_allowlisted, check_unknown_sprite_rejected,
         check_game, check_reads_need_no_token, check_endpoints_are_for_kid_devices,
         check_answer_and_result_record_evidence, check_concept_comes_from_the_brain, check_tool_call_starts_the_right_job,
+        check_showcase_seeds_once,
     ):
         check()
         print("ok", check.__name__)

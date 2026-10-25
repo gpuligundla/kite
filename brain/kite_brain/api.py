@@ -26,6 +26,7 @@ from kite_brain.policy import collab_log, fk_grade
 from kite_brain.routers import counselor, creations, dashboard, games, kids, stream, turns
 from kite_brain.safety import AzureSafety
 from kite_brain.voice import ElevenTts, ScribeStt
+from kite_brain.studio.store import seed_showcase
 
 
 async def _no_embed(texts: list[str]) -> np.ndarray:
@@ -77,6 +78,7 @@ def create_app(conn: sqlite3.Connection | None = None) -> FastAPI:
             await store_assignments(app.state.deps, kid["id"], load_assignments(kid["id"], now))
         fk_grade("Warm up the reading-level dictionaries.")
         collab_log()
+        seed_showcase()
         purge = asyncio.create_task(purge_loop(app.state.conn))
         yield
         purge.cancel()

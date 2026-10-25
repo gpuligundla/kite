@@ -9,4 +9,7 @@ SNAPSHOT=data/demo-snapshot.db
 
 rm -f "$DB-wal" "$DB-shm"
 cp "$SNAPSHOT" "$DB"
-echo "restored brain/$DB from the snapshot. Restart the brain now: it holds the old database open."
+# Rehearsal movies and games go too. The brain copies the showcase creations back in when it starts.
+rm -rf data/creations
+echo "restored brain/$DB from the snapshot and cleared data/creations."
+echo "Restart the brain now: it holds the old database open, and it re-seeds the showcase on start."

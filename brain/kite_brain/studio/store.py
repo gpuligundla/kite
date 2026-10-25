@@ -5,10 +5,13 @@ contract.Creation), meta.json (who it is for and where its evidence goes, never 
 media. It moves pending -> ready | fallback."""
 
 import asyncio
+import base64
 import html
 import json
 import logging
+import re
 import secrets
+import shutil
 from collections.abc import Coroutine
 from pathlib import Path
 from typing import Any
@@ -44,6 +47,31 @@ def new_id() -> str:
 
 def folder(creation_id: str) -> Path:
     return studio_pro.CREATIONS_DIR / creation_id
+
+
+SHOWCASE_DIR = Path(__file__).with_name("showcase")
+# The brain's injected sounds in a studio-agent page: <script data-kit="KITE_AUDIO">window.KITE_AUDIO = {...};</script>
+MEDIA_BLOCK = re.compile(r'(<script data-kit="(KITE_[A-Z]+)">window\.\2 = )(\{.*?\})(;</script>)', re.S)
+
+
+def seed_showcase() -> None:
+    """Copy the showcase creations (a movie and a game the studio agent built, kept in the repo) into the
+    creations folder, so a fresh deploy or a demo reset still has them. Leaves existing folders alone.
+    The repo keeps each page's sounds as media/<KIT>/<key>.mp3 (see scripts/pack_showcase.py); they go back in here."""
+    for source in sorted(SHOWCASE_DIR.iterdir()) if SHOWCASE_DIR.is_dir() else []:
+        target = folder(source.name)
+        if not source.is_dir() or target.exists():
+            continue
+        shutil.copytree(source, target, ignore=shutil.ignore_patterns("media"))
+        for page in target.glob("*.html"):
+            def fill(m: re.Match) -> str:
+                sounds = {
+                    mp3.stem: "data:audio/mpeg;base64," + base64.b64encode(mp3.read_bytes()).decode()
+                    for mp3 in sorted((source / "media" / m.group(2)).glob("*.mp3"))
+                }
+                return m.group(1) + json.dumps(sounds) + m.group(4)
+
+            page.write_text(MEDIA_BLOCK.sub(fill, page.read_text()))
 
 
 def sprites_for(creation: Creation) -> dict[str, str]:
