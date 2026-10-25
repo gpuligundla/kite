@@ -5,7 +5,7 @@ from kite_brain.auth import require
 from kite_brain.contract import AlertEvent, KidView
 from kite_brain.memory import ledger
 from kite_brain.memory.recall import remembered
-from kite_brain.turn.pipeline import start_teach
+from kite_brain.turn.pipeline import start_teach, teachable_concepts, teaching_now
 
 router = APIRouter()
 
@@ -59,11 +59,15 @@ async def teach_start(kid_id: str, body: TeachStart, request: Request) -> dict[s
 async def teachable(kid_id: str, request: Request) -> list[Teachable]:
     """Concepts she has met, most recent first, in kid words. Never levels."""
     deps = request.app.state.deps
-    grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (kid_id,)).fetchone()["grade"]
-    met = dict.fromkeys(
-        e.concept_id for e in reversed(ledger.events(deps.conn, deps.keys, kid_id, grade)) if e.concept_id
-    )
-    return [Teachable(concept_id=c, kid_name=deps.catalog.get(c).kid_name) for c in met]
+    return [Teachable(concept_id=c, kid_name=deps.catalog.get(c).kid_name) for c in teachable_concepts(deps, kid_id)]
+
+
+@router.get("/kids/{kid_id}/teach/active", dependencies=[require("os", "handheld")])
+async def teach_active(kid_id: str, request: Request) -> Teachable | None:
+    """The Teach Kite lesson the brain just started, so a screen can follow one the kid began by voice."""
+    deps = request.app.state.deps
+    concept_id = teaching_now(deps, kid_id)
+    return Teachable(concept_id=concept_id, kid_name=deps.catalog.get(concept_id).kid_name) if concept_id else None
 
 
 @router.get("/kids/{kid_id}/kid-view", dependencies=[require("os", "handheld")])

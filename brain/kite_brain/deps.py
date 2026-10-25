@@ -30,9 +30,9 @@ class LlmRequest:
 
 @dataclass
 class ToolCall:
-    name: Literal["make_movie", "make_game"]
+    name: Literal["make_movie", "make_game", "build_new_game", "teach_kite"]
     topic: str
-    learning_goal: str
+    learning_goal: str  # "" for teach_kite
 
 
 @dataclass

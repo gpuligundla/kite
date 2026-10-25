@@ -18,22 +18,41 @@ DEEP_PARSE_MAX_TOKENS = 8192  # a storyboard plus the thinking that comes before
 EFFORT_LOW = {"effort": "low"}
 EFFORT_MEDIUM = {"effort": "medium"}
 
-TOOLS = [
-    {
+_TOPIC = {"type": "string", "description": "What it is about, in a few words, e.g. 'volcanoes'."}
+_GOAL = {
+    "type": "string",
+    "description": "The one idea the child should come away with, as a plain sentence of fact. Not a greeting.",
+}
+# Kids talk to Kite out loud, so they ask in passing and point back ("that", "it") at what was just said.
+_ASKING = (
+    "The child may ask in any words, by voice, in the middle of a conversation. When they say 'that' or 'it', "
+    "take the topic from the recent conversation. Say one short sentence telling them what you're making, then call this."
+)
+
+
+def _tool(name: str, description: str, goal: bool = True) -> dict[str, Any]:
+    properties = {"topic": _TOPIC, "learning_goal": _GOAL} if goal else {"topic": _TOPIC}
+    return {
         "name": name,
         "description": description,
         "strict": True,
         "input_schema": {
-            "type": "object",
-            "properties": {"topic": {"type": "string"}, "learning_goal": {"type": "string"}},
-            "required": ["topic", "learning_goal"],
-            "additionalProperties": False,
+            "type": "object", "properties": properties, "required": list(properties), "additionalProperties": False,
         },
     }
-    for name, description in (
-        ("make_movie", "Make a short animated movie that teaches the topic."),
-        ("make_game", "Make a simple game that practices the topic."),
-    )
+
+
+TOOLS = [
+    _tool("make_movie", "Make a short animated movie that teaches a topic. Use it whenever the child asks for a "
+          f"movie, video, cartoon, film or show to watch. {_ASKING}"),
+    _tool("make_game", "Make a quick game that practices a topic. Use it whenever the child asks to play or make a "
+          f"game, unless they ask for a brand-new one. {_ASKING}"),
+    _tool("build_new_game", "Build a brand-new game from scratch, made just for this child. It takes a few minutes. "
+          "Use it instead of make_game only when the child asks for a new, custom, different or brand-new game, or "
+          f"one built or designed for them. {_ASKING}"),
+    _tool("teach_kite", "Start Teach Kite: the child explains a topic and you listen. Use it when the child says "
+          "they want to teach you, explain something to you, or show you what they know. Kite opens the lesson with "
+          "its own line, so don't ask about the topic or explain it yourself.", goal=False),
 ]
 
 
@@ -91,7 +110,7 @@ class FoundryLlm:
         for block in final.content:
             if block.type == "tool_use":
                 yield ToolCall(name=block.name, topic=block.input["topic"],
-                               learning_goal=block.input["learning_goal"])
+                               learning_goal=block.input.get("learning_goal", ""))
 
     async def parse(self, req: LlmRequest, model_cls: type[T], *, deep: bool = False) -> T:
         """Haiku with structured output, or with `deep` Sonnet at medium effort (storyboards and

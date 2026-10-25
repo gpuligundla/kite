@@ -5,16 +5,17 @@ import asyncio
 import logging
 import re
 import time
+from collections import deque
 from collections.abc import Awaitable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import TypeVar, get_args
 
 import numpy as np
 from ulid import ULID
 
 from kite_brain.config import (
-    ABOUT_KITE_THRESHOLD, DECIDE_TOTAL_TIMEOUT_S, RECALL_TIMEOUT_S, SAFETY_TIMEOUT_S,
+    ABOUT_KITE_THRESHOLD, DECIDE_TOTAL_TIMEOUT_S, MATCH_COSINE, RECALL_TIMEOUT_S, SAFETY_TIMEOUT_S,
 )
 from kite_brain.contract import (
     AlertEvent, AnswerDoneEvent, AnswerSentenceEvent, CardEvent, ConceptEvidence, DecidedEvent, DeviceKind,
@@ -40,6 +41,7 @@ from kite_brain.questions import (
 from kite_brain.studio.game import start_game
 from kite_brain.studio.movie import start_movie
 from kite_brain.studio.store import spawn
+from kite_brain.studio_pro import build_custom_game, start_custom_game
 from kite_brain.turn.route import FALLBACK, RoutePlan, route, teach_start_line
 from kite_brain.turn.speak import END, SentenceSplitter, audio_b64, drain, speak_sentences
 from kite_brain.turn.teach import TeachGrade, earlier_attempts, grade_teach, merge_attempts, teach_feedback_context
@@ -49,7 +51,18 @@ log = logging.getLogger(__name__)
 
 CONCEPT_CANDIDATES = 6
 EXCERPT_ROWS = 4  # the 2 turns (kid and kite) before the flagged message
+TIME_TRAVEL_ROWS = 10  # recall's HISTORY_TURNS
+TIME_TRAVEL_KEPT = timedelta(minutes=30)
+TEACH_ACTIVE = timedelta(minutes=2)
+TEACH_NOT_MET = "Let's talk about {topic} together first. Then you can teach it to me!"
 T = TypeVar("T")
+
+# A time-travel turn writes nothing, so without these a follow-up such as "make that into a movie" has no
+# conversation to point back at. Rows stay in this process only.
+# ponytail: per process and lost on restart; fine for one brain, move to a store if the brain ever scales out.
+_time_travel: dict[str, deque[tuple[datetime, str, str]]] = {}
+# The Teach Kite concept the brain started last, per kid, so the kid's screen can follow a lesson begun by voice.
+_teaching: dict[str, tuple[str, datetime]] = {}
 
 
 @dataclass(frozen=True)
@@ -77,6 +90,8 @@ class _Turn:
         self.plan: RoutePlan | None = None
         self.teach: TeachGrade | None = None
         self.about_kite = 0.0
+        self.concept_id: str | None = None
+        self.vec: np.ndarray | None = None
 
     def load_kid(self) -> None:
         row = self.deps.conn.execute(
@@ -160,14 +175,80 @@ def _voice(band, situation: Situation) -> VoiceSpec | None:
         return None
 
 
-def act_on_tool_call(call: ToolCall, turn_id: str, turn: _Turn | None = None) -> None:
-    """Start the movie or game Claude asked for. It runs in the background and reaches the kid
-    as creation events. A time-travel turn still gets its creation but records no evidence."""
+def act_on_tool_call(call: ToolCall, turn_id: str, turn: _Turn | None = None) -> str | None:
+    """Start what Claude asked for. A movie or game runs in the background and reaches the kid as
+    creation events; a time-travel turn still gets its creation but records no evidence. Teach Kite
+    returns the line the turn speaks next."""
     log.info("turn %s: tool call %s", turn_id, call.name)
     if turn is None:
-        return
+        return None
+    deps, kid_id = turn.deps, turn.inp.kid_id
+    if call.name == "teach_kite":
+        return _teach_by_voice(turn, call.topic)
+    if call.name == "build_new_game":  # as POST /kids/{kid}/games/custom does
+        creation_id = start_custom_game(deps, kid_id, call.topic, call.learning_goal)
+        spawn(build_custom_game(deps, kid_id, creation_id, call.topic, call.learning_goal))
+        return None
     start = start_movie if call.name == "make_movie" else start_game
-    spawn(start(turn.deps, turn.inp.kid_id, call.topic, call.learning_goal, turn.grade, read_only=turn.read_only))
+    spawn(start(deps, kid_id, call.topic, call.learning_goal, turn.grade, read_only=turn.read_only))
+    return None
+
+
+def teachable_concepts(deps: Deps, kid_id: str) -> list[str]:
+    """Concepts she has met, most recent first."""
+    grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (kid_id,)).fetchone()["grade"]
+    return list(dict.fromkeys(
+        e.concept_id for e in reversed(ledger.events(deps.conn, deps.keys, kid_id, grade)) if e.concept_id
+    ))
+
+
+def _best_teachable(turn: _Turn) -> str | None:
+    """The concept this turn is about when she has met it, else the closest one she has met."""
+    met = teachable_concepts(turn.deps, turn.inp.kid_id)
+    if turn.concept_id in met:
+        return turn.concept_id
+    catalog = turn.deps.catalog
+    if turn.vec is None or catalog.vectors is None or not met:
+        return None
+    rows = [i for i, c in enumerate(catalog.concepts) if c.id in met]
+    [(best, cosine)] = top_k(turn.vec, catalog.vectors[rows], 1)
+    return catalog.concepts[rows[best]].id if cosine >= MATCH_COSINE else None
+
+
+def _teach_by_voice(turn: _Turn, topic: str) -> str:
+    """Teach Kite started from a turn. The turn speaks the opener on the device that asked; the
+    turnless copy tells the kid's screens which lesson began, and gives the grown-up theirs."""
+    concept_id = _best_teachable(turn)
+    if concept_id is None:
+        return TEACH_NOT_MET.format(topic=topic)
+    text = teach_start_line(turn.deps.catalog.get(concept_id).kid_name)
+    _open_teach(turn.deps, turn.inp.kid_id, concept_id, text, audio="")
+    return text
+
+
+def _open_teach(deps: Deps, kid_id: str, concept_id: str, text: str, audio: str) -> None:
+    _teaching[kid_id] = (concept_id, deps.clock())
+    for audience in ("kid", "parent"):
+        deps.bus.publish(AnswerSentenceEvent(
+            kid_id=kid_id, turn_id=None, at=deps.clock(), audience=audience, index=0, text=text, audio_b64=audio
+        ))
+
+
+def teaching_now(deps: Deps, kid_id: str) -> str | None:
+    """The concept of the Teach Kite lesson started in the last two minutes, if any."""
+    concept_id, at = _teaching.get(kid_id, (None, None))
+    return concept_id if at and deps.clock() - at <= TEACH_ACTIVE else None
+
+
+def _remember_time_travel(turn: _Turn, kid_text: str, kite_text: str) -> None:
+    rows = _time_travel.setdefault(turn.inp.kid_id, deque(maxlen=TIME_TRAVEL_ROWS))
+    now = turn.deps.clock()  # not turn.now, which a simulation sets in the past
+    rows.extend([(now, "kid", kid_text), (now, "kite", kite_text)])
+
+
+def _time_travel_history(turn: _Turn) -> list[tuple[str, str]]:
+    since = turn.deps.clock() - TIME_TRAVEL_KEPT
+    return [(role, text) for at, role, text in _time_travel.get(turn.inp.kid_id, ()) if at >= since]
 
 
 async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | None, publish) -> str:
@@ -181,9 +262,10 @@ async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | No
         )
         text = "Please respond to what I just taught you."
     else:
+        history = recalled.history + (_time_travel_history(turn) if turn.read_only else [])
         context = turn_context(
             turn.kid_name, turn.grade, recalled.kid_view, " ".join(recalled.guidance) or None,
-            recalled.depth_topic, recalled.history, HOMEWORK_LINES.get(plan.homework_mode, ""),
+            recalled.depth_topic, history, HOMEWORK_LINES.get(plan.homework_mode, ""),
             build_log=collab_log() if turn.about_kite >= ABOUT_KITE_THRESHOLD else None,
         )
     request = LlmRequest(
@@ -198,7 +280,9 @@ async def _answer(turn: _Turn, text: str, recalled: Recall, spec: VoiceSpec | No
             if speaker.done():  # a flagged sentence ended the answer
                 break
             if isinstance(item, ToolCall):
-                act_on_tool_call(item, turn.turn_id, turn)
+                if line := act_on_tool_call(item, turn.turn_id, turn):
+                    for sentence in [*splitter.flush(), line]:
+                        queue.put_nowait(sentence)
             else:
                 for sentence in splitter.feed(item):
                     queue.put_nowait(sentence)
@@ -314,7 +398,8 @@ async def _run(turn: _Turn) -> None:
             _decide(turn, text, _candidates(turn, vec)),
             _timed(turn, "safety", deps.safety.check_input(text), SAFETY_TIMEOUT_S),
         )
-        concept_id = inp.concept_id or _concept(decisions)
+        concept_id = turn.concept_id = inp.concept_id or _concept(decisions)
+        turn.vec = vec
         about_me = decisions.answers["about_me"]["yes"] if decisions else 0.0
         if decisions:
             turn.about_kite = decisions.answers.get("about_kite", {}).get("yes", 0.0)
@@ -334,8 +419,13 @@ async def _run(turn: _Turn) -> None:
 
     if plan.route == "teach":
         turn.teach = _grade_teach(turn, decisions, concept_id)
-    if plan.forget and not turn.read_only:  # a time-travel turn deletes nothing, as it writes nothing
-        _forget_previous(turn)
+    if plan.forget:
+        if turn.read_only:  # a time-travel turn wrote nothing but the in-memory exchange
+            rows = _time_travel.get(inp.kid_id, deque())
+            for _ in range(min(2, len(rows))):
+                rows.pop()
+        else:
+            _forget_previous(turn)
 
     # 5. Grown-up events, to the audience the plan chose
     turn.emit(HeardEvent, plan.audience, text=text)
@@ -375,6 +465,8 @@ async def _run(turn: _Turn) -> None:
         turn.emit(CardEvent, plan.audience, card_id=_write_card(turn, answer), topic=plan.card_topic)
 
     # 7. Persist. A time-travel turn wrote its alert above and nothing else.
+    if turn.read_only and plan.write_memory:
+        _remember_time_travel(turn, text, answer)
     if turn.read_only or not plan.write_memory:
         return
     session_id = ledger.session_for(deps.conn, inp.kid_id, turn.now)
@@ -395,8 +487,4 @@ async def start_teach(deps: Deps, kid_id: str, concept_id: str) -> None:
     """Kite's fixed opening for Teach Kite, spoken in the listen voice to the kid, with the grown-up's copy."""
     grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (kid_id,)).fetchone()["grade"]
     text = teach_start_line(deps.catalog.get(concept_id).kid_name)
-    audio = await audio_b64(deps, text, _voice(band_for(grade), "listen"))
-    for audience in ("kid", "parent"):
-        deps.bus.publish(AnswerSentenceEvent(
-            kid_id=kid_id, turn_id=None, at=deps.clock(), audience=audience, index=0, text=text, audio_b64=audio
-        ))
+    _open_teach(deps, kid_id, concept_id, text, await audio_b64(deps, text, _voice(band_for(grade), "listen")))

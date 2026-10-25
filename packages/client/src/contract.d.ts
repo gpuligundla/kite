@@ -92,6 +92,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/kids/{kid_id}/teach/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Teach Active
+         * @description The Teach Kite lesson the brain just started, so a screen can follow one the kid began by voice.
+         */
+        get: operations["teach_active_kids__kid_id__teach_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kids/{kid_id}/kid-view": {
         parameters: {
             query?: never;
@@ -1602,6 +1622,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Teachable"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    teach_active_kids__kid_id__teach_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kid_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Teachable"] | null;
                 };
             };
             /** @description Validation Error */
