@@ -22,6 +22,8 @@ export interface ThreadProps {
   /** `${turn id}:${kind}` for each chip already pressed. */
   making: ReadonlySet<string>;
   onMake: (turn: TurnView, kind: CreationKind) => void;
+  /** Off during Teach Kite, when the kid is explaining rather than asking for things. */
+  makeChips: boolean;
   empty: ReactNode;
 }
 
@@ -32,7 +34,7 @@ const MAKE: Record<CreationKind, { label: string; busy: string }> = {
   game: { label: "Make a game", busy: "Making your game" },
 };
 
-export function Thread({ brain, band, device, turns, earlier, creations, anchors, making, onMake, empty }: ThreadProps) {
+export function Thread({ brain, band, device, turns, earlier, creations, anchors, making, onMake, makeChips, empty }: ThreadProps) {
   const scroller = useRef<HTMLDivElement>(null);
   const column = useRef<HTMLDivElement>(null);
   const follow = useRef<"turn" | "bottom" | "off">("turn");
@@ -88,7 +90,7 @@ export function Thread({ brain, band, device, turns, earlier, creations, anchors
           // The wire doesn't say which device asked. A live turn not posted here came from the kid's other device.
           const asker: DeviceKind | null = t.mine ? device : earlier.has(t.id) ? null : device === "os" ? "handheld" : "os";
           const first = t.sentences[0]?.text;
-          const canMake = t.done?.route === "answer" && t.heard && first;
+          const canMake = makeChips && t.done?.route === "answer" && t.heard && first;
           const below = creations.filter((c) => anchors[c.id] === t.id);
           return (
             <section key={t.id} className={s.turn} aria-label="One question and Kite's answer">

@@ -53,6 +53,8 @@ export function OsScreen({ device }: { device: DeviceKind }) {
   const [problem, setProblem] = useState<string | null>(null);
   const [party, setParty] = useState(0);
   const [cheering, setCheering] = useState(false);
+  // From the kid letting go until the brain has the turn: the gap before the turn exists to show as thinking.
+  const [sending, setSending] = useState(false);
   const started = useRef(new Set<string>());
   const celebrated = useRef(new Set<string>());
   const band = bandFor(grade);
@@ -135,10 +137,13 @@ export function OsScreen({ device }: { device: DeviceKind }) {
     const image = photo?.blob;
     clearPhoto();
     const lesson = teach.step === "on" ? { mode: "teach" as const, conceptId: teach.concept.concept_id } : {};
+    setSending(true);
     try {
       await brain.say({ ...utterance, ...lesson, ...(image ? { image } : {}), asOfGrade: grade as Grade });
     } catch {
       showProblem("Kite didn't get that. Try sending it again.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -204,7 +209,7 @@ export function OsScreen({ device }: { device: DeviceKind }) {
 
   const [hello, nudge] = HELLO[band](me?.name ?? "there");
   const teaching = teach.step === "on";
-  const thinking = talk.turns.some((t) => t.mine && t.id !== NO_TURN && !t.done && t.sentences.length === 0);
+  const thinking = sending || talk.turns.some((t) => t.mine && t.id !== NO_TURN && !t.done && t.sentences.length === 0);
   const teachButton = teaching ? (
     <button type="button" className={s.teachButton} data-on="true" onClick={() => setTeach({ step: "off" })}>
       <Glyph name="close" size={20} />
@@ -297,6 +302,7 @@ export function OsScreen({ device }: { device: DeviceKind }) {
         anchors={anchors}
         making={making}
         onMake={(t, kind) => void make(t, kind)}
+        makeChips={!teaching}
         empty={me && <p className={s.nudge}>{nudge}</p>}
       />
 

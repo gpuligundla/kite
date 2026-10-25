@@ -1,8 +1,9 @@
 // The demo path, end to end in two browser profiles, against a running web app and brain (plan Task 31).
 // Run before every rehearsal:
 //   OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs [http://localhost:3000]
-// Makes real model calls: three answers, one teach-back and one movie.
+// Makes real model calls: four answers (one spoken through a fake microphone), one teach-back and one movie.
 import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const base = (process.argv[2] ?? "http://localhost:3000").replace(/\/$/, "");
@@ -12,7 +13,12 @@ if (!OS_TOKEN || !PARENT_TOKEN) {
   process.exit(2);
 }
 
-const browser = await chromium.launch();
+// The kid's microphone plays a recorded "Why do volcanoes erupt?" (48 kHz mono, 2.5 s with the pauses).
+const SPOKEN = fileURLToPath(new URL("why-volcanoes.wav", import.meta.url));
+const SPOKEN_MS = 2400;
+const browser = await chromium.launch({
+  args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", `--use-file-for-fake-audio-capture=${SPOKEN}`],
+});
 let failed = 0;
 async function step(name, fn) {
   const t0 = Date.now();
@@ -44,10 +50,15 @@ try {
   });
 
   const turns = () => kid.locator('section[aria-label="One question and Kite\'s answer"]');
+  // Talking comes first on the kid screen; the text box waits behind "Type instead", remembered per device.
+  async function typing() {
+    if (!(await kid.getByRole("textbox").isVisible())) await kid.getByRole("button", { name: "Type instead" }).click();
+  }
   async function ask(grade, text) {
     await kid.locator('input[type="range"]').fill(String(grade));
     await kid.waitForTimeout(600);
     const before = await turns().count();
+    await typing();
     await kid.getByRole("textbox").fill(text);
     await kid.keyboard.press("Enter");
     const turn = turns().nth(before);
@@ -68,10 +79,25 @@ try {
     assert.ok(tenth.answer.length > first.answer.length, `${tenth.answer.length} vs ${first.answer.length} chars`);
   });
 
+  await step("a spoken question gets a spoken answer", async () => {
+    const before = await turns().count();
+    const spoke = kid.locator('svg[aria-label="Kite, talking"]').waitFor({ timeout: 40_000 });
+    const diamond = await kid.getByRole("button", { name: "Hold to talk" }).boundingBox();
+    await kid.mouse.move(diamond.x + diamond.width / 2, diamond.y + diamond.height / 2);
+    await kid.mouse.down();
+    await kid.waitForTimeout(SPOKEN_MS);
+    await kid.mouse.up();
+    const turn = turns().nth(before);
+    await turn.getByText(/volcano/i).first().waitFor({ timeout: 20_000 });
+    await turn.getByText(/^FK \d+\.\d$/).waitFor({ timeout: 25_000 });
+    await spoke;
+  });
+
   await step("Teach Kite listens and thanks her, with no grade shown", async () => {
     await kid.getByRole("button", { name: "Teach Kite" }).click();
     await kid.getByRole("button", { name: "Why the sky is blue" }).click();
     await kid.getByText(/all ears/i).waitFor({ timeout: 20_000 });
+    await typing();
     await kid.getByRole("textbox").fill(
       "Sunlight has all the colors. Air molecules bounce the short blue waves around much more than red ones, so blue comes at us from every part of the sky.",
     );
@@ -82,8 +108,10 @@ try {
   });
 
   await step("make it a movie: the player is ready within 45 s", async () => {
+    // The chip asks the way she would ("Make that into a movie"), and the movie shows under that new turn.
+    const before = await turns().count();
     await first.turn.getByRole("button", { name: "Make it a movie" }).click();
-    await first.turn.locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
+    await turns().nth(before).locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
   });
 
   await step("SOS reaches the grown-up view live within 2 s", async () => {
