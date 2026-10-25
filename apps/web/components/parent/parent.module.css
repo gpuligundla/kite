@@ -47,23 +47,106 @@
 .ticks span { width: 26px; text-align: center; }
 .ticks span[data-on="true"] { color: var(--ink); font-weight: 700; }
 
-/* Alerts */
-.alerts { margin: var(--space-2) 0 var(--space-6); }
-.alerts h2 { font-size: var(--step-1); }
-.alerts ul { list-style: none; padding: 0; margin: var(--space-3) 0 0; display: grid; gap: var(--space-2); }
-.alert {
-  position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-4);
-  padding: var(--space-3) var(--space-4); border-left: 4px solid var(--kite-red);
-  border-radius: 0 var(--radius-s) var(--radius-s) 0; background: color-mix(in srgb, var(--kite-red) 8%, white);
+/* Buttons: one filled action per card, the rest quieter. */
+.primaryButton, .secondaryButton {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 var(--space-4); border-radius: 999px; cursor: pointer;
+  font-weight: 700; transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-press) ease;
 }
-/* A new alert arrives with a brief brighter wash that settles; opacity only. */
+.primaryButton { border: 0; color: var(--paper); background: var(--ink); }
+.secondaryButton { border: 1px solid var(--line); color: var(--ink); background: var(--paper); }
+.primaryButton:active, .secondaryButton:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .primaryButton:hover { background: color-mix(in oklab, var(--ink) 85%, white); }
+  .secondaryButton:hover { background: var(--mist); }
+}
+.textButton { border: 0; background: none; padding: 0; cursor: pointer; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.textLink { font-weight: 700; text-underline-offset: 3px; }
+
+/* Alerts. Urgent is red, care is ink, a heads-up is amber; each kind also has its own glyph and next step. */
+.alertZone { display: grid; gap: var(--space-3); margin-bottom: var(--space-6); }
+.alertZone:empty { display: none; }
+.alerts { display: grid; gap: var(--space-3); }
+.alertsHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-4); }
+.alertsHead h2 { font-size: var(--step-1); }
+.alertsHead .textButton { margin-left: auto; font-size: var(--step--1); }
+.alertList { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+.alertRows {
+  list-style: none; padding: 0 var(--space-1); margin: 0; border-radius: var(--radius-m); background: var(--paper);
+  border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(29, 43, 83, 0.06);
+}
+.alertRows > li + li { border-top: 1px solid var(--line); }
+.alertRows .alert { border: 0; box-shadow: none; border-radius: 0; background: transparent; padding-block: var(--space-2); }
+.page [data-tone="urgent"] { --tone: var(--kite-red); --tone-deep: var(--kite-red-deep); }
+.page [data-tone="care"] { --tone: var(--ink); --tone-deep: var(--ink); }
+.page [data-tone="heads_up"] { --tone: #e0a100; --tone-deep: #8a6300; }
+.alert {
+  position: relative; display: grid; gap: var(--space-4); padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-m); background: var(--paper);
+  border: 1px solid color-mix(in oklab, var(--tone) 22%, var(--line));
+  box-shadow: 0 1px 2px rgba(29, 43, 83, 0.06);
+}
+.alert[data-featured="true"] {
+  padding: var(--space-5); border-radius: var(--radius-l); border-color: color-mix(in oklab, var(--tone) 40%, var(--line));
+  box-shadow: 0 1px 2px rgba(29, 43, 83, 0.08), 0 16px 36px -16px color-mix(in oklab, var(--tone) 55%, transparent);
+}
+@media (min-width: 760px) { .alert[data-featured="true"]:has(.where) { grid-template-columns: minmax(0, 1fr) minmax(260px, 400px); align-items: start; } }
+/* A new alert arrives with a brief tinted wash that settles; opacity only. */
 .alert::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: color-mix(in srgb, var(--kite-red) 18%, transparent); opacity: 0; animation: settle 1.6s var(--ease-out);
+  background: color-mix(in srgb, var(--tone) 14%, transparent); opacity: 0; animation: settle 1.6s var(--ease-out);
 }
 @keyframes settle { from { opacity: 1; } to { opacity: 0; } }
-.alertKind { font-family: var(--font-display); font-size: var(--step-1); color: var(--kite-red-deep); }
-.mapLink { font-weight: 700; }
+.alertBody { display: grid; gap: var(--space-2); align-content: start; min-width: 0; }
+.alert:not([data-featured="true"]) .alertBody { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-1) var(--space-4); }
+.alert:not([data-featured="true"]) .alertMeta, .alert:not([data-featured="true"]) .alertNext { grid-column: 1; }
+.alert:not([data-featured="true"]) .alertActions { grid-column: 2; grid-row: 1 / span 3; }
+.alertMeta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); color: var(--ink-soft); font-size: var(--step--1); max-width: none; }
+.alertMeta strong { color: var(--tone-deep); }
+.alertTitle { font-size: var(--step-0); line-height: 1.3; }
+.alert[data-featured="true"] .alertTitle { font-size: var(--step-2); margin-top: var(--space-1); }
+.alertNext { color: var(--ink-soft); }
+.alert[data-featured="true"] .alertNext { color: var(--ink); }
+.alertActions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); margin-top: var(--space-2); }
+.alert:not([data-featured="true"]) .alertActions { margin-top: 0; }
+@media (max-width: 640px) {
+  .alert:not([data-featured="true"]) .alertBody { grid-template-columns: minmax(0, 1fr); }
+  .alert:not([data-featured="true"]) .alertActions { grid-column: 1; grid-row: auto; }
+}
+
+.glyph { position: relative; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: color-mix(in oklab, var(--tone) 14%, white); flex: none; }
+.glyph svg { width: 14px; height: 14px; fill: var(--tone); }
+.alert[data-featured="true"] .alertMeta .glyph { width: 34px; height: 34px; }
+.alert[data-featured="true"] .alertMeta .glyph svg { width: 18px; height: 18px; }
+/* An unseen SOS breathes three times when it arrives, then holds still. */
+.glyph[data-pulse="true"]::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--tone);
+  opacity: 0; animation: pulse 1.6s var(--ease-out) 3;
+}
+@keyframes pulse { from { opacity: 0.6; transform: scale(1); } to { opacity: 0; transform: scale(1.9); } }
+
+.where { display: grid; gap: var(--space-3); min-width: 0; }
+.mapBox {
+  position: relative; height: 180px; border-radius: var(--radius-m); overflow: hidden; background-color: var(--mist);
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 28px 28px; background-position: center; box-shadow: inset 0 0 0 1px var(--line);
+}
+.tiles { position: absolute; left: 50%; top: 50%; }
+.tiles img { position: absolute; width: 256px; height: 256px; max-width: none; animation: fadeIn var(--dur-panel) var(--ease-out); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.pin {
+  position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--kite-red); border: 3px solid var(--paper); border-radius: 3px; box-shadow: 0 2px 6px rgba(29, 43, 83, 0.35);
+}
+.osm { position: absolute; right: 6px; bottom: 4px; font-size: 11px; color: var(--ink-soft); background: rgba(255, 255, 255, 0.8); padding: 0 4px; border-radius: 4px; }
+.whereText { display: grid; gap: 2px; }
+.whereText strong { font-variant-numeric: tabular-nums; }
+.whereText .alertActions { margin-top: var(--space-2); }
+
+.seenAlerts { font-size: var(--step--1); color: var(--ink-soft); }
+.seenAlerts summary { cursor: pointer; font-weight: 700; width: fit-content; padding: var(--space-1) 0; }
+.seenAlerts ul { list-style: none; padding: 0; margin: var(--space-2) 0 0; display: grid; gap: var(--space-1); max-width: 640px; }
+.seenAlerts li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); padding: var(--space-1) 0; border-top: 1px solid var(--line); }
+.seenAlerts strong { color: var(--ink); }
 
 /* Tabs */
 .tabs { display: flex; flex-wrap: wrap; gap: 0 var(--space-5); border-bottom: 1px solid var(--line); margin-bottom: var(--space-6); }

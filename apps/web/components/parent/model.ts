@@ -205,14 +205,47 @@ export const HOW_SHE_LEARNS: Record<string, string> = {
   game: "playing a game",
 };
 
-const KIND_WORDS: Record<AlertKind, string> = {
-  sos: "SOS",
-  bullying: "Bullying",
-  stranger: "A stranger",
-  abuse: "Possible abuse",
-  self_harm: "Self-harm",
+export type Tone = "urgent" | "care" | "heads_up";
+
+/**
+ * What a grown-up reads for each kind, most pressing first: an alert with several kinds leads with the earliest here.
+ * The parent never gets the kid's words, so `title` says what kind of thing happened and `next` what to do about it.
+ */
+export const ALERT_KINDS: Record<AlertKind, { word: string; tone: Tone; title: (name: string) => string; next: string }> = {
+  sos: {
+    word: "SOS",
+    tone: "urgent",
+    title: (name) => `${name} pressed SOS on her phone.`,
+    next: "Call her first. If you can't reach her and think she's in danger, call 911.",
+  },
+  self_harm: {
+    word: "Self-harm",
+    tone: "care",
+    title: (name) => `Something ${name} said to Kite sounded like she may want to hurt herself.`,
+    next: "Check in with her today, somewhere calm, and listen first. If you think she's in danger now, call or text 988.",
+  },
+  abuse: {
+    word: "Possible abuse",
+    tone: "care",
+    title: (name) => `Something ${name} said to Kite may mean someone is hurting her.`,
+    next: "Talk with her somewhere she feels safe, and listen before you act.",
+  },
+  bullying: {
+    word: "Bullying",
+    tone: "heads_up",
+    title: (name) => `Something ${name} told Kite sounded like bullying.`,
+    next: "Ask how things are with friends and at school, and listen before you act.",
+  },
+  stranger: {
+    word: "A stranger",
+    tone: "heads_up",
+    title: (name) => `${name} mentioned talking with someone she doesn't know.`,
+    next: "Ask who she's been talking to, online or nearby, without blame.",
+  },
 };
-export const kindWords = (kinds: AlertKind[]) => kinds.map((k) => KIND_WORDS[k]).join(" and ");
+const KIND_ORDER = Object.keys(ALERT_KINDS) as AlertKind[];
+export const leadKind = (kinds: AlertKind[]) => KIND_ORDER.find((k) => kinds.includes(k)) ?? kinds[0];
+export const kindWords = (kinds: AlertKind[]) => kinds.map((k) => ALERT_KINDS[k].word).join(" and ");
 
 export const POLICY_TOPICS: { topic: string; name: string }[] = [
   { topic: "death", name: "Death and dying" },
@@ -242,5 +275,31 @@ export const plainSummary = (s: string) => {
 export const momentForParent = (m: string) => m.replace(/^You taught Kite about/, "Taught Kite about");
 
 export const mapUrl = (lat: number, lng: number) => `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
+export const formatPlace = (lat: number, lng: number) =>
+  `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lng).toFixed(4)}° ${lng >= 0 ? "E" : "W"}`;
+
+const MAP_ZOOM = 15;
+/** The 3×3 OpenStreetMap tiles around a point, each offset in pixels from the point itself. */
+export function tilesAround(lat: number, lng: number) {
+  const n = 2 ** MAP_ZOOM;
+  const rad = (lat * Math.PI) / 180;
+  const x = ((lng + 180) / 360) * n;
+  const y = ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n;
+  return [-1, 0, 1].flatMap((dy) =>
+    [-1, 0, 1].map((dx) => {
+      const [tx, ty] = [Math.floor(x) + dx, Math.floor(y) + dy];
+      return { url: `https://tile.openstreetmap.org/${MAP_ZOOM}/${tx}/${ty}.png`, left: (tx - x) * 256, top: (ty - y) * 256 };
+    }),
+  );
+}
+
+const rtf = new Intl.RelativeTimeFormat("en-US", { numeric: "auto" });
+export function ago(iso: string, now: number) {
+  const min = Math.round((now - Date.parse(iso)) / 60_000);
+  if (min < 1) return "just now";
+  if (min < 60) return rtf.format(-min, "minute");
+  if (min < 24 * 60) return rtf.format(-Math.round(min / 60), "hour");
+  return rtf.format(-Math.round(min / (24 * 60)), "day");
+}
 
 export const percent = (x: number) => `${Math.round(x * 100)}%`;
