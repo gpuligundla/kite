@@ -11,40 +11,238 @@
 /* Nothing shows until /me says whose screen this is, so the band never jumps on load. */
 .screen > * { transition: opacity var(--dur-panel) var(--ease-out); }
 .screen[data-ready="false"] > * { opacity: 0; }
+.hidden { display: none; }
 
-/* Header: Kite at the top center, quiet controls in the corners. */
+/* Top bar: the way home and the quiet controls. Nothing here is bigger than the diamond. */
 .top {
-  position: relative;
-  display: grid;
-  justify-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-4) var(--space-5) var(--space-2);
 }
-.cornerLeft, .cornerRight {
-  position: absolute;
-  top: var(--space-4);
-  display: flex;
+.corner { display: flex; align-items: center; gap: var(--space-2); }
+.pill, .backButton {
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  min-height: max(44px, calc(var(--target) * 0.7));
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+  color: var(--ink);
+  font-size: calc(var(--kid-text) * 0.68);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    background-color var(--dur-press) ease,
+    opacity var(--dur-press) ease,
+    min-height var(--dur-band) var(--ease-in-out),
+    font-size var(--dur-band) var(--ease-in-out);
 }
-.cornerLeft { left: var(--space-5); }
-.cornerRight { right: var(--space-5); }
-
-.kiteSpot { position: relative; display: grid; place-items: center; }
-.kiteMark svg {
-  width: var(--kite-size);
-  height: calc(var(--kite-size) * 1.6);
-  transition: width var(--dur-band) var(--ease-in-out), height var(--dur-band) var(--ease-in-out);
+.pill:disabled { opacity: 0.45; cursor: default; }
+.backButton { justify-self: start; }
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out);
 }
+.iconButton:active { transform: scale(0.94); }
+.grade {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  font-size: var(--step--1);
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.grade input { width: 180px; margin: 0; accent-color: var(--ink); cursor: pointer; }
 .hello {
+  margin: 0;
   font-size: calc(var(--kid-text) * 1.3);
   font-weight: 800;
   transition: font-size var(--dur-band) var(--ease-in-out);
 }
+
+/* Home: a greeting, one big way to talk, and the other things Kite does a size smaller. */
+.home {
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-5);
+  padding: 0 var(--space-5) var(--space-6);
+}
+.homeHello { display: flex; align-items: center; gap: var(--space-4); }
+.homeHello svg {
+  width: calc(var(--kite-size) * 0.62);
+  height: calc(var(--kite-size) * 0.99);
+  transition: width var(--dur-band) var(--ease-in-out), height var(--dur-band) var(--ease-in-out);
+}
+.homeNudge { margin: 0; color: var(--ink-soft); font-size: var(--kid-text); transition: font-size var(--dur-band) var(--ease-in-out); }
+.tiles {
+  width: min(940px, 100%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.talkTile, .tile {
+  width: 100%;
+  border-radius: var(--radius-kid);
+  color: var(--ink);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    background-color var(--dur-press) ease,
+    border-color var(--dur-press) ease,
+    border-radius var(--dur-band) var(--ease-in-out),
+    min-height var(--dur-band) var(--ease-in-out);
+}
+.talkTile {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  min-height: calc(var(--target) * 2.1);
+  padding: var(--space-4) var(--space-6);
+  border: 0;
+  background: var(--kite-red);
+  color: var(--paper);
+}
+.talkTileMark { position: relative; display: grid; place-items: center; flex: none; width: calc(var(--target) * 1.3); height: calc(var(--target) * 1.3); }
+.talkTileMark::before {
+  content: "";
+  position: absolute;
+  inset: 15%;
+  border-radius: calc(var(--radius-kid) * 0.35);
+  background: var(--paper);
+  transform: rotate(45deg);
+}
+.talkTileMark svg { position: relative; color: var(--kite-red); }
+.tileCell { display: flex; }
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: calc(var(--target) * 1.8);
+  padding: var(--space-4);
+  border: 2px solid transparent;
+  background: var(--paper);
+}
+.tile[data-tone="teach"] { border-color: var(--tail-teal); }
+.tile[data-tone="quiet"] { background: color-mix(in srgb, var(--paper) 55%, transparent); }
+.tileGlyph {
+  display: grid;
+  place-items: center;
+  width: calc(var(--target) * 0.85);
+  height: calc(var(--target) * 0.85);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sky-deep) 45%, white);
+  transition: width var(--dur-band) var(--ease-in-out), height var(--dur-band) var(--ease-in-out);
+}
+.tile[data-tone="teach"] .tileGlyph { background: color-mix(in srgb, var(--tail-teal) 16%, white); color: #0b6a64; }
+.tile[data-tone="make"] .tileGlyph { background: color-mix(in srgb, var(--kite-yellow) 50%, white); }
+/* Story time: a cozy page, warm paper with the night sky on its glyph. */
+.tile[data-tone="story"] { background: #fff6e2; border-color: color-mix(in srgb, var(--kite-yellow) 55%, white); }
+.tile[data-tone="story"] .tileGlyph { background: var(--ink); color: var(--kite-yellow); }
+.tileText { display: grid; gap: 2px; }
+.tileLabel { font-family: var(--font-display), system-ui, sans-serif; font-weight: 800; font-size: calc(var(--kid-text) * 0.95); line-height: 1.15; }
+.talkTile .tileLabel { font-size: calc(var(--kid-text) * 1.45); }
+.tileHint { font-size: calc(var(--kid-text) * 0.66); opacity: 0.8; }
+/* K-2 reads pictures first: the tiles keep their names and drop the extra line. */
+[data-band="k2"] .tileHint { display: none; }
+
+/* The stage: Kite, its words, and the diamond under them. One question and answer at a time. */
+.stage {
+  position: relative;
+  container-type: size;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-5);
+}
+.scene {
+  width: min(860px, 100%);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+/* On a wide screen Kite moves beside its words while they're up, like someone talking, and waves its tail as it
+   speaks. The card gets the height. */
+.screen:not([data-device="handheld"]) .scene[data-card="true"] { flex-direction: row; align-items: flex-start; }
+.screen:not([data-device="handheld"]) .scene[data-card="true"] .words { justify-items: start; }
+.kiteSpot { position: relative; flex: none; display: grid; place-items: center; }
+.kiteMark svg {
+  --stage-kite: max(var(--kite-size), 104px);
+  width: var(--stage-kite);
+  height: calc(var(--stage-kite) * 1.6);
+  transition: width var(--dur-band) var(--ease-in-out), height var(--dur-band) var(--ease-in-out);
+}
+.scene[data-card="true"] .kiteMark svg { width: calc(var(--stage-kite) * 0.55); height: calc(var(--stage-kite) * 0.88); }
+.words {
+  flex: 1;
+  width: min(760px, 100%);
+  max-height: 100%;
+  min-height: 0;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* A long answer fades under the diamond instead of being cut by a hard edge. The padding keeps the last line
+     clear of the fade once she has scrolled to it. */
+  padding-bottom: var(--space-5);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--space-5)), transparent);
+}
+.caption {
+  margin: 0;
+  max-width: 20em;
+  text-align: center;
+  text-wrap: balance;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: calc(var(--kid-text) * 1.2);
+  font-weight: 700;
+  line-height: 1.25;
+  transition: font-size var(--dur-band) var(--ease-in-out);
+}
+.note {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-kid);
+  background: color-mix(in srgb, var(--kite-yellow) 30%, white);
+  font-size: calc(var(--kid-text) * 0.78);
+  font-weight: 700;
+}
+/* Over the top of the stage, so it never covers Kite's words. */
 .cheer {
   position: absolute;
-  top: calc(var(--space-4) + var(--kite-size) * 0.15);
-  left: calc(50% + var(--kite-size) * 0.5 + var(--space-3));
-  margin: 0;
+  top: var(--space-2);
+  left: 0;
+  right: 0;
+  width: fit-content;
+  margin: 0 auto;
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-kid) var(--radius-kid) var(--radius-kid) 6px;
   background: var(--tail-teal);
@@ -58,114 +256,40 @@
 .burst { position: absolute; left: 50%; top: 32%; width: 0; height: 0; pointer-events: none; }
 .burst i { position: absolute; width: 14px; height: 14px; margin: -7px; border-radius: 3px; }
 
-.iconButton {
+/* The answer card. */
+.card {
+  width: 100%;
   display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--paper) 55%, transparent);
-  color: var(--ink);
-  cursor: pointer;
-  transition: transform var(--dur-press) var(--ease-out);
-}
-.iconButton:active { transform: scale(0.94); }
-.remember {
-  font-size: var(--step--1);
-  font-weight: 700;
-  text-underline-offset: 3px;
-  padding: var(--space-2);
-}
-.grade {
-  display: grid;
-  justify-items: end;
-  gap: 2px;
-  font-size: var(--step--1);
-  font-weight: 700;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-.grade input { width: 180px; margin: 0; accent-color: var(--ink); cursor: pointer; }
-
-/* The conversation. */
-.thread {
-  position: relative;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: var(--space-3) var(--space-5);
-  /* Older turns fade out under Kite instead of being cut by a hard edge. */
-  mask-image: linear-gradient(to bottom, transparent, #000 var(--space-5));
-}
-.column {
-  width: min(760px, 100%);
-  margin-inline: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  padding-bottom: var(--space-3);
-}
-.nudge {
-  align-self: center;
-  max-width: 24em;
-  text-align: center;
-  color: var(--ink-soft);
-  font-size: var(--kid-text);
-  transition: font-size var(--dur-band) var(--ease-in-out);
-}
-.turn { display: flex; flex-direction: column; gap: var(--space-2); }
-
-.you, .answer {
-  margin: 0;
-  max-width: 100%;
-  transition:
-    font-size var(--dur-band) var(--ease-in-out),
-    padding var(--dur-band) var(--ease-in-out),
-    border-radius var(--dur-band) var(--ease-in-out);
-}
-.you {
-  align-self: flex-end;
-  max-width: 80%;
-  background: var(--sky-deep);
-  font-size: calc(var(--kid-text) * 0.92);
-  padding: calc(var(--target) * 0.15) calc(var(--target) * 0.3);
-  border-radius: var(--radius-kid) var(--radius-kid) calc(var(--radius-kid) * 0.25) var(--radius-kid);
-}
-.answer {
-  align-self: flex-start;
-  max-width: min(100%, 38em);
-  background: var(--paper);
-  font-size: var(--kid-text);
-  line-height: 1.45;
+  gap: var(--space-2);
   padding: calc(var(--target) * 0.26) calc(var(--target) * 0.36);
-  border-radius: var(--radius-kid) var(--radius-kid) var(--radius-kid) calc(var(--radius-kid) * 0.25);
+  border-radius: var(--radius-kid);
+  background: var(--paper);
+  transition: padding var(--dur-band) var(--ease-in-out), border-radius var(--dur-band) var(--ease-in-out);
 }
-.sentence { animation: appear var(--dur-pop) var(--ease-out); }
+.cardTop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-1) var(--space-3); }
+/* Her words, kept to two lines: the card is for Kite's answer. */
+.asked {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: calc(var(--kid-text) * 0.8);
+  font-weight: 700;
+}
+.asked > span { font-weight: 400; }
+.answer { font-size: calc(var(--kid-text) * 1.05); line-height: 1.45; transition: font-size var(--dur-band) var(--ease-in-out); }
+.sentence { animation: appear var(--dur-pop) var(--ease-out); border-radius: 6px; transition: opacity var(--dur-pop) var(--ease-out), background-color var(--dur-pop) ease; }
+.sentence[data-said="now"] { background: color-mix(in srgb, var(--kite-yellow) 45%, transparent); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.sentence[data-said="next"] { opacity: 0.35; }
 @keyframes appear { from { opacity: 0; } }
-.thinking { color: var(--ink-soft); }
 .dots { display: inline-flex; gap: 0.3em; padding: 0.25em 0; }
 .dots i { width: 0.45em; height: 0.45em; border-radius: 50%; background: currentColor; animation: blink 1.2s linear infinite; }
 .dots i:nth-child(2) { animation-delay: 0.15s; }
 .dots i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes blink { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
-
-.askRow {
-  display: flex;
-  flex-direction: row-reverse;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-2) var(--space-3);
-}
-.meta {
-  margin-right: auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0 0 var(--space-1) calc(var(--target) * 0.2);
-  font-size: var(--step--1);
-}
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--step--1); }
 .fk, .deeper {
   display: inline-flex;
   align-items: center;
@@ -178,8 +302,7 @@
 .fk { background: var(--kite-yellow); font-variant-numeric: tabular-nums; }
 .deeper { background: color-mix(in srgb, var(--tail-teal) 18%, white); color: #0b6a64; }
 .device { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-soft); }
-
-.makes { display: flex; flex-wrap: wrap; gap: var(--space-2); padding-left: calc(var(--target) * 0.2); }
+.makes { display: flex; flex-wrap: wrap; gap: var(--space-2); padding-top: var(--space-1); }
 .make {
   display: inline-flex;
   align-items: center;
@@ -199,21 +322,99 @@
     min-height var(--dur-band) var(--ease-in-out);
 }
 .make:disabled { border-style: dashed; color: var(--ink-soft); cursor: default; }
-.creation { margin-top: var(--space-2); }
 
-/* The dock. */
+/* Teach Kite: the same stage, listening to her. */
+.teachBar {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-kid);
+  background: color-mix(in srgb, var(--tail-teal) 14%, white);
+  font-size: calc(var(--kid-text) * 0.8);
+}
+.teachBar strong { font-family: var(--font-display), system-ui, sans-serif; font-size: calc(var(--kid-text) * 0.95); }
+.teachWhat { color: #0b6a64; font-weight: 700; font-size: var(--step--1); }
+.screen[data-view="teach"] { --band-bg: color-mix(in srgb, var(--tail-teal) 10%, #eef8f7); }
+
+/* Story time: what kind of story, and a moon for bedtime. */
+.storyChoices { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
+.storyChoice {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  min-width: calc(var(--target) * 2.2);
+  padding: var(--space-3) var(--space-4);
+  border: 3px solid transparent;
+  border-radius: var(--radius-kid);
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+  color: var(--ink);
+  font-size: calc(var(--kid-text) * 0.72);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-press) ease, border-color var(--dur-press) ease;
+}
+.storyChoice[aria-checked="true"] { border-color: var(--ink); background: var(--paper); }
+.storyGlyph { display: grid; place-items: center; width: calc(var(--target) * 0.85); height: calc(var(--target) * 0.85); border-radius: 50%; background: #fff1cc; }
+.bedtime {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target);
+  padding: 0 calc(var(--target) * 0.3) 0 var(--space-2);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: calc(var(--kid-text) * 0.75);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-pop) ease, color var(--dur-pop) ease;
+}
+.moon { display: grid; place-items: center; width: calc(var(--target) * 0.7); height: calc(var(--target) * 0.7); border-radius: 50%; background: var(--mist); transition: background-color var(--dur-pop) ease, color var(--dur-pop) ease; }
+.bedtime[aria-checked="true"] { background: var(--ink); color: var(--paper); }
+.bedtime[aria-checked="true"] .moon { background: #2d3d6b; color: var(--kite-yellow); }
+.bedtime[aria-checked="true"] .moon svg { fill: currentColor; }
+.screen[data-bedtime="true"] { --band-bg: #ccd2ea; }
+
+/* A movie or game rises in from below and covers the stage until she closes it. The dock stays clear. */
+.sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5) var(--space-5);
+  background: var(--band-bg, var(--sky));
+  /* Fades into the dock below instead of ending on a hard edge. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--space-4)), transparent);
+}
+/* Narrow enough that the whole player fits the stage's height: about 190px of Close, title and caption around a
+   16:9 picture. The stage is a size container. */
+.sheetItem { width: min(920px, 100%, calc((100cqh - 190px) * 16 / 9 + 48px)); display: grid; justify-items: end; gap: var(--space-2); }
+/* While a movie or game is up, the dock keeps only the diamond and its neighbours, to give the player the room. */
+.screen[data-sheet="true"] .bottom { padding-bottom: var(--space-4); }
+.screen[data-sheet="true"] .typeBox, .screen[data-sheet="true"] .attached { display: none; }
+.sheetItem > .pill { background: var(--paper); }
+
+/* The dock: the diamond in the middle, a size-smaller control on each side, typing behind a toggle. */
 .bottom {
   display: grid;
   justify-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-5) var(--space-4);
+  /* Lifts the diamond toward the middle of a wide screen. The handheld keeps it low, under the thumb. */
+  padding: var(--space-2) var(--space-5) max(var(--space-5), 11dvh);
 }
 .dock { width: min(720px, 100%); display: grid; gap: var(--space-3); }
-/* Talking is the way in: the diamond sits in the middle, the quieter ways around it. */
-.voiceRow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--space-3); }
-.voiceRow > :first-child { justify-self: start; }
-.voiceRow > :last-child { justify-self: end; }
-.toggleRow { display: grid; justify-items: center; }
+.voiceRow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--space-4); }
+.beside { display: flex; }
+.beside:first-child { justify-content: flex-end; }
+.beside:last-child { justify-content: flex-start; }
+.toggleRow { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
 .typeToggle {
   display: inline-flex;
   align-items: center;
@@ -224,7 +425,7 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--paper) 55%, transparent);
   color: var(--ink);
-  font-size: calc(var(--kid-text) * 0.72);
+  font-size: calc(var(--kid-text) * 0.68);
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
@@ -280,16 +481,16 @@
 }
 .send:disabled { opacity: 0.4; cursor: default; }
 
-.teachButton {
+.teachButton, .side {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   min-height: var(--target);
   padding: 0 calc(var(--target) * 0.3);
-  border: 2px solid var(--tail-teal);
+  border: 2px solid transparent;
   border-radius: var(--radius-kid);
   background: var(--paper);
-  color: #0b6a64;
+  color: var(--ink);
   font-size: calc(var(--kid-text) * 0.75);
   font-weight: 700;
   white-space: nowrap;
@@ -301,19 +502,56 @@
     font-size var(--dur-band) var(--ease-in-out),
     border-radius var(--dur-band) var(--ease-in-out);
 }
+.teachButton { border-color: var(--tail-teal); color: #0b6a64; }
 .teachButton[data-on="true"] { background: var(--tail-teal); color: var(--paper); }
 
-.teachBar {
-  width: min(720px, 100%);
+/* What rides along with the next question. */
+.attach { position: relative; }
+.attachMenu {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 5;
   display: grid;
-  gap: 2px;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-kid);
-  background: color-mix(in srgb, var(--tail-teal) 14%, white);
-  font-size: calc(var(--kid-text) * 0.8);
+  gap: 4px;
+  min-width: 230px;
+  padding: 6px;
+  border-radius: calc(var(--radius-kid) * 0.8);
+  background: var(--paper);
+  box-shadow: 0 10px 30px rgb(29 43 83 / 0.2);
+  transform-origin: bottom right;
 }
-.teachBar strong { font-family: var(--font-display), system-ui, sans-serif; font-size: calc(var(--kid-text) * 0.95); }
-.teachWhat { color: #0b6a64; font-weight: 700; font-size: var(--step--1); }
+.attachMenu button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: calc(var(--radius-kid) * 0.6);
+  background: none;
+  color: var(--ink);
+  font-size: calc(var(--kid-text) * 0.78);
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
+}
+.attached { display: grid; gap: var(--space-2); }
+.chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 6px;
+  border-radius: var(--radius-kid);
+  background: var(--paper);
+  font-size: calc(var(--kid-text) * 0.7);
+  font-weight: 700;
+  animation: appear var(--dur-pop) var(--ease-out);
+}
+.chip img { width: 52px; height: 52px; object-fit: cover; border-radius: calc(var(--radius-kid) * 0.6); }
+.chip > span:not(.chipIcon) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chipIcon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: calc(var(--radius-kid) * 0.6); background: color-mix(in srgb, var(--kite-red) 12%, white); color: var(--kite-red-deep); }
 
 .problem {
   margin: 0;
@@ -325,14 +563,14 @@
   font-size: calc(var(--kid-text) * 0.7);
 }
 
-/* Hold to talk: the kite's diamond in kite red, the biggest thing in the dock. */
+/* Hold to talk: the kite's diamond in kite red, the biggest control on the screen. */
 .talk { display: grid; justify-items: center; gap: var(--space-1); }
 .diamond {
   position: relative;
   display: grid;
   place-items: center;
-  width: calc(var(--target) * 1.9);
-  height: calc(var(--target) * 1.9);
+  width: calc(var(--target) * 2.3);
+  height: calc(var(--target) * 2.3);
   padding: 0;
   border: 0;
   background: none;
@@ -354,30 +592,26 @@
 }
 .diamondShape {
   background: var(--kite-red);
+  box-shadow: 0 6px 0 var(--kite-red-deep);
   transition: background-color var(--dur-pop) ease;
 }
 .diamond > svg, .clock, .diamond .dots { position: relative; }
-.diamond > svg { width: calc(var(--target) * 0.5); height: calc(var(--target) * 0.5); }
+.diamond > svg { width: calc(var(--target) * 0.55); height: calc(var(--target) * 0.55); }
 .diamond .dots { font-size: calc(var(--target) * 0.32); }
 .clock { font-weight: 700; font-size: calc(var(--kid-text) * 0.8); font-variant-numeric: tabular-nums; }
 /* Motion owns the shape's transform (a spring per band); CSS owns its color. */
 .diamond[data-look="listening"] .diamondShape { background: var(--kite-red-deep); }
 .diamond[data-look="thinking"] .diamondShape { background: color-mix(in srgb, var(--kite-red) 72%, var(--paper)); }
+/* While she talks, a ring follows her voice: Dock writes --level (0 to 1) from the mic each frame. */
 .diamond[data-look="listening"]::before {
   content: "";
   border: 3px solid var(--kite-red);
-  animation: ring 1.2s var(--ease-out) infinite;
-}
-@keyframes ring {
-  from { opacity: 0.8; transform: rotate(45deg) scale(1.1); }
-  to { opacity: 0; transform: rotate(45deg) scale(1.55); }
-}
-@keyframes ringStill {
-  from { opacity: 0.8; transform: rotate(45deg) scale(1.1); }
-  to { opacity: 0; transform: rotate(45deg) scale(1.1); }
+  opacity: calc(0.3 + var(--level, 0) * 0.7);
+  transform: rotate(45deg) scale(calc(1.12 + var(--level, 0) * 0.42));
+  transition: transform 90ms linear, opacity 90ms linear;
 }
 @media (prefers-reduced-motion: reduce) {
-  .diamond[data-look="listening"]::before { animation-name: ringStill; }
+  .diamond[data-look="listening"]::before { transform: rotate(45deg) scale(1.12); }
 }
 .talkLabel {
   font-size: calc(var(--kid-text) * 0.7);
@@ -386,47 +620,77 @@
   transition: font-size var(--dur-band) var(--ease-in-out);
 }
 
-/* Handheld: one-handed, with the camera and SOS. */
-.dock[data-device="handheld"] { gap: var(--space-2); }
-.dock[data-device="handheld"] .voiceRow { gap: var(--space-2); }
-.side {
+/* Past chats: a calm list by day, then one chat read back. */
+.past {
+  min-height: 0;
+  overflow-y: auto;
+  width: min(760px, 100%);
+  justify-self: center;
   display: grid;
-  justify-items: center;
-  gap: 2px;
-  min-height: var(--target);
-  padding: var(--space-2) var(--space-3);
-  border: 0;
-  border-radius: var(--radius-kid);
-  background: var(--paper);
-  font-size: calc(var(--kid-text) * 0.68);
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform var(--dur-press) var(--ease-out);
+  align-content: start;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-5) var(--space-7);
 }
-.dock[data-device="handheld"] .teachButton { display: grid; justify-items: center; gap: 2px; padding: var(--space-2) var(--space-3); font-size: calc(var(--kid-text) * 0.68); }
-.hidden { display: none; }
-.photo {
+.pastTitle { margin: 0; font-size: calc(var(--kid-text) * 1.3); text-wrap: balance; }
+.pastWhen { margin: 0; color: var(--ink-soft); font-size: calc(var(--kid-text) * 0.75); }
+.pastDay { display: grid; gap: var(--space-2); }
+.pastDay h3 { margin: 0; font-size: calc(var(--kid-text) * 0.75); color: var(--ink-soft); }
+.pastDay ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.pastChat {
+  width: 100%;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: var(--space-3);
-  padding: 6px 6px 6px 6px;
+  min-height: var(--target);
+  padding: calc(var(--target) * 0.18) calc(var(--target) * 0.3);
+  border: 0;
+  border-radius: calc(var(--radius-kid) * 0.7);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: calc(var(--kid-text) * 0.82);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-press) ease;
+}
+.pastTime { flex: none; color: var(--ink-soft); font-size: var(--step--1); font-weight: 400; }
+[data-band="k2"] .pastTime { display: none; }
+.transcript {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-5);
+  display: grid;
+  gap: var(--space-4);
   border-radius: var(--radius-kid);
   background: var(--paper);
-  font-size: calc(var(--kid-text) * 0.7);
-  font-weight: 700;
 }
-.photo img { width: 52px; height: 52px; object-fit: cover; border-radius: calc(var(--radius-kid) * 0.6); }
-.photo span { flex: 1; }
+.transcript li { display: grid; gap: 2px; }
+.transcript p { margin: 0; max-width: 38em; font-size: var(--kid-text); line-height: 1.5; }
+.transcript li[data-role="kid"] p { font-weight: 700; }
+.who { font-size: var(--step--1); font-weight: 700; color: var(--ink-soft); }
 
-.screen[data-device="handheld"] .top { padding-inline: var(--space-4); }
-.screen[data-device="handheld"] .cornerLeft { left: var(--space-3); flex-direction: column; align-items: flex-start; gap: 0; }
-.screen[data-device="handheld"] .cornerRight { right: var(--space-3); }
-.screen[data-device="handheld"] .remember { max-width: 7.5em; line-height: 1.25; padding-inline: 4px; }
-.screen[data-device="handheld"] .thread { padding-inline: var(--space-4); }
-.screen[data-device="handheld"] .bottom { padding-inline: var(--space-4); }
-.screen[data-device="handheld"] .diamond { width: min(calc(var(--target) * 2.1), 36vw); height: min(calc(var(--target) * 2.1), 36vw); }
-.dock[data-device="handheld"] .side, .dock[data-device="handheld"] .teachButton { min-width: 96px; }
-.screen[data-device="handheld"] .cheer { left: auto; right: var(--space-3); top: calc(var(--space-4) + var(--kite-size) * 1.2); }
+/* Handheld: one-handed. The diamond sits low in the thumb's reach, with the camera and Add beside it. */
+.screen[data-device="handheld"] .top { padding-inline: var(--space-3); gap: var(--space-2); }
+.screen[data-device="handheld"] .pill { padding-inline: var(--space-3); font-size: calc(var(--kid-text) * 0.62); }
+.screen[data-device="handheld"] .stage { padding-inline: var(--space-4); }
+.screen[data-device="handheld"] .bottom { padding: var(--space-2) var(--space-4) max(var(--space-4), 3dvh); }
+.screen[data-device="handheld"] .home { padding-inline: var(--space-4); align-content: start; }
+.screen[data-device="handheld"] .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.screen[data-device="handheld"] .talkTile { gap: var(--space-4); padding: var(--space-4); }
+.screen[data-device="handheld"] .past { padding-inline: var(--space-4); }
+.screen[data-device="handheld"] .diamond { width: min(calc(var(--target) * 2.2), 38vw); height: min(calc(var(--target) * 2.2), 38vw); }
+.screen[data-device="handheld"] .voiceRow { gap: var(--space-2); }
+.dock[data-device="handheld"] .side,
+.dock[data-device="handheld"] .beside .teachButton {
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 88px;
+  padding: var(--space-2) var(--space-3);
+  font-size: calc(var(--kid-text) * 0.66);
+}
+.dock[data-device="handheld"] .toggleRow .teachButton { min-height: 44px; font-size: calc(var(--kid-text) * 0.66); border-radius: 999px; }
 
 .sosWrap { display: grid; justify-items: center; gap: 2px; }
 .sos {
@@ -479,7 +743,7 @@
 .sosCheck { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--tail-teal); color: var(--paper); }
 .sos911 { max-width: 22em; font-weight: 700; }
 
-/* Teach Kite picker: rises out of the dock. */
+/* Teach Kite picker. */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -537,12 +801,16 @@
   transition: transform var(--dur-press) var(--ease-out), border-color var(--dur-press) ease;
 }
 
-.send:active:not(:disabled), .make:active:not(:disabled), .teachButton:active, .topic:active, .side:active, .quiet:active, .typeToggle:active {
+.send:active:not(:disabled), .make:active:not(:disabled), .teachButton:active, .topic:active, .side:active, .quiet:active,
+.typeToggle:active, .pill:active:not(:disabled), .backButton:active, .tile:active, .talkTile:active, .pastChat:active,
+.storyChoice:active, .bedtime:active {
   transform: scale(0.97);
 }
 @media (hover: hover) and (pointer: fine) {
-  .make:hover:not(:disabled), .side:hover, .iconButton:hover, .typeToggle:hover { background-color: var(--mist); }
+  .make:hover:not(:disabled), .side:hover, .iconButton:hover, .typeToggle:hover, .pill:hover:not(:disabled), .backButton:hover,
+  .attachMenu button:hover, .pastChat:hover, .tile:hover, .storyChoice:hover { background-color: var(--mist); }
   .send:hover:not(:disabled) { background-color: var(--kite-red-deep); }
+  .talkTile:hover { background-color: var(--kite-red-deep); }
   .teachButton:hover:not([data-on="true"]) { background-color: color-mix(in srgb, var(--tail-teal) 10%, white); }
   .topic:hover, .quiet:hover { border-color: var(--tail-teal); }
 }

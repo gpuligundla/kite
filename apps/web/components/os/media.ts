@@ -11,7 +11,7 @@ export interface Recording {
   stop(): void;
 }
 
-export function startRecording(maxMs: number): Recording {
+export function startRecording(maxMs: number, onLevel?: (level: number) => void): Recording {
   let stopped = false;
   let recorder: MediaRecorder | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -23,7 +23,11 @@ export function startRecording(maxMs: number): Recording {
     if (recorder?.state === "recording") recorder.stop();
   };
   const ready = navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-    const release = () => stream.getTracks().forEach((t) => t.stop());
+    const stopMeter = onLevel && !stopped ? meter(stream, onLevel) : () => {};
+    const release = () => {
+      stopMeter();
+      stream.getTracks().forEach((t) => t.stop());
+    };
     // A tap shorter than the permission prompt ends before the mic opens.
     if (stopped) {
       release();
@@ -48,12 +52,42 @@ export function startRecording(maxMs: number): Recording {
   return { ready, done, stop };
 }
 
+/** The mic's loudness from 0 to 1, once a frame, so the screen shows the kid is being heard. Returns the stop. */
+function meter(stream: MediaStream, onLevel: (level: number) => void): () => void {
+  const ctx = new AudioContext();
+  const analyser = ctx.createAnalyser();
+  analyser.fftSize = 512;
+  ctx.createMediaStreamSource(stream).connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+  let frame = 0;
+  const tick = () => {
+    analyser.getFloatTimeDomainData(samples);
+    let sum = 0;
+    for (const v of samples) sum += v * v;
+    // A speaking voice sits around 0.05-0.2 RMS; the factor spreads it across most of the range.
+    onLevel(Math.min(1, Math.sqrt(sum / samples.length) * 5));
+    frame = requestAnimationFrame(tick);
+  };
+  tick();
+  return () => {
+    cancelAnimationFrame(frame);
+    onLevel(0);
+    void ctx.close();
+  };
+}
+
+/** The sentence Kite is saying now. */
+export interface Saying {
+  readonly turn: string;
+  readonly index: number;
+}
+
 /**
- * Speaks this device's sentences in order, one clip at a time, and reports whether Kite is talking.
+ * Speaks this device's sentences in order, one clip at a time, and reports which one Kite is saying.
  * `hush` stops the current clip and drops the rest, so the mic never records Kite.
  */
-export function useVoice(brain: Brain, muted: boolean): { speaking: boolean; hush: () => void } {
-  const [speaking, setSpeaking] = useState(false);
+export function useVoice(brain: Brain, muted: boolean): { saying: Saying | null; hush: () => void } {
+  const [saying, setSaying] = useState<Saying | null>(null);
   const current = useRef<HTMLAudioElement | null>(null);
   const mutedRef = useRef(muted);
   mutedRef.current = muted;
@@ -67,7 +101,7 @@ export function useVoice(brain: Brain, muted: boolean): { speaking: boolean; hus
     let alive = true;
     const quiet = () => {
       setVoiceActive(false);
-      setSpeaking(false);
+      setSaying(null);
     };
     const pump = () => {
       if (!alive || current.current) return;
@@ -77,7 +111,7 @@ export function useVoice(brain: Brain, muted: boolean): { speaking: boolean; hus
       audio.muted = mutedRef.current;
       current.current = audio;
       setVoiceActive(true);
-      setSpeaking(true);
+      setSaying({ turn: clip.turn, index: clip.index });
       const ended = () => {
         if (current.current !== audio) return;
         current.current = null;
@@ -105,7 +139,17 @@ export function useVoice(brain: Brain, muted: boolean): { speaking: boolean; hus
     };
   }, [brain]);
 
-  return { speaking, hush: () => hush.current() };
+  return { saying, hush: () => hush.current() };
+}
+
+/** For a JSON route: outside a turn the brain client posts JSON only. */
+export function base64Of(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }
 
 /** Phone photos run 2-5 MB and a turn is capped at 900 KB, so a photo is redrawn at most 1024px on its long side. */

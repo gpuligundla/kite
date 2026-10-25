@@ -2,7 +2,7 @@
 
 import type { DeviceKind } from "@kite/client";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { SPRING, type Band } from "@/lib/band";
 import { playSound } from "@/lib/sound";
 import { Glyph } from "./Glyph";
@@ -23,28 +23,37 @@ export interface DockProps {
   band: Band;
   /** Teach Kite takes a long explanation: tap to start, tap to finish. Talking is hold to talk. */
   teaching: boolean;
-  /** Kite has the kid's question and hasn't started answering it. */
+  /** Kite has the kid's words and hasn't started answering. */
   thinking: boolean;
+  /** What holding the diamond does on this stage. */
+  holdLabel: string;
+  placeholder: string;
+  /** A photo rides along, so an empty message still asks "What's this?". */
+  hasPhoto: boolean;
   onSend: (text: string) => void;
   onAudio: (audio: Blob) => void;
-  /** Kite stops talking when the kid starts. */
-  onListen: () => void;
+  /** The mic opened (Kite stops talking) or closed. */
+  onMic: (on: boolean) => void;
   onProblem: (message: string) => void;
-  teachButton: ReactNode;
-  photo: string | null;
-  onPhoto: (file: File) => void;
-  onClearPhoto: () => void;
+  /** Beside the diamond, never bigger than it. */
+  left: ReactNode;
+  right: ReactNode;
+  /** Quiet controls next to "Type instead". */
+  extras?: ReactNode;
+  /** Thumbnails of what rides along with the next question. */
+  attached?: ReactNode;
 }
 
 /** Talking is the way in. Typing is a backup behind a toggle, remembered per device. */
-export function Dock({ device, band, teaching, thinking, onSend, onAudio, onListen, onProblem, teachButton, photo, onPhoto, onClearPhoto }: DockProps) {
+export function Dock(props: DockProps) {
+  const { device, band, teaching, thinking, holdLabel, placeholder, hasPhoto, onSend, onAudio, onMic, onProblem } = props;
   const [text, setText] = useState("");
   const [mic, setMic] = useState<Mic>({ phase: "idle" });
   const [now, setNow] = useState(0);
   const [typing, setTyping] = useState(false);
   const take = useRef<Recording | null>(null);
-  const cameraInput = useRef<HTMLInputElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
+  const diamondRef = useRef<HTMLButtonElement>(null);
   const focusBox = useRef(false);
   const remembered = `kite.dock.${device}`;
 
@@ -70,11 +79,18 @@ export function Dock({ device, band, teaching, thinking, onSend, onAudio, onList
     }
   };
 
+  const micOn = mic.phase !== "idle";
+  const onMicRef = useRef(onMic);
+  onMicRef.current = onMic;
+
   const start = () => {
     if (take.current) return;
-    onListen();
+    onMic(true); // first, so Kite is hushed before the listen sound
     playSound("listen");
-    const rec = startRecording(teaching ? TEACH_MAX_MS : HOLD_MAX_MS);
+    // The ring around the diamond follows her voice, without a render per frame.
+    const rec = startRecording(teaching ? TEACH_MAX_MS : HOLD_MAX_MS, (level) =>
+      diamondRef.current?.style.setProperty("--level", level.toFixed(2)),
+    );
     take.current = rec;
     let since = Date.now();
     let refused = false;
@@ -93,6 +109,7 @@ export function Dock({ device, band, teaching, thinking, onSend, onAudio, onList
       if (take.current !== rec) return; // dropped when the kid left Teach Kite
       take.current = null;
       setMic({ phase: "idle" });
+      onMic(false);
       if (refused) return;
       if (audio && (teaching || Date.now() - since >= MIN_HOLD_MS)) onAudio(audio);
       else if (!teaching) onProblem("Keep holding the diamond while you talk.");
@@ -132,53 +149,36 @@ export function Dock({ device, band, teaching, thinking, onSend, onAudio, onList
     return () => clearInterval(tick);
   }, [mic, teaching]);
 
-  // Leaving Teach Kite mid-explanation ends the take without sending it.
+  // Leaving the stage (Teach Kite, Home) mid-take ends it without sending it.
   useEffect(
     () => () => {
       const rec = take.current;
       take.current = null;
       rec?.stop();
       setMic({ phase: "idle" });
+      if (rec) onMicRef.current(false);
     },
     [teaching],
   );
 
   const send = () => {
-    const said = text.trim() || (photo ? "What's this?" : "");
+    const said = text.trim() || (hasPhoto ? "What's this?" : "");
     if (!said) return;
     playSound("send");
     onSend(said);
     setText("");
   };
 
-  const look: Look = mic.phase !== "idle" ? "listening" : thinking ? "thinking" : "ready";
+  const look: Look = micOn ? "listening" : thinking ? "thinking" : "ready";
   const elapsed = mic.phase === "on" ? Math.max(0, Math.floor((now - mic.since) / 1000)) : 0;
   const clock = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}`;
   const action = teaching
     ? look === "listening" ? "Tap when you're done" : "Tap to start teaching"
-    : look === "listening" ? "Listening…" : "Hold to talk";
-  const diamond = (
-    <Diamond band={band} look={look} teaching={teaching} action={action} label={look === "thinking" ? "Kite is thinking…" : action}
-      clock={teaching && look === "listening" ? clock : undefined} start={start} stop={stop} toggle={toggle} />
-  );
-  const typeToggle = (
-    <button type="button" className={s.typeToggle} data-on={typing} onClick={() => chooseTyping(!typing)}>
-      <Glyph name={typing ? "mic" : "keyboard"} size={20} />
-      {typing ? "Talk instead" : "Type instead"}
-    </button>
-  );
+    : look === "listening" ? "Listening…" : holdLabel;
 
   return (
     <div className={s.dock} data-device={device}>
-      {photo && (
-        <div className={s.photo}>
-          <img src={photo} alt="Your photo, sent with your next question" />
-          <span>{typing ? "Kite will look at this" : "Hold the diamond and ask about it"}</span>
-          <button type="button" className={s.iconButton} onClick={onClearPhoto} aria-label="Remove the photo">
-            <Glyph name="close" size={18} />
-          </button>
-        </div>
-      )}
+      {props.attached}
       {typing && (
         <form
           className={s.typeBox}
@@ -198,52 +198,44 @@ export function Dock({ device, band, teaching, thinking, onSend, onAudio, onList
                 send();
               }
             }}
-            placeholder={teaching ? "Type what you know" : "Type a question"}
-            aria-label={teaching ? "Type what you know" : "Type a question for Kite"}
+            placeholder={placeholder}
+            aria-label={placeholder}
           />
-          <button type="submit" className={s.send} disabled={!text.trim() && !photo}>
+          <button type="submit" className={s.send} disabled={!text.trim() && !hasPhoto}>
             Send
           </button>
         </form>
       )}
-      {device === "os" ? (
-        <div className={s.voiceRow}>
-          {teachButton}
-          {diamond}
-          {typeToggle}
-        </div>
-      ) : (
-        <>
-          <div className={s.voiceRow}>
-            <button type="button" className={s.side} onClick={() => cameraInput.current?.click()}>
-              <Glyph name="camera" size={26} />
-              What&apos;s this?
-            </button>
-            <input
-              ref={cameraInput}
-              className={s.hidden}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) onPhoto(file);
-                e.target.value = "";
-              }}
-            />
-            {diamond}
-            {teachButton}
-          </div>
-          <div className={s.toggleRow}>{typeToggle}</div>
-        </>
-      )}
+      <div className={s.voiceRow}>
+        <div className={s.beside}>{props.left}</div>
+        <Diamond
+          band={band}
+          look={look}
+          teaching={teaching}
+          action={action}
+          label={look === "thinking" ? "Kite is thinking…" : action}
+          clock={teaching && look === "listening" ? clock : undefined}
+          button={diamondRef}
+          start={start}
+          stop={stop}
+          toggle={toggle}
+        />
+        <div className={s.beside}>{props.right}</div>
+      </div>
+      <div className={s.toggleRow}>
+        {props.extras}
+        <button type="button" className={s.typeToggle} data-on={typing} onClick={() => chooseTyping(!typing)}>
+          <Glyph name={typing ? "mic" : "keyboard"} size={20} />
+          {typing ? "Talk instead" : "Type instead"}
+        </button>
+      </div>
     </div>
   );
 }
 
-function Diamond({ band, look, teaching, action, label, clock, start, stop, toggle }: {
+function Diamond({ band, look, teaching, action, label, clock, button, start, stop, toggle }: {
   band: Band; look: Look; teaching: boolean; action: string; label: string; clock?: string;
-  start: () => void; stop: () => void; toggle: () => void;
+  button: RefObject<HTMLButtonElement | null>; start: () => void; stop: () => void; toggle: () => void;
 }) {
   const reduce = useReducedMotion();
   const hold = teaching
@@ -265,6 +257,7 @@ function Diamond({ band, look, teaching, action, label, clock, start, stop, togg
   return (
     <div className={s.talk}>
       <button
+        ref={button}
         type="button"
         className={s.diamond}
         data-look={look}

@@ -80,7 +80,9 @@ try {
 
   let first;
   await step("a grade-2 question gets a spoken answer with a reading level", async () => {
+    // /os opens on the home tiles, greeting her by name; talking is the big tile.
     await kid.getByText(/Maya/).first().waitFor({ timeout: 15_000 });
+    await kid.getByRole("button", { name: /Talk with Kite/ }).click();
     first = await ask(2, "why is the sky blue?");
     assert.equal(await kid.locator("main").getAttribute("data-band"), "k2");
   });
@@ -108,9 +110,17 @@ try {
   });
 
   await step("make it a movie: the player is ready within 45 s", async () => {
-    // The chip under the latest answer says what she would ("Make that into a movie"); the movie shows under that turn.
-    const asked = await newTurn(() => spoken.getByRole("button", { name: "Make it a movie" }).click());
-    await asked.locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
+    // The chip on the answer card says what she would ("Make that into a movie"); the movie rises in a sheet over the
+    // stage until she closes it.
+    await newTurn(() => spoken.getByRole("button", { name: "Make it a movie" }).click());
+    await kid.locator("[data-creation]").getByText("Watch to the end").waitFor({ timeout: 45_000 });
+    // Close the sheet so the stage is clear for Teach Kite. Kite can have started a second creation on its own, so
+    // close what's open, letting each sheet finish leaving before counting again.
+    const close = kid.getByRole("button", { name: "Close", exact: true });
+    for (let i = 0; i < 3 && (await close.count()) > 0; i++) {
+      await close.first().click();
+      await kid.waitForTimeout(800);
+    }
   });
 
   await step("Teach Kite listens and thanks her, with no grade shown", async () => {
