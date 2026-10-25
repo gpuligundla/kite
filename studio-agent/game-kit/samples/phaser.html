@@ -16,8 +16,8 @@ class Play extends Phaser.Scene {
     this.load.image("dot", kite.svg('<circle cx="32" cy="32" r="30" fill="#fff"/>', 16));
   }
   create() {
-    this.title = this.add.text(480, 60, kite.say("Is it daytime?"), { fontSize: "36px", color: "#fff" }).setOrigin(0.5);
-    this.sun = this.add.image(480, 300, "sun");
+    this.title = this.add.text(kite.W / 2, 80, kite.say("Is it daytime?"), { fontSize: "48px", color: "#fff" }).setOrigin(0.5);
+    this.sun = this.add.image(kite.W / 2, kite.H / 2, "sun");
     this.burst = this.add.particles(0, 0, "dot", { speed: 200, lifespan: 600, scale: { start: 0.8, end: 0 }, emitting: false });
     this.input.keyboard.on("keydown-RIGHT", () => this.answer(ROUNDS[round]));
     this.input.keyboard.on("keydown-LEFT", () => this.answer(!ROUNDS[round]));
@@ -36,10 +36,7 @@ class Play extends Phaser.Scene {
   }
 }
 
-const game = new Phaser.Game({
-  type: Phaser.AUTO, width: 960, height: 600, backgroundColor: "#0d1b3a", banner: false,
-  audio: { noAudio: true }, loader: { imageLoadType: "HTMLImageElement" }, scene: Play,
-});
+const game = new Phaser.Game(kite.phaser({ backgroundColor: "#0d1b3a", scene: Play }));
 window.kiteTest = { solve() { const s = game.scene.getScene("default"); while (!done) s.answer(ROUNDS[round]); } };
 </script>
 </body>

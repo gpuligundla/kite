@@ -2,13 +2,15 @@
 // the brain's policy. Usage: node playtest.mjs [game.html]   Writes dist/game.html and shots/*.png
 // next to the source, prints a JSON verdict {passed, errors, out, shots} and exits 1 on failure.
 // Error codes, so the agent can fix the right thing: KIT_FORGED, TOO_BIG, GAME_ERROR, NO_READY,
-// NO_CANVAS, CANVAS_FROZEN, NOT_FINISHABLE, NETWORK.
+// NO_CANVAS, LOW_RES, NOT_FIT, CANVAS_FROZEN, NOT_FINISHABLE, NETWORK.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { chromium } from "playwright";
 
 const KIT = import.meta.dirname;
 const RUN_MS = 5000;
+// The Kite OS shows games on HiDPI laptops, so the play-test runs at 2 device pixels per CSS pixel.
+const VIEW = { viewport: { width: 960, height: 600 }, deviceScaleFactor: 2 };
 const SOLVE_MS = 30000;
 const MAX_BYTES = 2_500_000;
 const PAGE = "https://kite.test/game.html";
@@ -56,7 +58,7 @@ setTimeout(() => {
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 
 async function open() {
-  const page = await browser.newPage({ viewport: { width: 960, height: 600 } });
+  const page = await browser.newPage(VIEW);
   await page.route("**/*", (route) => {
     if (route.request().url() === PAGE) return route.fulfill({ contentType: "text/html", body: html, headers: { "Content-Security-Policy": CSP } });
     fail("NETWORK", route.request().url());
@@ -87,6 +89,17 @@ const canvas = page.locator("canvas").first();
 if ((await canvas.count()) === 0) {
   fail("NO_CANVAS", "no <canvas> on the page");
 } else {
+  // Every pixel on screen needs its own pixel in the canvas, or the browser stretches it and the game looks soft.
+  const fit = await canvas.evaluate((c) => {
+    const r = c.getBoundingClientRect();
+    return { w: c.width, h: c.height, cw: r.width, ch: r.height, x: r.x, y: r.y, dpr: devicePixelRatio, vw: innerWidth, vh: innerHeight };
+  });
+  const need = (css) => Math.floor(css * fit.dpr) - 1;
+  if (fit.w < need(fit.cw) || fit.h < need(fit.ch))
+    fail("LOW_RES", `canvas is ${fit.w}x${fit.h} pixels but shows at ${fit.cw}x${fit.ch} CSS px at devicePixelRatio ${fit.dpr}; build the game with kite.phaser(...) or kite.kaplay(...)`);
+  const inside = fit.x >= -1 && fit.y >= -1 && fit.x + fit.cw <= fit.vw + 1 && fit.y + fit.ch <= fit.vh + 1;
+  if (!inside || (fit.cw < fit.vw - 2 && fit.ch < fit.vh - 2))
+    fail("NOT_FIT", `canvas shows at ${fit.cw}x${fit.ch} CSS px in a ${fit.vw}x${fit.vh} page; it must fill the page's width or height without spilling, as kite.phaser(...) and kite.kaplay(...) do`);
   const before = await canvas.screenshot();
   const box = await canvas.boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);

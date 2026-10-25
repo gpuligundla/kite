@@ -7,7 +7,22 @@
     if (window.parent !== window) window.parent.postMessage(msg, "*");
   }
 
+  // Esc pressed inside the game never reaches the Kite OS page, so pass it up: it leaves full screen.
+  window.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && window.parent !== window) window.parent.postMessage({ type: "kite.escape" }, "*");
+  }, true);
+
   var sounds = {};
+
+  // The game's own coordinates. The page fits the canvas to whatever size the Kite OS shows it at,
+  // and the canvas holds a device pixel for every pixel on screen, up to full screen on this display.
+  var W = 1280, H = 800;
+  var ratio = Math.min(3, (window.devicePixelRatio || 1) * Math.max(1, Math.min(screen.width / W, screen.height / H)));
+  function fillPage() {
+    var s = "margin:0;width:100%;height:100%;overflow:hidden";
+    document.documentElement.style.cssText += ";" + s;
+    document.body.style.cssText += ";" + s;
+  }
 
   // Simple flat shapes as inert data: URLs. Any script inside an SVG image never runs.
   var SHAPES = {
@@ -29,6 +44,44 @@
   };
 
   window.kite = {
+    W: W,
+    H: H,
+    ratio: ratio,
+
+    // new Phaser.Game(kite.phaser({ scene: Play, backgroundColor: "#0b1020" })). Phaser 3 has no
+    // HiDPI mode, so the canvas is W x H times kite.ratio and every scene's camera zooms by kite.ratio:
+    // the game still draws in W x H coordinates. Text gets the same resolution unless it sets its own.
+    phaser: function (config) {
+      var P = window.Phaser;
+      var cameras = P.Cameras.Scene2D.CameraManager.prototype;
+      var start = cameras.start;
+      cameras.start = function () {
+        start.call(this);
+        this.main.setZoom(ratio).centerOn(W / 2, H / 2);
+      };
+      var factory = P.GameObjects.GameObjectFactory.prototype;
+      var text = factory.text;
+      factory.text = function (x, y, words, style) {
+        return text.call(this, x, y, words, Object.assign({ resolution: ratio }, style));
+      };
+      fillPage();
+      var physics = config.physics || {};
+      return Object.assign({ type: P.AUTO, banner: false }, config, {
+        width: W * ratio,
+        height: H * ratio,
+        scale: { mode: P.Scale.FIT, autoCenter: P.Scale.CENTER_BOTH },
+        audio: { noAudio: true },
+        loader: { imageLoadType: "HTMLImageElement" },
+        physics: Object.assign({}, physics, { arcade: Object.assign({ width: W, height: H }, physics.arcade) }),
+      });
+    },
+
+    // kaplay(kite.kaplay({ background: [16, 24, 48] })): W x H, letterboxed, at kite.ratio.
+    kaplay: function (opt) {
+      fillPage();
+      return Object.assign({ global: false }, opt, { width: W, height: H, letterbox: true, pixelDensity: ratio, texFilter: "linear" });
+    },
+
     ready: function () { post({ type: "kite.ready" }); },
 
     // One of kite.sounds. Silent where there are none, as in the play-test.

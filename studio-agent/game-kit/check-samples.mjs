@@ -6,9 +6,14 @@ import { resolve } from "node:path";
 const dir = resolve(import.meta.dirname, "samples");
 const read = (name) => readFileSync(resolve(dir, `${name}.html`), "utf8");
 const good = read("good");
+const phaser = read("phaser");
+const KIT_PHASER = 'kite.phaser({ backgroundColor: "#0d1b3a", scene: Play })';
+const KIT_KAPLAY = "kite.kaplay({ background: [16, 24, 48] })";
 const CASES = {
   good: [good, null],
-  phaser: [read("phaser"), null],
+  phaser: [phaser, null],
+  "low-res": [phaser.replace(KIT_PHASER, '{ type: Phaser.AUTO, width: 1280, height: 800, scale: { mode: Phaser.Scale.FIT }, audio: { noAudio: true }, scene: Play }'), "LOW_RES"],
+  "not-fit": [good.replace(KIT_KAPLAY, "{ width: 480, height: 300, pixelDensity: 2, global: false }"), "NOT_FIT"],
   throws: [read("throws"), "GAME_ERROR"],
   "no-ready": [read("no-ready"), "NO_READY"],
   frozen: [read("frozen"), "CANVAS_FROZEN"],
