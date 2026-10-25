@@ -18,6 +18,11 @@
     if (window.parent !== window) window.parent.postMessage(msg, "*");
   }
 
+  // Esc pressed inside the movie never reaches the Kite OS page, so pass it up: it leaves full screen.
+  window.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && window.parent !== window) window.parent.postMessage({ type: "kite.escape" }, "*");
+  }, true);
+
   function band(grade) {
     return grade <= 2 ? "K-2" : grade <= 5 ? "3-5" : grade <= 8 ? "6-8" : "9-12";
   }
