@@ -5,7 +5,9 @@ SCHEMA = Path(__file__).with_name("schema.sql")
 
 
 def connect(path: str) -> sqlite3.Connection:
-    # check_same_thread=False: FastAPI runs sync handlers on a thread pool.
+    # One connection, used only from the event loop: every handler and dependency that touches it is async,
+    # so FastAPI never runs two of them on pool threads at once. check_same_thread=False only lets tests and
+    # startup create it on another thread.
     conn = sqlite3.connect(path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")

@@ -53,7 +53,7 @@ def require(*kinds: DeviceKind):
     """Dependency for every endpoint. 401: no or unknown token. 403: wrong kind, or a
     kid_id in the path that isn't this device's kid. 429: over the rate limit."""
 
-    def dependency(request: Request) -> Device:
+    async def dependency(request: Request) -> Device:
         token = _token(request)
         device = lookup(request.app.state.conn, token) if token else None
         if device is None:

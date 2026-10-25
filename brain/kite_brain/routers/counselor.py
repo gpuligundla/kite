@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/counselor/alerts")
-def get_alerts(request: Request, device: Device = require("counselor")) -> list[CounselorAlertView]:
+async def get_alerts(request: Request, device: Device = require("counselor")) -> list[CounselorAlertView]:
     """Counselor-routed alerts for the kid this device is bound to, newest first, with their
     excerpts. Every excerpt returned is recorded as a receipt."""
     deps, kid_id = request.app.state.deps, device.kid_id

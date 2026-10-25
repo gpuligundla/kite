@@ -56,7 +56,7 @@ async def teach_start(kid_id: str, body: TeachStart, request: Request) -> dict[s
 
 
 @router.get("/kids/{kid_id}/teachable", dependencies=[require("os", "handheld")])
-def teachable(kid_id: str, request: Request) -> list[Teachable]:
+async def teachable(kid_id: str, request: Request) -> list[Teachable]:
     """Concepts she has met, most recent first, in kid words. Never levels."""
     deps = request.app.state.deps
     grade = deps.conn.execute("SELECT grade FROM kid WHERE id = ?", (kid_id,)).fetchone()["grade"]
@@ -67,13 +67,13 @@ def teachable(kid_id: str, request: Request) -> list[Teachable]:
 
 
 @router.get("/kids/{kid_id}/kid-view", dependencies=[require("os", "handheld")])
-def kid_view(kid_id: str, request: Request) -> KidView:
+async def kid_view(kid_id: str, request: Request) -> KidView:
     """What Kite remembers, as the kid may see it. Never levels or scores."""
     return remembered(request.app.state.deps, kid_id)
 
 
 @router.get("/kids/{kid_id}/me", dependencies=[require("os", "handheld")])
-def me(kid_id: str, request: Request) -> Me:
+async def me(kid_id: str, request: Request) -> Me:
     """The kid's name and grade, so their screen can greet them and match its look to their age."""
     row = request.app.state.deps.conn.execute("SELECT display_name, grade FROM kid WHERE id = ?", (kid_id,)).fetchone()
     return Me(name=row["display_name"], grade=row["grade"])

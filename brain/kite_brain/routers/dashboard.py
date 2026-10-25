@@ -13,7 +13,7 @@ class PolicyBody(BaseModel):
 
 
 @router.get("/kids/{kid_id}/dashboard", dependencies=[require("parent")])
-def get_dashboard(kid_id: str, request: Request, grade: Grade | None = Query(None)) -> DashboardView:
+async def get_dashboard(kid_id: str, request: Request, grade: Grade | None = Query(None)) -> DashboardView:
     deps = request.app.state.deps
     if grade is None:
         grade = dashboard.kid_row(deps, kid_id)["grade"]
@@ -22,7 +22,7 @@ def get_dashboard(kid_id: str, request: Request, grade: Grade | None = Query(Non
 
 
 @router.put("/families/{family_id}/policy/{topic}")
-def put_policy(
+async def put_policy(
     family_id: str, topic: str, body: PolicyBody, request: Request, device: Device = require("parent")
 ) -> dict[str, str]:
     deps = request.app.state.deps
@@ -36,13 +36,13 @@ def put_policy(
 
 
 @router.get("/kids/{kid_id}/contacts", dependencies=[require("parent")])
-def get_contacts(kid_id: str, request: Request) -> list[dashboard.ContactView]:
+async def get_contacts(kid_id: str, request: Request) -> list[dashboard.ContactView]:
     deps = request.app.state.deps
     dashboard.receipt(deps, kid_id, "contacts")
     return dashboard.contacts(deps, kid_id)
 
 
 @router.get("/kids/{kid_id}/movies", dependencies=[require("parent")])
-def get_movies(kid_id: str, request: Request) -> list[Creation]:
+async def get_movies(kid_id: str, request: Request) -> list[Creation]:
     dashboard.receipt(request.app.state.deps, kid_id, "movies")
     return dashboard.movies()
