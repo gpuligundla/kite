@@ -19,8 +19,9 @@ const dataUrl = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(s
 /** The sprite for a slug: the caller's art (a URL or raw <svg> markup) first, then a flat generated badge. */
 export function resolveSprite(slug: string, sprites: Record<string, string> = {}): string {
   const art = sprites[slug];
-  // KAPLAY rasterizes an SVG at its own width and height, and the brain's art is 32 px, so draw it at 128.
-  if (art?.trimStart().startsWith("<svg")) return dataUrl(art.replace(/<svg([^>]*?)\swidth="\d+"\s+height="\d+"/, '<svg$1 width="128" height="128"'));
+  // KAPLAY rasterizes an SVG at its own width and height, and the brain's art is 32 px, so draw it at 256:
+  // enough for a 96 px sprite at full screen on a HiDPI display.
+  if (art?.trimStart().startsWith("<svg")) return dataUrl(art.replace(/<svg([^>]*?)\swidth="\d+"\s+height="\d+"/, '<svg$1 width="256" height="256"'));
   if (art) return art;
   let hash = 0;
   for (const ch of slug) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
@@ -29,6 +30,6 @@ export function resolveSprite(slug: string, sprites: Record<string, string> = {}
   const initial = SHAPES[slug]
     ? ""
     : `<text x="32" y="43" font-size="30" font-family="Arial" font-weight="700" text-anchor="middle" fill="#fff">${slug[0]?.toUpperCase() ?? ""}</text>`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="128" height="128"><g fill="${color}">${shape}</g>${initial}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="256" height="256"><g fill="${color}">${shape}</g>${initial}</svg>`;
   return dataUrl(svg);
 }

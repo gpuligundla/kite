@@ -8,25 +8,24 @@ import styles from "./creations.module.css";
 type Ask = "idle" | "asking" | "asked" | "failed";
 
 /** A template game on a KAPLAY canvas, with the way to ask Kite for a brand-new one under it. */
-export default function GameStage({ brain, data, celebrate }: StageProps) {
+export default function GameStage({ brain, data, celebrate, take }: StageProps) {
   const spec = data.game!;
   const box = useRef<HTMLDivElement>(null);
-  const [round, setRound] = useState(0);
-  const [finished, setFinished] = useState(false);
   const [ask, setAsk] = useState<Ask>("idle");
   const latest = useRef({ brain, celebrate });
   latest.current = { brain, celebrate };
 
   useEffect(() => {
-    // A fresh canvas per mount: KAPLAY can't boot twice on one, and dev mode mounts effects twice.
+    // A fresh canvas per mount and per "Play again": KAPLAY can't boot twice on one, and dev mode mounts effects twice.
+    // KAPLAY sizes it to the box at the screen's pixel density.
+    const el = box.current!;
     const canvas = document.createElement("canvas");
-    canvas.width = 960;
-    canvas.height = 600;
-    canvas.tabIndex = 0;
     canvas.setAttribute("aria-label", spec.title);
-    box.current!.append(canvas);
+    el.append(canvas);
+    // KAPLAY keeps Tab for itself; let Tab move focus out of the game instead.
+    const tab = (e: KeyboardEvent) => e.key === "Tab" && e.stopPropagation();
+    el.addEventListener("keydown", tab, true);
     const onFinish = (r: GameResult) => {
-      setFinished(true);
       latest.current.celebrate();
       latest.current.brain.post(`/creations/${data.id}/result`, r).catch(() => {}); // learning evidence only; the kid's game is done either way
     };
@@ -34,8 +33,9 @@ export default function GameStage({ brain, data, celebrate }: StageProps) {
     return () => {
       stop();
       canvas.remove();
+      el.removeEventListener("keydown", tab, true);
     };
-  }, [data, spec, round]);
+  }, [data, spec, take]);
 
   async function buildNew() {
     setAsk("asking");
@@ -51,18 +51,6 @@ export default function GameStage({ brain, data, celebrate }: StageProps) {
     <>
       <div ref={box} className={styles.gameBox} />
       <div className={styles.actions}>
-        {finished && (
-          <button
-            type="button"
-            className={styles.action}
-            onClick={() => {
-              setFinished(false);
-              setRound((n) => n + 1);
-            }}
-          >
-            Play again
-          </button>
-        )}
         {ask === "asked" ? (
           <p className={styles.sub} role="status">
             Kite is building it. Your brand-new game will show up here when it's ready.

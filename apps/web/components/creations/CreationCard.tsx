@@ -4,10 +4,11 @@ import type { Brain } from "@kite/client";
 import type { Creation } from "@kite/movie";
 import { MotionConfig, motion } from "motion/react";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { SPRING, type Band } from "@/lib/band";
 import type { CreationEntry } from "@/lib/creations";
 import { playSound } from "@/lib/sound";
+import { CheckCard, type Answer } from "./Check";
 import { Making, Resting } from "./Making";
 import { SandboxFrame } from "./SandboxFrame";
 import styles from "./creations.module.css";
@@ -19,10 +20,20 @@ export interface CreationCardProps {
 
 /** GET /creations/{id}: the creation plus slug-to-SVG sprites, passed to the players as they are. */
 export type Loaded = Creation & { sprites: Record<string, string> };
+/** What the card hands every player. */
 export interface StageProps {
   brain: Brain;
   data: Loaded;
+  /** A finished game cheers, with the burst. */
   celebrate: () => void;
+  /** Goes up by one each "Play again": the player starts over from the top. */
+  take: number;
+  /** A movie reached its end, so the card lays its check question over it. */
+  onEnd: () => void;
+  /** Esc pressed inside a page, where the card can't hear it: leave full screen. */
+  onEscape: () => void;
+  /** Drawn over the picture, inside the player's box. */
+  overlay: ReactNode;
 }
 
 // Remotion and KAPLAY touch the browser at import.
@@ -35,6 +46,7 @@ type Stage =
   | { show: "frame" | "movie" | "game"; data: Loaded }
   | { show: "later"; kind: Creation["kind"] }
   | { show: "error" };
+type Playing = Extract<Stage, { data: Loaded }>;
 
 function stageOf(creation: CreationEntry, data: Loaded | "error" | undefined): Stage {
   if (creation.status === "making" || data === undefined) return { show: "making" };
@@ -54,7 +66,6 @@ export function CreationCard({ brain, creation }: CreationCardProps) {
   const root = useRef<HTMLElement>(null);
   const band = useBand(root);
   const [data, setData] = useState<Loaded | "error">();
-  const [burst, setBurst] = useState(0);
   const [fresh, setFresh] = useState(false);
   const makingSince = useRef<number | null>(null);
   const stage = stageOf(creation, data);
@@ -82,15 +93,10 @@ export function CreationCard({ brain, creation }: CreationCardProps) {
     makingSince.current = null;
   }, [ready]);
 
-  const playable = stage.show === "movie" || stage.show === "game" || stage.show === "frame";
+  const playable = "data" in stage;
   useEffect(() => {
     if (fresh && playable) playSound("ready");
   }, [fresh, playable]);
-
-  const celebrate = useCallback(() => {
-    playSound("cheer");
-    setBurst((n) => n + 1);
-  }, []);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -105,10 +111,9 @@ export function CreationCard({ brain, creation }: CreationCardProps) {
             animate={{ opacity: 1, transform: "scale(1)" }}
             transition={SPRING[band]}
           >
-            <StageView stage={stage} brain={brain} celebrate={celebrate} retry={() => setData(undefined)} />
+            {"data" in stage ? <Player stage={stage} brain={brain} /> : <NothingToPlay stage={stage} retry={() => setData(undefined)} />}
           </motion.div>
         )}
-        {burst > 0 && <Burst key={burst} />}
       </article>
     </MotionConfig>
   );
@@ -117,53 +122,157 @@ export function CreationCard({ brain, creation }: CreationCardProps) {
 /** While a ready creation loads, the kite waits at the top of its sky. */
 const done = (p: CreationEntry["progress"]) => ({ step: p?.total ?? 1, total: p?.total ?? 1 });
 
-function StageView({ stage, brain, celebrate, retry }: { stage: Exclude<Stage, { show: "making" }>; brain: Brain; celebrate: () => void; retry: () => void }) {
-  switch (stage.show) {
-    case "movie":
-      return (
-        <>
-          <h3 className={styles.title}>{stage.data.storyboard!.title}</h3>
-          <MovieStage brain={brain} data={stage.data} celebrate={celebrate} />
-        </>
-      );
-    case "game":
-      return (
-        <>
-          <h3 className={styles.title}>{stage.data.game!.title}</h3>
-          <GameStage brain={brain} data={stage.data} celebrate={celebrate} />
-        </>
-      );
-    case "frame": {
-      const movie = stage.data.kind === "movie";
-      return (
-        <>
-          <header className={styles.heading}>
-            <h3 className={styles.title}>{movie ? (stage.data.storyboard?.title ?? "Your movie") : "Your brand-new game"}</h3>
-            <p className={styles.sub}>{movie ? "Kite's special version" : "Kite built this one just for you."}</p>
-          </header>
-          <SandboxFrame brain={brain} data={stage.data} celebrate={celebrate} />
-        </>
-      );
+/** In the card, full screen over the whole page, or closed down to its title. */
+type View = "card" | "full" | "closed";
+
+function heading(stage: Playing): { title: string; sub?: string } {
+  const { data } = stage;
+  if (stage.show === "movie") return { title: data.storyboard!.title };
+  if (stage.show === "game") return { title: data.game!.title };
+  return data.kind === "movie"
+    ? { title: data.storyboard?.title ?? "Your movie", sub: "Kite's special version" }
+    : { title: "Your brand-new game", sub: "Kite built this one just for you." };
+}
+
+/**
+ * The same controls on every movie and game, whatever made it: full screen, play again, close. The player sits in a
+ * <dialog> that never moves in the page, so a game or movie keeps running as it goes full screen and back; showModal()
+ * lifts it above the page, makes the rest inert, and Esc brings it back.
+ */
+function Player({ stage, brain }: { stage: Playing; brain: Brain }) {
+  const { data } = stage;
+  const movie = data.kind === "movie";
+  const check = movie ? data.storyboard?.check : undefined;
+  const { title, sub } = heading(stage);
+  const shell = useRef<HTMLDialogElement>(null);
+  const [view, setView] = useState<View>("card");
+  const [take, setTake] = useState(0);
+  const [atEnd, setAtEnd] = useState(false);
+  const [answer, setAnswer] = useState<Answer>({});
+  const [burst, setBurst] = useState(0);
+
+  const celebrate = useCallback(() => {
+    playSound("cheer");
+    setBurst((n) => n + 1);
+  }, []);
+  const onEnd = useCallback(() => setAtEnd(true), []);
+  const onEscape = useCallback(() => setView((v) => (v === "full" ? "card" : v)), []);
+  const again = () => {
+    setAtEnd(false);
+    setTake((n) => n + 1);
+  };
+  const close = () => setView(view === "full" ? "card" : "closed");
+
+  useLayoutEffect(() => {
+    const d = shell.current;
+    if (!d || (view === "full") === d.matches(":modal")) return;
+    d.close();
+    if (view === "full") {
+      d.showModal();
+      // The game takes the keys straight away; a movie leaves focus on the dialog.
+      (d.querySelector<HTMLElement>("iframe, canvas") ?? d).focus();
+    } else {
+      // ponytail: the open attribute shows it in place again; show() would also move focus into it.
+      d.setAttribute("open", "");
     }
-    case "later":
-      // A movie with nothing to play is a director's cut that didn't finish; its template movie is already on
-      // screen, so the card just goes away. (A template movie that fails still plays the cached fallback.)
-      if (stage.kind === "movie") return null;
-      return (
-        <Resting
-          title={`Kite couldn't finish this ${stage.kind}`}
-          lines={["It'll try again another time.", stage.kind === "game" ? "Your other game is still here to play." : "Ask Kite for a movie any time."]}
-        />
-      );
-    case "error":
-      return (
-        <Resting title="Kite couldn't open this one" lines={["Check the connection, then try again."]}>
-          <button type="button" className={styles.action} onClick={retry}>
-            Try again
-          </button>
-        </Resting>
-      );
-  }
+  }, [view]);
+
+  if (view === "closed")
+    return (
+      <header className={styles.bar}>
+        <h3 className={styles.title}>{title}</h3>
+        <Control icon="open" onClick={() => setView("card")}>
+          Open
+        </Control>
+      </header>
+    );
+
+  const props: StageProps = {
+    brain,
+    data,
+    celebrate,
+    take,
+    onEnd,
+    onEscape,
+    overlay:
+      check && atEnd ? (
+        <CheckCard brain={brain} id={data.id} check={check} voice={data.audio.check} answer={answer} setAnswer={setAnswer} celebrate={celebrate} again={again} close={close} />
+      ) : null,
+  };
+  return (
+    <dialog
+      ref={shell}
+      open
+      tabIndex={-1}
+      className={styles.shell}
+      aria-label={title}
+      onCancel={(e) => {
+        e.preventDefault();
+        setView("card");
+      }}
+    >
+      <header className={styles.bar}>
+        <div className={styles.heading}>
+          <h3 className={styles.title}>{title}</h3>
+          {sub && <p className={styles.sub}>{sub}</p>}
+        </div>
+        <div className={styles.controls}>
+          <Control
+            icon="full"
+            hidden={view === "full"}
+            onClick={() => {
+              playSound("whoosh");
+              setView("full");
+            }}
+          >
+            Full screen
+          </Control>
+          <Control icon="again" onClick={again}>
+            {movie ? "Watch again" : "Play again"}
+          </Control>
+          <Control icon="close" onClick={close}>
+            Close
+          </Control>
+        </div>
+      </header>
+      {stage.show === "movie" ? <MovieStage {...props} /> : stage.show === "game" ? <GameStage {...props} /> : <SandboxFrame {...props} />}
+      {check && !atEnd && !answer.reply && <p className={styles.sub}>Watch to the end. Kite has a question for you.</p>}
+      {burst > 0 && <Burst key={burst} />}
+    </dialog>
+  );
+}
+
+const ICONS = {
+  full: "M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5",
+  again: "M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5",
+  close: "M6 6l12 12M18 6L6 18",
+  open: "M6 9l6 6 6-6",
+};
+
+function Control({ icon, hidden, onClick, children }: { icon: keyof typeof ICONS; hidden?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button type="button" className={`${styles.action} ${styles.control}`} hidden={hidden} onClick={onClick}>
+      <svg viewBox="0 0 24 24" aria-hidden fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
+        <path d={ICONS[icon]} />
+      </svg>
+      {children}
+    </button>
+  );
+}
+
+function NothingToPlay({ stage, retry }: { stage: Extract<Stage, { show: "later" | "error" }>; retry: () => void }) {
+  if (stage.show === "error")
+    return (
+      <Resting title="Kite couldn't open this one" lines={["Check the connection, then try again."]}>
+        <button type="button" className={styles.action} onClick={retry}>
+          Try again
+        </button>
+      </Resting>
+    );
+  // A movie with nothing to play is a director's cut that didn't finish; its template movie is already on
+  // screen, so the card just goes away. (A template movie that fails still plays the cached fallback.)
+  if (stage.kind === "movie") return null;
+  return <Resting title={`Kite couldn't finish this ${stage.kind}`} lines={["It'll try again another time.", "Your other game is still here to play."]} />;
 }
 
 /** The data-band of the nearest kid page root, kept current when the grade slider moves it. */
@@ -183,7 +292,7 @@ function useBand(ref: RefObject<HTMLElement | null>): Band {
 
 const RIPSTOP = ["var(--kite-red)", "var(--kite-yellow)", "var(--tail-teal)", "var(--sky-deep)"];
 
-/** Ripstop diamonds flying out of the card: the cheer moments only. CSS sizes it per band and hides it for teens. */
+/** Ripstop diamonds flying out of the player: the cheer moments only. CSS sizes it per band and hides it for teens. */
 function Burst() {
   return (
     <div className={styles.burst} aria-hidden>

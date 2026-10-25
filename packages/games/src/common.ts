@@ -32,7 +32,9 @@ export function boot(canvas: HTMLCanvasElement, spec: GameSpec, sprites: Sprites
     touchToMouse: true,
     debug: false,
     font: "sans-serif",
-    pixelDensity: 1,
+    // A device pixel for every screen pixel, up to full screen on this display; "linear" keeps scaled art smooth.
+    pixelDensity: Math.min(3, devicePixelRatio * Math.max(1, Math.min(screen.width / W, screen.height / H))),
+    texFilter: "linear",
   });
 
   for (const slug of new Set(spec.items.map((i) => i.sprite))) k.loadSprite(spriteName(slug), resolveSprite(slug, sprites));
