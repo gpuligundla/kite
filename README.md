@@ -185,7 +185,7 @@ The night shift's snapshot holds 330 kid turns in 106 sessions across grades 1 t
 - at least 3 concepts Maya can teach,
 - at least 2 big-question cards for her parents.
 
-The real data has dinosaurs as a strength at grades 4, 6, and 8 to 11. In grade 7 it dipped to 3 of 6 concepts mastered, when birds-are-dinosaurs and deep time arrived. We kept the data and moved the demo to grade 8, where the claim is true. The snapshot is not in git because `brain/data/` is ignored. The brain image carries it. To recount, run `uv run python -m evals.shape` from `brain/`. [pending: recount if the night shift reruns]
+The real data has dinosaurs as a strength at grades 4, 6, and 8 to 11. In grade 7 it dipped to 3 of 6 concepts mastered, when the ideas that birds are dinosaurs and the dinosaur timeline arrived. We kept the data and moved the demo to grade 8, where the claim is true. The snapshot is not in git because `brain/data/` is ignored. The brain image carries it. To recount, run `uv run python -m evals.shape` from `brain/`. [pending: recount if the night shift reruns]
 
 ## Where to read the code
 
