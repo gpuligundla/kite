@@ -9,6 +9,10 @@ param claudeCountryCode = readEnvironmentVariable('CLAUDE_COUNTRY_CODE', 'US')
 param claudeIndustry = readEnvironmentVariable('CLAUDE_INDUSTRY', 'education')
 param deployApps = bool(readEnvironmentVariable('KITE_DEPLOY_APPS', 'false'))
 param kiteVoices = readEnvironmentVariable('KITE_VOICES', '{}')
+param studioAgentEndpoint = readEnvironmentVariable('STUDIO_AGENT_ENDPOINT', '')
+// scripts/deploy-azure.sh tags images with the commit, so each deploy rolls out a new revision. Empty means :latest.
+param brainImage = readEnvironmentVariable('KITE_BRAIN_IMAGE', '')
+param webImage = readEnvironmentVariable('KITE_WEB_IMAGE', '')
 param appSecrets = {
   ELEVENLABS_API_KEY: readEnvironmentVariable('ELEVENLABS_API_KEY', '')
   KITE_MASTER_KEY: readEnvironmentVariable('KITE_MASTER_KEY', '')

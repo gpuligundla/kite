@@ -4,6 +4,8 @@ param location string
 param namePrefix string
 param logsName string
 param acrName string
+@description('The Foundry account the brain calls the studio agent on, with this identity.')
+param foundryName string
 param brainImage string
 param webImage string
 
@@ -15,6 +17,7 @@ param brainEnv object
 param brainSecrets object
 
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+var azureAiUserRoleId = '53ca6127-db72-4b80-b1b0-d745d6d5456d'
 var secretVars = filter(objectKeys(brainSecrets), k => !empty(brainSecrets[k]))
 
 resource logs 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
@@ -25,7 +28,12 @@ resource acr 'Microsoft.ContainerRegistry/registries@2025-11-01' existing = {
   name: acrName
 }
 
-// A user-assigned identity exists before the apps do, so its AcrPull grant is in place for the first pull.
+resource foundry 'Microsoft.CognitiveServices/accounts@2025-10-01-preview' existing = {
+  name: foundryName
+}
+
+// A user-assigned identity exists before the apps do, so its grants are in place for the first pull and the
+// first studio call. The apps pull images with it, and the brain signs its studio-agent calls with it.
 resource pullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: '${namePrefix}-apps-id'
   location: location
@@ -38,6 +46,17 @@ resource appsAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalId: pullIdentity.properties.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
+  }
+}
+
+// The brain invokes the kite-studio hosted agent with an Entra token for https://ai.azure.com.
+resource appsAiUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: foundry
+  name: guid(foundry.id, pullIdentity.id, azureAiUserRoleId)
+  properties: {
+    principalId: pullIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', azureAiUserRoleId)
   }
 }
 
@@ -97,8 +116,10 @@ resource brain 'Microsoft.App/containerApps@2025-01-01' = {
             cpu: json('2.0')
             memory: '4Gi'
           }
+          // AZURE_CLIENT_ID points DefaultAzureCredential at the user-assigned identity.
           env: concat(
             map(items(brainEnv), e => { name: e.key, value: e.value }),
+            [{ name: 'AZURE_CLIENT_ID', value: pullIdentity.properties.clientId }],
             map(secretVars, k => { name: k, secretRef: toLower(replace(k, '_', '-')) })
           )
         }
@@ -108,6 +129,7 @@ resource brain 'Microsoft.App/containerApps@2025-01-01' = {
   }
   dependsOn: [
     appsAcrPull
+    appsAiUser
   ]
 }
 

@@ -245,7 +245,7 @@ OS_TOKEN=… PARENT_TOKEN=… node e2e/demo-smoke.mjs http://localhost:3000
 
 ## Deploy to Azure
 
-`infra/main.bicep` creates the Foundry account with Claude Sonnet 5.5, Claude Haiku 5.5, Claude Opus 5.5, Microsoft-Decision-1, and the embeddings model, plus a container registry and App Insights. `scripts/deploy-studio-agent.sh` builds and registers the `kite-studio` hosted agent. The brain and web images build in the registry with `az acr build` from the repo root (`brain/Dockerfile` and `apps/web/Dockerfile`), and `KITE_DEPLOY_APPS=true infra/deploy.sh` runs them on Azure Container Apps. Each app runs one replica, because the brain's event bus lives in memory. [`docs/DEPLOY.md`](docs/DEPLOY.md) has every command.
+`infra/main.bicep` creates the Foundry account with Claude Sonnet 5.5, Claude Haiku 5.5, Claude Opus 5.5, Microsoft-Decision-1, and the embeddings model, plus a container registry and App Insights. `scripts/deploy-studio-agent.sh` builds and registers the `kite-studio` hosted agent. `scripts/deploy-azure.sh` moves everything onto Azure in one command. It builds the brain and web images in the registry (`brain/Dockerfile` and `apps/web/Dockerfile`), and runs them on Azure Container Apps, each as one replica, because the brain's event bus lives in memory. On a phone, Chrome's **Add to Home screen** installs the handheld launcher full screen with its own icon. [`docs/DEPLOY.md`](docs/DEPLOY.md) has every command.
 
 ## Where the numbers come from
 

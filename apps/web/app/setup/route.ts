@@ -11,7 +11,9 @@ export function GET(req: NextRequest): NextResponse {
   const token = req.nextUrl.searchParams.get("token");
   const to = HOME[req.nextUrl.searchParams.get("to") ?? "os"] ?? HOME.os;
   if (!token) return NextResponse.json({ error: "Add ?token= with this device's token from the seed." }, { status: 400 });
-  const res = NextResponse.redirect(new URL(to, req.url), 303);
+  // A relative Location: behind Azure's ingress req.url names the container (https://0.0.0.0:3000), not the
+  // public host, so an absolute redirect sent every paired browser nowhere.
+  const res = new NextResponse(null, { status: 303, headers: { Location: to } });
   res.cookies.set("kite_token", token, {
     httpOnly: true,
     sameSite: "lax",

@@ -5,6 +5,9 @@
 
 .git
 **/node_modules
+**/.next
+.claude/
+pitch/
 **/.venv
 **/__pycache__
 .audit/

@@ -1,5 +1,5 @@
 // Kite's Azure resources: one Foundry account with Claude, Decision-1 and embeddings, a project for
-// the hosted studio agent, a container registry, monitoring, and (from Sunday) the brain and web apps.
+// the hosted studio agent, a container registry, monitoring, and the brain and web apps on Container Apps.
 // Deploy with infra/deploy.sh. Never output keys. infra/write-env.sh reads them with az.
 
 @description('Region. Each one listed had Claude 5.5 (version 1, GlobalStandard), Microsoft-Decision-1 (DataZoneStandard), text-embedding-3-small, Content Safety and hosted agents on 2026-10-24.')
@@ -77,6 +77,9 @@ param brainImage string = ''
 
 @description('Defaults to <registry>/kite-web:latest.')
 param webImage string = ''
+
+@description('The kite-studio hosted agent\'s invocations endpoint, from scripts/deploy-studio-agent.sh. Empty turns off director\'s cuts and brand-new games.')
+param studioAgentEndpoint string = ''
 
 @description('JSON for KITE_VOICES. Read by the brain app only.')
 param kiteVoices string = '{}'
@@ -241,6 +244,7 @@ module apps 'modules/apps.bicep' = if (deployApps) {
     namePrefix: namePrefix
     logsName: logs.name
     acrName: acr.name
+    foundryName: foundry.name
     brainImage: empty(brainImage) ? '${acr.properties.loginServer}/kite-brain:latest' : brainImage
     webImage: empty(webImage) ? '${acr.properties.loginServer}/kite-web:latest' : webImage
     brainEnv: {
@@ -251,6 +255,7 @@ module apps 'modules/apps.bicep' = if (deployApps) {
       EMBED_DEPLOYMENT: models.embed.name
       CONTENT_SAFETY_ENDPOINT: foundry.properties.endpoint
       KITE_VOICES: kiteVoices
+      STUDIO_AGENT_ENDPOINT: studioAgentEndpoint
     }
     brainSecrets: union(appSecrets, {
       FOUNDRY_KEY: foundry.listKeys().key1

@@ -2,7 +2,7 @@
 # Creates or updates Kite's Azure resources. Safe to rerun. See docs/DEPLOY.md.
 #
 #   CLAUDE_ORG_NAME="Your Org" infra/deploy.sh
-#   KITE_DEPLOY_APPS=true infra/deploy.sh      # Sunday, after the images are pushed
+#   KITE_DEPLOY_APPS=true infra/deploy.sh      # after the images are pushed; scripts/deploy-azure.sh does both
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -46,6 +46,9 @@ if [ "$KITE_DEPLOY_APPS" = "true" ]; then
   for name in ELEVENLABS_API_KEY KITE_MASTER_KEY OPENROUTER_KEY KITE_VOICES; do
     export "$name=$(env_value "$name")"
   done
+  # scripts/deploy-azure.sh passes the endpoint of the agent it just deployed; otherwise brain/.env has it.
+  export STUDIO_AGENT_ENDPOINT="${STUDIO_AGENT_ENDPOINT:-$(env_value STUDIO_AGENT_ENDPOINT)}"
+  [ -n "$STUDIO_AGENT_ENDPOINT" ] || echo "deploy: no STUDIO_AGENT_ENDPOINT, so the brain app makes template movies and games only." >&2
   if [ -z "$KITE_MASTER_KEY" ] || [ -z "$ELEVENLABS_API_KEY" ]; then
     echo "deploy: the brain app needs KITE_MASTER_KEY and ELEVENLABS_API_KEY in brain/.env." >&2
     exit 1
@@ -58,6 +61,12 @@ for ns in Microsoft.CognitiveServices Microsoft.ContainerRegistry Microsoft.Oper
 done
 
 az group create --name "$KITE_RG" --location "$KITE_LOCATION" --only-show-errors -o none
+if [ "${KITE_WHAT_IF:-}" = 1 ]; then
+  # A preview that changes nothing. Resource IDs only, so no setting or secret is printed.
+  az deployment group what-if --resource-group "$KITE_RG" --name "$KITE_DEPLOYMENT" \
+    --parameters infra/main.bicepparam --result-format ResourceIdOnly --only-show-errors
+  exit 0
+fi
 az deployment group create \
   --resource-group "$KITE_RG" \
   --name "$KITE_DEPLOYMENT" \

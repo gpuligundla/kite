@@ -219,35 +219,47 @@ az role assignment create --assignee <agent-principal-id> --role 53ca6127-db72-4
 
 ## Deploy the brain and web apps
 
-Do this on Sunday, after the brain and web images exist.
-
-1. Build the brain image in the registry. `az acr build` builds on Azure, so you don't need Docker. The build context is the repo root, because the image also carries `COLLAB_LOG.md`, `docs/trust/` and `packages/movie`. `.dockerignore` keeps every `.env` out.
-
-	```bash
-	az acr build --registry <acrName> --image kite-brain:latest -f brain/Dockerfile .
-	```
-
-	The image holds `brain/data/demo-snapshot.db` (as `data/kite.db`) and `brain/data/concept_vectors.npy` when they exist at build time. Checkpoint the snapshot first, so no `-wal` file is left behind: `sqlite3 brain/data/demo-snapshot.db "PRAGMA wal_checkpoint(TRUNCATE)"`. The movie renderer's `npm ci` is skipped until `packages/movie` exists.
-
-2. Build the web image. Its build context is the repo root too, because the web app compiles the workspace packages (`packages/client`, `packages/games`, `packages/movie`) from source. The image runs Next's standalone server and reads `BRAIN_URL` at request time.
-
-	```bash
-	az acr build --registry <acrName> --image kite-web:latest -f apps/web/Dockerfile .
-	```
-
-3. Deploy the apps. The script reads `ELEVENLABS_API_KEY`, `KITE_MASTER_KEY`, `OPENROUTER_KEY` and `KITE_VOICES` from `brain/.env` and stores the keys as Container Apps secrets.
-
-	```bash
-	KITE_DEPLOY_APPS=true infra/deploy.sh
-	```
-
-	The script prints the brain and web URLs. The web app gets the brain's URL in `BRAIN_URL`.
-
-Each app runs one replica, because the brain's event bus lives in memory. Keep `KITE_DEPLOY_APPS=true` on every later run, or the deployment skips the apps and leaves their settings unchanged. To roll out a new image under the same tag, run this command:
+One command moves everything onto Azure. It reruns `infra/deploy.sh` for the Foundry resources, redeploys the studio agent, builds the brain and web images in the registry under the current commit's tag, and rolls the `kite-brain` and `kite-web` Container Apps to them. Then it waits until both answer.
 
 ```bash
-az containerapp update --resource-group rg-kite --name kite-brain --image <acrLoginServer>/kite-brain:latest
+scripts/deploy-azure.sh
 ```
+
+- It needs `brain/.env` (from `infra/write-env.sh`) and `brain/data/demo-snapshot.db`. It reads the Claude organization name from the last deployment, so `CLAUDE_ORG_NAME` is optional on a rerun.
+- `SKIP_STUDIO=1` keeps the studio agent that's running, which saves a few minutes.
+- To preview first without changing anything, run `KITE_WHAT_IF=1 KITE_DEPLOY_APPS=true infra/deploy.sh`. It lists what would be created and redeployed, by resource ID only, so no setting or secret is printed.
+- A full run takes about 15 to 25 minutes. Most of that is the three image builds.
+
+What the script does, if you need one step on its own:
+
+1. **Images.** `az acr build` builds on Azure, so you don't need Docker. The build context is the repo root for both images. The brain image also carries `COLLAB_LOG.md`, `docs/trust/` and `packages/movie`. The web app compiles the workspace packages (`packages/client`, `packages/games`, `packages/movie`) from source. `.dockerignore` keeps every `.env` out.
+
+	```bash
+	az acr build --registry <acrName> --image kite-brain:<tag> -f brain/Dockerfile .
+	az acr build --registry <acrName> --image kite-web:<tag> -f apps/web/Dockerfile .
+	```
+
+	The brain image holds `brain/data/demo-snapshot.db` as its live `data/kite.db`. Checkpoint the snapshot first, so no rows are left in a `-wal` file. The script does this with Python's `sqlite3`.
+
+2. **Apps.** `infra/deploy.sh` reads `ELEVENLABS_API_KEY`, `KITE_MASTER_KEY`, `OPENROUTER_KEY`, `KITE_VOICES` and `STUDIO_AGENT_ENDPOINT` from `brain/.env` and stores the keys as Container Apps secrets. `KITE_BRAIN_IMAGE` and `KITE_WEB_IMAGE` pick the images. Without them, it uses `:latest`, and Container Apps doesn't roll out a new revision for an unchanged image name.
+
+	```bash
+	KITE_DEPLOY_APPS=true KITE_BRAIN_IMAGE=<server>/kite-brain:<tag> KITE_WEB_IMAGE=<server>/kite-web:<tag> infra/deploy.sh
+	```
+
+How the apps run:
+
+- Each app runs one replica, because the brain's event bus lives in memory.
+- Both apps use the `kite-apps-id` managed identity. It pulls their images, and the brain signs its calls to the studio agent with it (`AZURE_CLIENT_ID`, plus Azure AI User on the Foundry account).
+- The web app proxies to the brain's HTTPS address in `BRAIN_URL`.
+- The brain keeps SQLite on the container's own disk, so a restart puts the demo snapshot back. Run this before a rehearsal:
+
+	```bash
+	az containerapp revision restart -g rg-kite -n kite-brain --revision $(az containerapp show -g rg-kite -n kite-brain --query properties.latestRevisionName -o tsv)
+	```
+
+- Pair each device with `scripts/pair-links.sh https://<web address>`, in your own terminal. On a phone, open the handheld link in Chrome, then use **Add to Home screen** to install Kite full screen with its own icon.
+- Keep `KITE_DEPLOY_APPS=true` on any manual rerun of `infra/deploy.sh`, or the deployment leaves the apps as they are.
 
 ## What it costs
 
