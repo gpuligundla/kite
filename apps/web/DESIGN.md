@@ -55,7 +55,7 @@ These follow Emil Kowalski's animation rules.
 
 - **Decide by frequency first.** Typing, keyboard shortcuts and scrolling get no animation. Sending a message and a new answer bubble get a short, subtle entrance. Celebrations are rare.
 - **The delight budget.** Celebration (motion plus the `cheer` sound) is only for:
-  - a teach-back graded `got_it` or `can_teach`
+  - finishing a teach-back (`answer.done` with route `teach`). Celebrate the teaching, never the grade. `taught` is parent-only by design (`KID_EVENT_TYPES` in `contract.py`), and Kite's spoken feedback already tells the kid how they did.
   - a check question answered right
   - a game finished
   - a movie or game becoming ready
