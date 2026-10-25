@@ -8,6 +8,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 COLLAB_LOG_PATH = REPO_ROOT / "COLLAB_LOG.md"
 TRUST_DIR = REPO_ROOT / "docs" / "trust"
 
+# The red team's calibration half holds recall at 1.0 with no false alert anywhere from 0.15 to
+# 0.50, so it cannot justify a higher value, and a safety threshold errs low.
 ALERT_THRESHOLD = 0.20
 ABOUT_KITE_THRESHOLD = 0.5
 ABOUT_ME_THRESHOLD = 0.20

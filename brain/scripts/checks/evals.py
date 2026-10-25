@@ -14,6 +14,7 @@ from evals import redteam as rt
 from evals import simulate as sim
 from evals.write_gate import STATEMENTS, run_write_gate
 from evals.shape import assert_demo_shape
+from kite_brain.config import ALERT_THRESHOLD
 from kite_brain.contract import ConceptEvidence, CuriositySignal
 from kite_brain.decide import Decisions
 from kite_brain.deps import ToolCall
@@ -164,15 +165,10 @@ def alert_results(top_probs, kind="abuse"):
     return [result(f"a{i}", "safety", {f"alert_{kind}": p}, kind, expected="alert") for i, p in enumerate(top_probs)]
 
 
-def check_calibrate_picks_highest_threshold_meeting_recall() -> None:
-    # 19 of 20 alerts score .40 and one scores .10: recall is .95 up to .40 and drops to 0 above it.
-    assert rt.calibrate(alert_results([0.40] * 19 + [0.10])) == 0.40, "the highest threshold that still holds .95"
-    assert rt.calibrate(alert_results([0.40] * 18 + [0.10] * 2)) == 0.10, "two misses in twenty is .90, so go lower"
-    assert rt.calibrate(alert_results([0.9, 0.8])) == 0.50, "the search stops at 0.50"
-    assert rt.calibrate(alert_results([0.01, 0.01])) == 0.05, "nothing qualifies: the lowest threshold"
-    wrong_kind = [result("w", "safety", {"alert_bullying": 0.9}, "abuse", expected="alert")]
-    assert rt.calibrate(wrong_kind) == 0.05, "a different kind does not count as recall"
+def check_alert_recall() -> None:
     assert rt.alert_recall(alert_results([0.2, 0.3, 0.4, 0.5]), 0.30) == 0.75
+    wrong_kind = [result("w", "safety", {"alert_bullying": 0.9}, "abuse", expected="alert")]
+    assert rt.alert_recall(wrong_kind, 0.05) == 0.0, "a different kind does not count as recall"
 
 
 def check_split_is_deterministic_and_disjoint() -> None:
@@ -242,7 +238,8 @@ def check_run_all_writes_the_trust_files() -> None:
         assert asyncio.run(rt.run_all(deps, trust, out)), "the write gate stored nothing"
         card = json.loads((trust / "scorecard.json").read_text())
         points = json.loads((trust / "readability.json").read_text())
-        assert card["alert_threshold"] == 0.05, "a model that never alerts calibrates to the floor"
+        assert card["alert_threshold"] == ALERT_THRESHOLD, "the scorecard measures the threshold the brain runs"
+        assert card["calibration"]["alert_recall"] == 0.0, "a model that never alerts shows its zero recall"
         assert card["holdout"]["total"] == len(rt.split(rt.load_prompts())[1]) and card["write_gate"] == {"stored": 0}
         assert [p["grade"] for p in points] == [1, 2, 3, 5, 6, 8, 9, 10] and all(p["n"] == 4 for p in points), points
         assert sorted(p.name for p in Path(tmp).rglob("*.json*")) == ["readability.json", "scorecard.json", "transcripts.jsonl"]
@@ -251,7 +248,7 @@ def check_run_all_writes_the_trust_files() -> None:
 
 def run() -> None:
     for check in (
-        check_calibrate_picks_highest_threshold_meeting_recall, check_split_is_deterministic_and_disjoint,
+        check_alert_recall, check_split_is_deterministic_and_disjoint,
         check_scorecard_counts, check_write_gate_counts_what_was_stored, check_run_all_writes_the_trust_files,
         check_simulation_stamps_grade_and_year, check_teach_moves_produce_evidence_and_creations,
         check_no_turn_after_the_real_now, check_shape_reports_missing_growing_area,
