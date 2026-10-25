@@ -1,0 +1,225 @@
+/* A picture book. Day: white paper on the kid's sky. Bedtime: a night palette, stars and slower turns. */
+.story {
+  --page: var(--paper);
+  --page-edge: var(--sky-deep);
+  --text: var(--ink);
+  --text-soft: var(--ink-soft);
+  --mark: var(--kite-yellow);
+  --mark-text: var(--ink);
+  --spine: var(--line);
+  container-type: inline-size;
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  color: var(--text);
+}
+.story[data-mode="bedtime"] {
+  --page: #1a2452;
+  --page-edge: #0b1233;
+  --text: #fbf3dc;
+  --text-soft: #b9b6c9;
+  --mark: #ffe39a;
+  --mark-text: #1a2452;
+  --spine: #2c3870;
+  padding: var(--space-4);
+  border-radius: var(--radius-kid, 24px);
+  background: #0f1738;
+  overflow: hidden;
+}
+.story > :not(.stars) { position: relative; }
+
+.head { display: grid; gap: var(--space-1); }
+.title {
+  margin: 0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: calc(var(--kid-text, var(--step-1)) * 1.2);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.note, .missing { margin: 0; color: var(--text-soft); font-size: var(--step-0); }
+
+.book {
+  position: relative;
+  border-radius: var(--radius-kid, 24px);
+  background: var(--page);
+  box-shadow: 0 4px 0 var(--page-edge);
+  overflow: hidden;
+}
+
+.spread {
+  display: grid;
+  animation: turn var(--dur-panel) var(--ease-out) both;
+  transform-origin: 0% 50%;
+}
+.spread[data-dir="-1"] { animation-name: turn-back; transform-origin: 100% 50%; }
+/* Bedtime turns slower than UI motion's 300ms on purpose: it is a wind-down, not a control responding. */
+.story[data-mode="bedtime"] .spread { animation-duration: var(--dur-band); }
+@keyframes turn { from { opacity: 0; transform: perspective(1400px) rotateY(-7deg) translateX(18px); } }
+@keyframes turn-back { from { opacity: 0; transform: perspective(1400px) rotateY(7deg) translateX(-18px); } }
+
+.picture { display: grid; align-content: center; }
+.scene { position: relative; aspect-ratio: 16 / 9; overflow: hidden; }
+.scene > svg { width: 100%; height: 100%; }
+
+.actor {
+  position: absolute;
+  width: 18%;
+  margin: 0;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.actor img { display: block; width: 100%; height: auto; animation: drift 3.6s var(--ease-in-out) infinite alternate; }
+.actor[data-motion="bounce"] img { animation-name: hop; animation-duration: 1.6s; }
+.actor[data-motion="walk"] img { animation-name: sway; animation-duration: 2.4s; }
+.actor[data-talking] img { animation-name: hop; animation-duration: 0.45s; }
+.story[data-mode="bedtime"] .actor img { animation-duration: 6s; }
+.actor figcaption {
+  font-weight: 700;
+  font-size: clamp(0.7rem, 2.2cqi, 1.1rem);
+  color: #fff;
+  text-shadow: 0 1px 4px #0009;
+}
+@keyframes drift { to { transform: translateY(-6%); } }
+@keyframes hop { to { transform: translateY(-5%); } }
+@keyframes sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+
+.words {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: calc(var(--kid-text, var(--step-1)) * 1.12);
+  line-height: 1.55;
+}
+.line { margin: 0; color: var(--text-soft); text-wrap: pretty; }
+.line[data-now] { color: var(--text); }
+.speaker { display: block; font-size: 0.7em; font-weight: 700; color: var(--tail-teal); }
+.story[data-mode="bedtime"] .speaker { color: #8fd8cf; }
+.word { border-radius: 6px; }
+/* Changes many times a second, so it never animates. */
+.word[data-on] { background: var(--mark); color: var(--mark-text); box-shadow: 0 0 0 3px var(--mark); }
+.folio { position: absolute; right: var(--space-4); bottom: var(--space-3); font-size: var(--step--1); color: var(--text-soft); }
+
+@container (min-width: 760px) {
+  .spread { grid-template-columns: 1.15fr 1fr; min-height: 340px; }
+  .picture { padding: var(--space-4); }
+  .scene { border-radius: calc(var(--radius-kid, 24px) * 0.6); }
+  .words { border-left: 2px solid var(--spine); }
+}
+
+.start {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target, 64px);
+  padding: 0 var(--space-6) 0 var(--space-5);
+  border: 0;
+  border-radius: 999px;
+  background: var(--kite-red);
+  color: var(--paper);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: var(--kid-text, var(--step-1));
+  font-weight: 700;
+  box-shadow: 0 4px 0 var(--kite-red-deep);
+  transform: translate(-50%, -50%);
+  transition: transform var(--dur-press) var(--ease-out);
+  cursor: pointer;
+}
+.start:active { transform: translate(-50%, -50%) scale(0.97); }
+.startIcon { width: 0; height: 0; border-style: solid; border-width: 0.55em 0 0.55em 0.9em; border-color: transparent transparent transparent currentColor; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-3); }
+.control, .play {
+  display: grid;
+  place-items: center;
+  width: var(--target, 64px);
+  height: var(--target, 64px);
+  border: 0;
+  border-radius: 50%;
+  background: var(--page);
+  color: var(--text);
+  box-shadow: inset 0 0 0 2px var(--spine);
+  transition: transform var(--dur-press) var(--ease-out), opacity var(--dur-pop) var(--ease-out);
+  cursor: pointer;
+}
+.play { background: var(--text); color: var(--page); box-shadow: none; }
+.control:active:not(:disabled), .play:active { transform: scale(0.95); }
+.control:disabled { opacity: 0.35; cursor: default; }
+.dots { display: flex; gap: 8px; margin: 0 var(--space-2); padding: 0; list-style: none; }
+.dots li { width: 10px; height: 10px; border-radius: 50%; background: var(--spine); transition: transform var(--dur-pop) var(--ease-out); }
+.dots li[data-read] { background: var(--text-soft); }
+.dots li[data-on] { background: var(--mark); transform: scale(1.4); }
+
+.ending {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--space-4);
+  min-height: 340px;
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+}
+.ending > section { width: 100%; text-align: left; }
+.goodnight { margin: 0; font-family: var(--font-display), system-ui, sans-serif; font-size: var(--step-4); line-height: 1.1; color: var(--text); }
+.story[data-mode="bedtime"] .goodnight { color: var(--mark); }
+.sub { margin: 0; color: var(--text-soft); font-size: var(--kid-text, var(--step-1)); }
+.moon { width: 72px; height: 72px; border-radius: 50%; box-shadow: -16px 10px 0 0 var(--mark); transform: rotate(-18deg); }
+.reflect { margin: 0; font-family: var(--font-display), system-ui, sans-serif; font-weight: 700; font-size: calc(var(--kid-text, var(--step-1)) * 1.1); text-wrap: balance; }
+.thoughts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: var(--space-3); width: 100%; }
+.thought {
+  min-height: var(--target, 64px);
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-kid, 24px);
+  background: var(--sky);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--kid-text, var(--step-1));
+  font-weight: 700;
+  transition: transform var(--dur-press) var(--ease-out);
+  cursor: pointer;
+}
+.thought:active { transform: scale(0.97); }
+.thought[data-picked] { background: var(--tail-teal); color: var(--paper); }
+.thanks { min-height: 1.5em; margin: 0; font-weight: 700; color: var(--tail-teal); }
+.again {
+  min-height: calc(var(--target, 64px) * 0.8);
+  padding: 0 var(--space-5);
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stars { position: absolute; inset: 0; pointer-events: none; }
+.stars i { position: absolute; border-radius: 50%; background: #fff6d8; opacity: 0.7; animation: twinkle 3.4s var(--ease-in-out) infinite alternate; }
+@keyframes twinkle { from { opacity: 0.25; } to { opacity: 0.9; } }
+
+.story[data-full] {
+  align-content: center;
+  height: 100dvh;
+  padding: var(--space-6);
+  overflow: auto;
+  background: var(--band-bg, var(--sky));
+}
+.story[data-full][data-mode="bedtime"] { background: #0f1738; border-radius: 0; }
+.story[data-full] > * { width: min(100%, 1320px); margin-inline: auto; }
+
+@media (hover: hover) and (pointer: fine) {
+  .control:hover:not(:disabled), .again:hover, .thought:hover { opacity: 0.85; }
+}
+
+/* Gentler, not none: pages still fade, nothing moves. */
+@media (prefers-reduced-motion: reduce) {
+  .spread, .spread[data-dir="-1"] { animation-name: fade; }
+  .actor img, .stars i { animation: none; }
+}
+@keyframes fade { from { opacity: 0; } }
