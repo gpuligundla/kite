@@ -17,8 +17,12 @@ _SENTENCE_END = re.compile(r"(.*?[.!?]+[\"')\]]*)\s+", re.S)
 _MARKUP = re.compile(r"\*\*|__|`|^\s*(?:[-*•]\s+|#{1,6}\s+)+", re.M)
 
 
-def plain(sentence: str) -> str:
-    return re.sub(r"\s*\n\s*", " ", _MARKUP.sub("", sentence)).strip()
+_INLINE_BULLET = re.compile(r"(?<=[.!?:])\s+[-*•]\s+")
+
+
+def plain(text: str) -> str:
+    """Spoken-safe text: no emphasis marks, headings or list markers, on one line."""
+    return re.sub(r"\s*\n\s*", " ", _MARKUP.sub("", _INLINE_BULLET.sub(" ", text))).strip()
 END = None  # queue sentinel
 
 Publish = Callable[[int, str, str], None]  # (index, text, audio_b64)

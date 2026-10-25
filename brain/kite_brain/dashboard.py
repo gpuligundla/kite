@@ -12,6 +12,7 @@ from kite_brain.contract import (
 from kite_brain.crypto import aad, open_sealed
 from kite_brain.deps import Deps
 from kite_brain.memory import ledger, maps
+from kite_brain.turn.speak import plain
 
 SENSITIVE_TOPICS = ("death", "religion", "bodies", "war", "divorce")
 
@@ -60,7 +61,8 @@ def _cards(deps: Deps, kid_id: str, grade: Grade) -> list[CardView]:
     return [
         CardView(
             card_id=r["id"], grade=r["grade"], at=datetime.fromisoformat(r["at"]), topic=r["topic"],
-            summary=open_sealed(key, r["summary"], aad("big_question_card", kid_id, r["id"])).decode(),
+            # Cards written before answers were kept plain can hold markdown; the parent sees clean text.
+            summary=plain(open_sealed(key, r["summary"], aad("big_question_card", kid_id, r["id"])).decode()),
             starter=open_sealed(key, r["starter"], aad("big_question_card", kid_id, r["id"])).decode(),
         )
         for r in rows

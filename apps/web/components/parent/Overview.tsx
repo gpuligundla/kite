@@ -70,10 +70,11 @@ function Standings({ view, grade }: { view: DashboardView; grade: Grade }) {
             <ul className={styles.plainList}>
               {still.map((t) => (
                 <li key={t.name} className={styles.standing}>
-                  <strong>{t.name}</strong>
+                  {/* Named by idea, not topic: a topic can be a strength while one of its ideas is still growing. */}
+                  <strong>{list(t.concepts)}</strong>
                   <span>
-                    She has worked on {list(t.concepts.map(quote))} across several sessions.{" "}
-                    {t.concepts.length > 1 ? "They aren't solid yet." : "It isn't solid yet."}
+                    Part of {t.name.toLowerCase()}. She has worked on {t.concepts.length > 1 ? "these" : "it"} across
+                    several sessions, and {t.concepts.length > 1 ? "they aren't" : "it isn't"} solid yet.
                   </span>
                 </li>
               ))}

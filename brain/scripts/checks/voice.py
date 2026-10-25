@@ -93,6 +93,11 @@ def check_spoken_text_is_plain() -> None:
     out = split.feed("- **Six vertical bars:** red, green and blue.\n- ## The `sky` is blue! ") + split.flush()
     assert out == ["Six vertical bars: red, green and blue.", "The sky is blue!"], out
     assert SentenceSplitter().feed("Bees are 2 inches long. ") == ["Bees are 2 inches long."], "plain text is untouched"
+    from kite_brain.turn.speak import plain
+    assert plain("Three lines of evidence. - **The iridium layer.** It is thin.") == (
+        "Three lines of evidence. The iridium layer. It is thin."
+    ), "inline bullets in a stored answer come out clean"
+    assert plain("A well-known 5 - 3 = 2 fact.") == "A well-known 5 - 3 = 2 fact.", "a minus sign is not a bullet"
 
 
 def run() -> None:
