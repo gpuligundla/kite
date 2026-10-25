@@ -350,3 +350,19 @@ Timestamped record of how our AI teammates shaped Kite. Source for the Devpost "
 - **The reviewer model stopped a privacy leak before it was built.** Claude's plan had a 30-day chat review for parents, which the design promised. The reviewer pointed out that `session_turn` has no audience column, so a parent transcript could show an abuse disclosure that went only to the counselor. Claude dropped the feature. The counselor's context now comes from a recorded `source_turn_id`, never a time window.
 - **The counselor page had nothing to show,** because the demo snapshot had no counselor alerts. A helper drives scripted disclosures through the real pipeline, so Decision-1 classifies them for real, and then refreshes the snapshot.
 - **The showcase game was rebuilt on the laptop** after the cloud build ran past its 11-minute budget. Opus 5.5 wrote a Rayleigh scattering lab that passes the play-test at full sharpness, and the studio agent's budget went up to 15 minutes.
+
+## 2026-10-25 ~01:15 to ~02:40 EDT: Session 1, three consoles land and the demo smoke finds two real bugs
+
+- **Three helpers rebuilt the screens on Design v2 in parallel,** each taking up to five screenshot rounds.
+  - Kite OS became a desktop with Classroom, To-do, Quizzes, Calendar, Story time and My creations, a Today column, and Ask Kite in the dock on every screen. The phone became a kid-safe launcher with approved contacts, SOS and a walkie-talkie talk button.
+  - The parent page became seven tabs. The helper replaced a pile of 17 SOS cards with one alert strip under the app bar, shown on every tab.
+  - The counselor page became four tabs with a case workflow, sealed notes, the same-chat context of each report, and the access trail. Its helper drove scripted disclosures through the real pipeline to fill it, then refreshed the demo snapshot.
+- **Helpers caught problems outside their own scope.**
+  - The OS helper found that a quiz scheduled for next week counted as closed, so Kite would have walked a kid through its answers before it was given. A quiz that hasn't opened now gets hints only.
+  - The docs helper recomputed the dashboard from the snapshot and found grade 7 shows 4 of 6 dinosaur ideas solid, not the 3 of 6 every doc said.
+- **A second Claude session, writing the pitch deck, fact-checked the docs against the code.** It found that recall runs after Decision-1, not alongside it, and that the red team no longer calibrates its threshold. It also found that the three held-out misses were all over-caution, not prompts that got through, and that the night shift ran an hour on Saturday evening, not overnight. It flagged a live quiz whose questions Ask Kite still offered as buttons. Claude fixed each one.
+- **The demo smoke failed twice on the merged build, and each failure was a real product bug, not a flaky test.**
+  - Creation events carried no turn id, so a screen opened while a director's cut was still building claimed that cut for its own newest question. That hid the question's movie chip and raised a movie nobody had asked for. Events now name the turn that asked for them.
+  - The type-or-talk toggle read its remembered choice one frame late after every stage change, so a tap in that frame flipped it. It now reads the choice while rendering.
+  - Claude's first guess at the first bug was wrong. A restart didn't fix the failure, and the event stream showed the click had worked. Claude instrumented each click instead of guessing again.
+- **The smoke then passed 9 of 9, three runs in a row.** The demo database was restored from the new snapshot, and `brain` and `main` were pushed.
