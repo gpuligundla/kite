@@ -1,0 +1,73 @@
+/* The knowledge map: luminous hexes on the dark console. Strength combs carry a yellow rim and glow. */
+
+.defs { position: absolute; width: 0; height: 0; }
+
+.map { --hex-scale: 1.15; position: relative; margin-top: var(--space-5); }
+/* A soft stage of light behind the combs. It sits behind data, never behind text. */
+.combs::before {
+  content: "";
+  position: absolute;
+  inset: 0 12%;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgba(18, 201, 168, 0.16), rgba(123, 92, 255, 0.08) 60%, transparent);
+  pointer-events: none;
+}
+.combs {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--space-6) var(--space-7);
+  padding: var(--space-5) 0 var(--space-2);
+}
+.comb { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+.comb svg { display: block; height: auto; overflow: visible; }
+.comb[data-strength="true"] svg { filter: drop-shadow(0 0 18px rgba(18, 201, 168, 0.45)) drop-shadow(0 0 3px rgba(230, 255, 248, 0.6)); }
+
+/* The strength rim is a lit white-mint edge, so it never reads as a "learning" yellow cell. */
+.halo { fill: #e6fff8; }
+.back { fill: #161c58; }
+.cellEmpty { fill: rgba(255, 255, 255, 0.035); stroke: rgba(255, 255, 255, 0.16); stroke-width: 1; }
+.cellRing { fill: none; stroke: rgba(255, 255, 255, 0.0); stroke-width: 3; transition: stroke var(--dur-press) var(--ease-out); }
+.lit { stroke: rgba(255, 255, 255, 0.28); stroke-width: 1; }
+.lit[data-level="can_teach"] { stroke: rgba(220, 255, 246, 0.7); }
+.cellMark { fill: rgba(10, 16, 56, 0.55); }
+.cell { cursor: pointer; outline: none; }
+.cell:focus-visible .cellRing { stroke: var(--kite-yellow); }
+@media (hover: hover) and (pointer: fine) { .cell:hover .cellRing { stroke: rgba(255, 255, 255, 0.9); } }
+
+.combLabel { text-align: center; display: grid; justify-items: center; gap: 2px; }
+.combLabel h3 { font-size: var(--step-0); font-weight: 700; }
+.combLabel > span:not(.strengthTag) { color: var(--ink-soft); font-size: var(--step--1); }
+.strengthTag {
+  margin-top: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e6fff8;
+  color: #06352c;
+  box-shadow: 0 0 16px rgba(18, 201, 168, 0.6);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mini { display: block; flex: none; overflow: visible; }
+.mini[data-strength="true"] { filter: drop-shadow(0 0 12px rgba(18, 201, 168, 0.55)) drop-shadow(0 0 2px rgba(230, 255, 248, 0.7)); }
+.mini .cellEmpty { stroke-width: 2; }
+
+.key { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: var(--space-4) 0 0; padding: 0; list-style: none; font-size: var(--step--1); color: var(--ink-soft); }
+.key li { display: flex; align-items: center; gap: 6px; }
+.swatch { width: 18px; height: 20px; overflow: visible; }
+
+.empty { color: var(--ink-soft); }
+
+.asTable { margin-top: var(--space-4); }
+.asTable summary { cursor: pointer; color: var(--ink-soft); font-size: var(--step--1); font-weight: 700; }
+.asTable table { width: 100%; margin-top: var(--space-3); border-collapse: collapse; font-size: var(--step--1); }
+.asTable th, .asTable td { padding: 6px 10px 6px 0; text-align: left; border-bottom: 1px solid var(--line); }
+.asTable thead th { color: var(--ink-soft); }
+
+@media (max-width: 760px) {
+  .map { --hex-scale: 0.62; }
+  .combs { gap: var(--space-5) var(--space-5); }
+}
